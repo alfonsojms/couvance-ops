@@ -149,7 +149,7 @@ Definidos bajo la realidad operativa de los 2 socios:
 
 ## ⚖️ 5. Reglas de Negocio Indispensables
 
-* **RN-01 (Sin Decimales en Presupuestos):** Los porcentajes de los hitos y los montos de presupuestos principales deben ser números enteros (sin centavos, ej: 50%, $1,500 USD). Únicamente los montos de servicios recurrentes (hosting, dominios, mantenimiento) pueden admitir centavos si el proveedor externo maneja tarifas con decimales (ej: $9.99 USD/mes).
+* **RN-01 (Sin Decimales en Presupuestos y Reconciliación de Residuo):** Los porcentajes de los hitos y los montos de presupuestos principales deben ser números enteros (sin centavos, ej: 50%, $1,500 USD). En presupuestos donde el cálculo porcentual arroje fracciones (ej: 30% de $1,005 = $301.50), los hitos iniciales se redondean a enteros (`Math.floor` o `Math.round`) y el último hito absorbe automáticamente la diferencia para que la suma total coincida exactamente con el monto presupuestado. Únicamente los montos de servicios recurrentes (hosting, dominios, mantenimiento) pueden admitir centavos si el proveedor externo maneja tarifas con decimales (ej: $9.99 USD/mes).
 * **RN-02 (Regla de Oro del 100%):** La suma de los porcentajes enteros de los hitos debe ser exactamente 100%. Ningún presupuesto puede guardarse ni aprobarse con sumas distintas.
 * **RN-03 (Aprobación Atómica en 1 Clic):** Aprobar un presupuesto cambia el estado a `Aprobado`, cambia el proyecto a `En Progreso` y crea los hitos de cobro en estado `Pendiente`.
 * **RN-04 (Operación Cobrar Todo):** Permite liquidar todos los hitos pendientes de un presupuesto aprobado en una sola acción registrando la fecha actual.

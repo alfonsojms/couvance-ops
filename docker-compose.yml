@@ -1,0 +1,28 @@
+services:
+  kodex-ops:
+    build: .
+    container_name: kodex-ops
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - NODE_ENV=production
+      - PIN_SECRET=clave_secreta_super_segura_para_jwt
+      - DATABASE_URL=file:/app/data/kodex-ops.db
+      - INITIAL_PIN=123456
+      - SECURITY_Q1=¿Cuál es el nombre de tu primera mascota?
+      - SECURITY_A1=kodex
+      - SECURITY_Q2=¿En qué ciudad se fundó la agencia?
+      - SECURITY_A2=valencia
+    volumes:
+      - kodex_data:/app/data
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  kodex_data:
