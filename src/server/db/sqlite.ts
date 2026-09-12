@@ -1,5 +1,7 @@
 import Database from 'better-sqlite3';
 import { drizzle, BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
+import fs from 'node:fs';
+import path from 'node:path';
 import * as schema from './schema';
 
 export type SqliteDb = BetterSQLite3Database<typeof schema>;
@@ -13,10 +15,22 @@ export function getSqliteDb(customPath?: string): { db: SqliteDb; sqlite: Databa
   }
 
   const dbPath = customPath || process.env.DATABASE_URL?.replace('file:', '') || './data/kodex-ops.db';
-  sqliteInstance = new Database(dbPath);
-  sqliteInstance.pragma('journal_mode = WAL');
-  sqliteInstance.pragma('foreign_keys = ON');
+  const dbDir = path.dirname(dbPath);
+  if (!fs.existsSync(dbDir)) {
+    fs.mkdirSync(dbDir, { recursive: true });
+  }
 
-  dbInstance = drizzle(sqliteInstance, { schema });
-  return { db: dbInstance, sqlite: sqliteInstance };
+  const sqlite = new Database(dbPath);
+  sqlite.pragma('journal_mode = WAL');
+  sqlite.pragma('foreign_keys = ON');
+
+  const db = drizzle(sqlite, { schema });
+
+  if (!customPath) {
+    sqliteInstance = sqlite;
+    dbInstance = db;
+  }
+
+  return { db, sqlite };
 }
+

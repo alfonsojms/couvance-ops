@@ -4,6 +4,7 @@ import { eq } from 'drizzle-orm';
 import { getDb, authConfig } from '../../db';
 import {
   sha256,
+  timingSafeEqual,
   signToken,
   verifyToken,
   setSessionCookie,
@@ -20,20 +21,38 @@ import {
 
 const authApp = new Hono();
 
-// Esquemas Zod
-const unlockSchema = z.object({
-  pin: z.string().length(6, 'El PIN debe tener exactamente 6 dígitos').regex(/^\d{6}$/, 'El PIN debe ser numérico'),
+// Esquemas Zod cacheados fuera de los handlers
+export const unlockSchema = z.object({
+  pin: z
+    .string({ required_error: 'El PIN es obligatorio' })
+    .length(6, 'El PIN debe tener exactamente 6 dígitos')
+    .regex(/^\d{6}$/, 'El PIN debe ser numérico'),
 });
 
-const recoverSchema = z.object({
-  a1: z.string().min(1, 'La respuesta 1 es obligatoria'),
-  a2: z.string().min(1, 'La respuesta 2 es obligatoria'),
+export const recoverSchema = z.object({
+  a1: z
+    .string({ required_error: 'La respuesta 1 es obligatoria' })
+    .trim()
+    .min(1, 'La respuesta 1 no puede estar vacía'),
+  a2: z
+    .string({ required_error: 'La respuesta 2 es obligatoria' })
+    .trim()
+    .min(1, 'La respuesta 2 no puede estar vacía'),
 });
 
-const resetPinSchema = z.object({
-  token: z.string().min(1, 'El token de recuperación es requerido'),
-  newPin: z.string().length(6, 'El nuevo PIN debe tener exactamente 6 dígitos').regex(/^\d{6}$/, 'El PIN debe ser numérico'),
+export const resetPinSchema = z.object({
+  token: z
+    .string({ required_error: 'El token de recuperación es requerido' })
+    .min(1, 'El token de recuperación no puede estar vacío'),
+  newPin: z
+    .string({ required_error: 'El nuevo PIN es obligatorio' })
+    .length(6, 'El nuevo PIN debe tener exactamente 6 dígitos')
+    .regex(/^\d{6}$/, 'El PIN debe ser numérico'),
 });
+
+export type UnlockInput = z.infer<typeof unlockSchema>;
+export type RecoverInput = z.infer<typeof recoverSchema>;
+export type ResetPinInput = z.infer<typeof resetPinSchema>;
 
 // 1. POST /api/auth/unlock — Valida el PIN de 6 dígitos
 authApp.post('/unlock', rateLimitMiddleware, async (c) => {
@@ -42,7 +61,7 @@ authApp.post('/unlock', rateLimitMiddleware, async (c) => {
   const parsed = unlockSchema.safeParse(body);
 
   if (!parsed.success) {
-    return c.json({ error: parsed.error.issues[0].message }, 400);
+    return c.json({ error: parsed.error.issues[0]?.message || 'El PIN debe tener 6 dígitos numéricos.' }, 400);
   }
 
   const db = getDb(c);
@@ -54,7 +73,7 @@ authApp.post('/unlock', rateLimitMiddleware, async (c) => {
   }
 
   const inputHash = await sha256(parsed.data.pin, secret);
-  if (inputHash !== auth.pinHash) {
+  if (!timingSafeEqual(inputHash, auth.pinHash)) {
     recordFailedAttempt(ip);
     return c.json({ error: 'PIN incorrecto. Intente nuevamente.' }, 401);
   }
@@ -97,7 +116,7 @@ authApp.post('/recover', rateLimitMiddleware, async (c) => {
   const parsed = recoverSchema.safeParse(body);
 
   if (!parsed.success) {
-    return c.json({ error: parsed.error.issues[0].message }, 400);
+    return c.json({ error: parsed.error.issues[0]?.message || 'Respuestas requeridas inválidas.' }, 400);
   }
 
   const db = getDb(c);
@@ -111,7 +130,10 @@ authApp.post('/recover', rateLimitMiddleware, async (c) => {
   const inputA1Hash = await sha256(parsed.data.a1, secret);
   const inputA2Hash = await sha256(parsed.data.a2, secret);
 
-  if (inputA1Hash !== auth.a1Hash || inputA2Hash !== auth.a2Hash) {
+  const match1 = timingSafeEqual(inputA1Hash, auth.a1Hash);
+  const match2 = timingSafeEqual(inputA2Hash, auth.a2Hash);
+
+  if (!match1 || !match2) {
     recordFailedAttempt(ip);
     return c.json({ error: 'Una o ambas respuestas son incorrectas.' }, 401);
   }
@@ -135,7 +157,7 @@ authApp.post('/reset-pin', async (c) => {
   const parsed = resetPinSchema.safeParse(body);
 
   if (!parsed.success) {
-    return c.json({ error: parsed.error.issues[0].message }, 400);
+    return c.json({ error: parsed.error.issues[0]?.message || 'Datos de nuevo PIN inválidos.' }, 400);
   }
 
   const secret = getPinSecret(c);
@@ -177,20 +199,32 @@ authApp.post('/lock', (c) => {
   return c.json({ ok: true, message: 'Sesión cerrada.' });
 });
 
-// 6. GET /api/auth/status — Verifica estado de sesión
-authApp.get('/status', async (c) => {
-  const cookie = getSessionCookie(c);
-  if (!cookie) {
+// Helper para validar estado de autenticación (sesión activa)
+async function checkAuthStatus(c: any) {
+  let token = getSessionCookie(c);
+  if (!token) {
+    const authHeader = c.req.header('authorization');
+    if (authHeader?.startsWith('Bearer ')) {
+      token = authHeader.slice(7).trim();
+    }
+  }
+
+  if (!token) {
     return c.json({ authenticated: false });
   }
 
   const secret = getPinSecret(c);
-  const payload = await verifyToken(cookie, secret);
+  const payload = await verifyToken(token, secret);
   if (!payload || payload.sub !== 'session') {
     return c.json({ authenticated: false });
   }
 
   return c.json({ authenticated: true });
-});
+}
+
+// 6. GET /api/auth/status y GET /api/auth/me — Verifica estado de sesión activa
+authApp.get('/status', checkAuthStatus);
+authApp.get('/me', checkAuthStatus);
 
 export default authApp;
+

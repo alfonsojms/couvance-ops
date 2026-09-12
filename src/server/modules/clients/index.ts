@@ -5,13 +5,21 @@ import { getDb, clients, projects, budgets, milestones } from '../../db';
 
 const clientsApp = new Hono();
 
-const clientSchema = z.object({
-  name: z.string().min(1, 'El nombre o empresa es obligatorio'),
-  contactName: z.string().optional().nullable(),
-  phone: z.string().optional().nullable(),
-  email: z.string().email('Email inválido').optional().nullable().or(z.literal('')),
-  notes: z.string().optional().nullable(),
+export const clientCreateSchema = z.object({
+  name: z.string({ required_error: 'El nombre o empresa es obligatorio' }).trim().min(1, 'El nombre o empresa es obligatorio'),
+  contactName: z.string().trim().optional().nullable(),
+  phone: z.string().trim().optional().nullable(),
+  email: z.string().trim().email('Email inválido').optional().nullable().or(z.literal('')),
+  notes: z.string().trim().optional().nullable(),
 });
+
+export const clientUpdateSchema = clientCreateSchema.partial();
+
+// Alias para compatibilidad hacia atrás
+export const clientSchema = clientCreateSchema;
+
+export type ClientCreateInput = z.infer<typeof clientCreateSchema>;
+export type ClientUpdateInput = z.infer<typeof clientUpdateSchema>;
 
 // 1. GET /api/clients — Listado de clientes con conteo de proyectos y saldos
 clientsApp.get('/', async (c) => {
@@ -100,10 +108,10 @@ clientsApp.post('/', async (c) => {
 clientsApp.put('/:id', async (c) => {
   const id = c.req.param('id');
   const body = await c.req.json().catch(() => null);
-  const parsed = clientSchema.safeParse(body);
+  const parsed = clientUpdateSchema.safeParse(body);
 
   if (!parsed.success) {
-    return c.json({ error: parsed.error.issues[0].message }, 400);
+    return c.json({ error: parsed.error.issues[0]?.message || 'Datos de cliente inválidos' }, 400);
   }
 
   const db = getDb(c);
@@ -113,17 +121,17 @@ clientsApp.put('/:id', async (c) => {
   }
 
   const nowIso = new Date().toISOString();
-  await db
-    .update(clients)
-    .set({
-      name: parsed.data.name.trim(),
-      contactName: parsed.data.contactName?.trim() || null,
-      phone: parsed.data.phone?.trim() || null,
-      email: parsed.data.email?.trim() || null,
-      notes: parsed.data.notes?.trim() || null,
-      updatedAt: nowIso,
-    })
-    .where(eq(clients.id, id));
+  const updateData: Partial<typeof clients.$inferInsert> = {
+    updatedAt: nowIso,
+  };
+
+  if (parsed.data.name !== undefined) updateData.name = parsed.data.name.trim();
+  if (parsed.data.contactName !== undefined) updateData.contactName = parsed.data.contactName?.trim() || null;
+  if (parsed.data.phone !== undefined) updateData.phone = parsed.data.phone?.trim() || null;
+  if (parsed.data.email !== undefined) updateData.email = parsed.data.email?.trim() || null;
+  if (parsed.data.notes !== undefined) updateData.notes = parsed.data.notes?.trim() || null;
+
+  await db.update(clients).set(updateData).where(eq(clients.id, id));
 
   const [updated] = await db.select().from(clients).where(eq(clients.id, id)).all();
   return c.json(updated);

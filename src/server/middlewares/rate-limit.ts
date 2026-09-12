@@ -23,22 +23,43 @@ function getClientIp(c: Context): string {
   return '127.0.0.1';
 }
 
-export function isRateLimited(ip: string): boolean {
+export function getRateLimitStatus(ip: string): { limited: boolean; retryAfter: number } {
   const now = Date.now();
   const record = ipStore.get(ip);
-  if (!record) return false;
+  if (!record) {
+    return { limited: false, retryAfter: 0 };
+  }
 
   if (now > record.resetAt) {
     ipStore.delete(ip);
-    return false;
+    return { limited: false, retryAfter: 0 };
   }
 
-  return record.failedAttempts >= MAX_FAILED_ATTEMPTS;
+  if (record.failedAttempts >= MAX_FAILED_ATTEMPTS) {
+    const remainingMs = Math.max(0, record.resetAt - now);
+    const retryAfter = Math.ceil(remainingMs / 1000) || 1;
+    return { limited: true, retryAfter };
+  }
+
+  return { limited: false, retryAfter: 0 };
+}
+
+export function isRateLimited(ip: string): boolean {
+  return getRateLimitStatus(ip).limited;
 }
 
 export function recordFailedAttempt(ip: string): void {
   const now = Date.now();
   const record = ipStore.get(ip);
+
+  // Limpieza preventiva de memoria si la tabla supera 500 IPs
+  if (ipStore.size > 500) {
+    for (const [key, val] of ipStore.entries()) {
+      if (now > val.resetAt) {
+        ipStore.delete(key);
+      }
+    }
+  }
 
   if (!record || now > record.resetAt) {
     ipStore.set(ip, {
@@ -54,10 +75,16 @@ export function clearFailedAttempts(ip: string): void {
   ipStore.delete(ip);
 }
 
+export function resetRateLimitStore(): void {
+  ipStore.clear();
+}
+
 export async function rateLimitMiddleware(c: Context, next: Next) {
   const ip = getClientIp(c);
+  const status = getRateLimitStatus(ip);
 
-  if (isRateLimited(ip)) {
+  if (status.limited) {
+    c.header('Retry-After', String(status.retryAfter));
     return c.json(
       {
         error: 'Demasiados intentos fallidos. Por favor, espera 15 minutos antes de volver a intentar.',
@@ -70,3 +97,4 @@ export async function rateLimitMiddleware(c: Context, next: Next) {
 }
 
 export { getClientIp };
+

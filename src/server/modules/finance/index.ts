@@ -1,17 +1,19 @@
 import { Hono } from 'hono';
-import { eq, asc } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { getDb, milestones, budgets, projects, clients } from '../../db';
+import { handleProjectRenewal } from '../projects';
 
 const financeApp = new Hono();
 
-// Helper para calcular diferencia de días
-function getDaysUntil(dateString: string): number {
-  const target = new Date(dateString);
+// Helper para calcular diferencia de días con soporte de zona horaria local
+export function getDaysUntil(dateString: string): number {
+  const [year, month, day] = dateString.split('-').map(Number);
+  const target = new Date(year, month - 1, day);
   const now = new Date();
   target.setHours(0, 0, 0, 0);
   now.setHours(0, 0, 0, 0);
   const diffTime = target.getTime() - now.getTime();
-  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return Math.round(diffTime / (1000 * 60 * 60 * 24));
 }
 
 // 1. GET /api/finance/radar — Radar de cobranzas WhatsApp y recurrentes a 30 días (RN-08, RN-09)
@@ -27,13 +29,19 @@ financeApp.get('/radar', async (c) => {
   const allBudgets = await db.select().from(budgets).all();
   const budgetsMap = new Map(allBudgets.map((b) => [b.id, b]));
 
-  // 1. Hitos PENDING ordenados por due_date ASC
+  // 1. Hitos PENDING ordenados por due_date ASC (con fechas vencidas y próximas primero, sin fecha al final)
   const pendingMilestones = await db
     .select()
     .from(milestones)
     .where(eq(milestones.status, 'PENDING'))
-    .orderBy(asc(milestones.dueDate))
     .all();
+
+  pendingMilestones.sort((a, b) => {
+    if (!a.dueDate && !b.dueDate) return 0;
+    if (!a.dueDate) return 1;
+    if (!b.dueDate) return -1;
+    return a.dueDate.localeCompare(b.dueDate);
+  });
 
   const pendingDTO = pendingMilestones.map((m) => {
     const budget = budgetsMap.get(m.budgetId);
@@ -56,9 +64,10 @@ financeApp.get('/radar', async (c) => {
     };
   });
 
-  // 2. Servicios recurrentes (has_recurring = 1) que vencen en 30 días o menos
+  // 2. Servicios recurrentes (has_recurring = 1) que vencen en 30 días o menos (RN-08)
   const recurringProjects = allProjects.filter((p) => {
     if (p.hasRecurring !== 1 || !p.recurringRenewalDate) return false;
+    if (p.status === 'CANCELLED') return false;
     const days = getDaysUntil(p.recurringRenewalDate);
     return days <= 30;
   });
@@ -81,54 +90,27 @@ financeApp.get('/radar', async (c) => {
     };
   });
 
+  // Ordenar alertas recurrentes por urgencia (menor días restantes primero)
+  recurringDTO.sort((a, b) => a.daysRemaining - b.daysRemaining);
+
   return c.json({
     pendingMilestones: pendingDTO,
     recurringAlerts: recurringDTO,
   });
 });
 
-// 2. POST /api/projects/:id/renew — Suma un período de renovación (+1 mes o +1 año)
+// 2. POST /api/finance/projects/:id/renew y POST /api/finance/:id/renew — Suma un período (+1 mes o +1 año)
 financeApp.post('/projects/:id/renew', async (c) => {
   const id = c.req.param('id');
-  const db = getDb(c);
-
-  const [project] = await db.select().from(projects).where(eq(projects.id, id)).all();
-  if (!project) {
-    return c.json({ error: 'Proyecto no encontrado' }, 404);
-  }
-
-  if (project.hasRecurring !== 1 || !project.recurringRenewalDate) {
-    return c.json({ error: 'El proyecto no tiene un servicio recurrente configurado con fecha de renovación.' }, 400);
-  }
-
-  const currentDate = new Date(project.recurringRenewalDate);
-  const nextDate = new Date(currentDate);
-
-  if (project.recurringPeriod === 'MONTHLY') {
-    nextDate.setMonth(nextDate.getMonth() + 1);
-  } else {
-    nextDate.setFullYear(nextDate.getFullYear() + 1);
-  }
-
-  const nextDateString = nextDate.toISOString().split('T')[0];
-  const nowIso = new Date().toISOString();
-
-  await db
-    .update(projects)
-    .set({
-      recurringRenewalDate: nextDateString,
-      updatedAt: nowIso,
-    })
-    .where(eq(projects.id, id));
-
-  return c.json({
-    ok: true,
-    message: `Renovación registrada exitosamente. Próxima fecha: ${nextDateString}`,
-    nextRenewalDate: nextDateString,
-  });
+  return handleProjectRenewal(c, id);
 });
 
-// 3. GET /api/finance/metrics — Métricas globales de caja
+financeApp.post('/:id/renew', async (c) => {
+  const id = c.req.param('id');
+  return handleProjectRenewal(c, id);
+});
+
+// 3. GET /api/finance/metrics — Métricas globales de caja (RN-08)
 financeApp.get('/metrics', async (c) => {
   const db = getDb(c);
 
@@ -146,12 +128,34 @@ financeApp.get('/metrics', async (c) => {
     }
   }
 
+  let totalActiveRecurring = 0;
+  let monthlyRecurring = 0;
+  let annuallyRecurring = 0;
+  let activeRecurringCount = 0;
+
+  for (const p of allProjects) {
+    if (p.hasRecurring === 1 && p.status !== 'CANCELLED' && p.recurringAmount) {
+      totalActiveRecurring += p.recurringAmount;
+      activeRecurringCount++;
+      if (p.recurringPeriod === 'MONTHLY') {
+        monthlyRecurring += p.recurringAmount;
+      } else {
+        annuallyRecurring += p.recurringAmount;
+      }
+    }
+  }
+
   const activeProjectsCount = allProjects.filter((p) => p.status === 'IN_PROGRESS').length;
   const totalProjectsCount = allProjects.length;
 
   return c.json({
     totalInTheStreet,
+    totalPending: totalInTheStreet,
     totalCollected,
+    totalActiveRecurring,
+    monthlyRecurring,
+    annuallyRecurring,
+    activeRecurringCount,
     activeProjectsCount,
     totalProjectsCount,
   });

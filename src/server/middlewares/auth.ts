@@ -10,7 +10,7 @@ export function getPinSecret(c: Context): string {
   return envSecret || processSecret || 'kodex_ops_default_insecure_secret_change_in_prod';
 }
 
-// SHA-256 nativo con Web Crypto para compatibilidad Edge y Node
+// SHA-256 nativo con Web Crypto para compatibilidad total Edge y Node
 export async function sha256(input: string, secret: string): Promise<string> {
   const normalized = input.trim().toLowerCase() + secret;
   const encoder = new TextEncoder();
@@ -18,6 +18,21 @@ export async function sha256(input: string, secret: string): Promise<string> {
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Comparación segura en tiempo constante para evitar ataques de temporización (timing attacks)
+export function timingSafeEqual(a: string, b: string): boolean {
+  const enc = new TextEncoder();
+  const aBytes = enc.encode(a);
+  const bBytes = enc.encode(b);
+  if (aBytes.byteLength !== bBytes.byteLength) {
+    return false;
+  }
+  let mismatch = 0;
+  for (let i = 0; i < aBytes.byteLength; i++) {
+    mismatch |= aBytes[i] ^ bBytes[i];
+  }
+  return mismatch === 0;
 }
 
 // Generación y verificación de tokens HMAC-SHA256 nativos
@@ -120,9 +135,11 @@ export function setSessionCookie(c: Context, token: string): void {
 }
 
 export function clearSessionCookie(c: Context): void {
+  const isProd = typeof process !== 'undefined' ? process.env.NODE_ENV === 'production' : true;
   deleteCookie(c, SESSION_COOKIE_NAME, {
     path: '/',
     httpOnly: true,
+    secure: isProd,
     sameSite: 'Lax',
   });
 }
@@ -137,14 +154,23 @@ const PUBLIC_ROUTES = [
   { method: 'GET', path: '/api/auth/questions' },
   { method: 'POST', path: '/api/auth/recover' },
   { method: 'POST', path: '/api/auth/reset-pin' },
+  { method: 'POST', path: '/api/auth/lock' },
+  { method: 'GET', path: '/api/auth/status' },
+  { method: 'GET', path: '/api/auth/me' },
   { method: 'GET', path: '/api/health' },
 ];
 
 export async function pinAuthMiddleware(c: Context, next: Next) {
   const method = c.req.method.toUpperCase();
-  const path = c.req.path;
+  if (method === 'OPTIONS') {
+    return next();
+  }
 
-  // 1. Exención de rutas públicas
+  // Normalizar ruta eliminando barras finales
+  const rawPath = c.req.path;
+  const path = rawPath.length > 1 ? rawPath.replace(/\/+$/, '') : rawPath;
+
+  // 1. Exención rigurosa de rutas públicas
   const isPublic = PUBLIC_ROUTES.some(
     (route) => route.method === method && route.path === path
   );
@@ -152,19 +178,26 @@ export async function pinAuthMiddleware(c: Context, next: Next) {
     return next();
   }
 
-  // 2. Solo proteger endpoints de API
+  // 2. Solo proteger endpoints bajo /api/
   if (!path.startsWith('/api/')) {
     return next();
   }
 
-  // 3. Verificación de cookie de sesión
-  const cookie = getSessionCookie(c);
-  if (!cookie) {
+  // 3. Verificación de cookie de sesión o Bearer header
+  let token = getSessionCookie(c);
+  if (!token) {
+    const authHeader = c.req.header('authorization');
+    if (authHeader?.startsWith('Bearer ')) {
+      token = authHeader.slice(7).trim();
+    }
+  }
+
+  if (!token) {
     return c.json({ error: 'No autenticado. Ingrese el PIN maestro.' }, 401);
   }
 
   const secret = getPinSecret(c);
-  const payload = await verifyToken(cookie, secret);
+  const payload = await verifyToken(token, secret);
 
   if (!payload || payload.sub !== 'session') {
     clearSessionCookie(c);
@@ -173,3 +206,4 @@ export async function pinAuthMiddleware(c: Context, next: Next) {
 
   await next();
 }
+

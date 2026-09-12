@@ -5,28 +5,31 @@ import { getDb, projects, clients, budgets, milestones } from '../../db';
 
 const projectsApp = new Hono();
 
-const projectCategorySchema = z.enum(['LANDING', 'ECOMMERCE', 'CORPORATE', 'WEBAPP']);
-const projectStatusSchema = z.enum(['PROSPECT', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED']);
-const productionStatusSchema = z.enum(['ACTIVE', 'INACTIVE']);
-const recurringPeriodSchema = z.enum(['MONTHLY', 'ANNUALLY']);
+export const projectCategorySchema = z.enum(['LANDING', 'ECOMMERCE', 'CORPORATE', 'WEBAPP']);
+export const projectStatusSchema = z.enum(['PROSPECT', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED']);
+export const productionStatusSchema = z.enum(['ACTIVE', 'INACTIVE']);
+export const recurringPeriodSchema = z.enum(['MONTHLY', 'ANNUALLY']);
 
-const projectCreateSchema = z.object({
-  clientId: z.string().min(1, 'El cliente es obligatorio'),
-  title: z.string().min(1, 'El título del proyecto es obligatorio'),
+export const projectCreateSchema = z.object({
+  clientId: z.string({ required_error: 'El cliente es obligatorio' }).min(1, 'El cliente es obligatorio'),
+  title: z.string({ required_error: 'El título del proyecto es obligatorio' }).trim().min(1, 'El título del proyecto es obligatorio'),
   category: projectCategorySchema,
   status: projectStatusSchema.default('PROSPECT'),
-  productionUrl: z.string().url('URL de producción inválida').optional().nullable().or(z.literal('')),
+  productionUrl: z.string().trim().url('URL de producción inválida').optional().nullable().or(z.literal('')),
   productionStatus: productionStatusSchema.default('ACTIVE'),
-  codeRepoUrl: z.string().url('URL de repositorio inválida').optional().nullable().or(z.literal('')),
-  resourcesUrl: z.string().url('URL de recursos inválida').optional().nullable().or(z.literal('')),
+  codeRepoUrl: z.string().trim().url('URL de repositorio inválida').optional().nullable().or(z.literal('')),
+  resourcesUrl: z.string().trim().url('URL de recursos inválida').optional().nullable().or(z.literal('')),
   hasRecurring: z.number().int().min(0).max(1).default(0),
-  recurringAmount: z.number().nonnegative().optional().nullable(),
-  recurringCurrency: z.string().default('USD'),
+  recurringAmount: z.number().nonnegative('El monto recurrente debe ser mayor o igual a 0').optional().nullable(),
+  recurringCurrency: z.string().trim().default('USD'),
   recurringPeriod: recurringPeriodSchema.default('ANNUALLY'),
-  recurringRenewalDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato YYYY-MM-DD').optional().nullable().or(z.literal('')),
+  recurringRenewalDate: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato YYYY-MM-DD').optional().nullable().or(z.literal('')),
 });
 
-const projectUpdateSchema = projectCreateSchema.partial();
+export const projectUpdateSchema = projectCreateSchema.partial();
+
+export type ProjectCreateInput = z.infer<typeof projectCreateSchema>;
+export type ProjectUpdateInput = z.infer<typeof projectUpdateSchema>;
 
 // 1. GET /api/projects — Listado general de proyectos con filtros
 projectsApp.get('/', async (c) => {
@@ -224,6 +227,56 @@ projectsApp.put('/:id', async (c) => {
 
   const [updated] = await db.select().from(projects).where(eq(projects.id, id)).all();
   return c.json(updated);
+});
+
+// Helper para calcular siguiente fecha de renovación
+export function calculateNextRenewalDate(currentDateString: string, period: 'MONTHLY' | 'ANNUALLY'): string {
+  const [year, month, day] = currentDateString.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+  if (period === 'MONTHLY') {
+    date.setMonth(date.getMonth() + 1);
+  } else {
+    date.setFullYear(date.getFullYear() + 1);
+  }
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+export async function handleProjectRenewal(c: any, projectId: string) {
+  const db = getDb(c);
+  const [project] = await db.select().from(projects).where(eq(projects.id, projectId)).all();
+  if (!project) {
+    return c.json({ error: 'Proyecto no encontrado' }, 404);
+  }
+
+  if (project.hasRecurring !== 1 || !project.recurringRenewalDate) {
+    return c.json({ error: 'El proyecto no tiene un servicio recurrente configurado con fecha de renovación.' }, 400);
+  }
+
+  const nextDateString = calculateNextRenewalDate(project.recurringRenewalDate, project.recurringPeriod as 'MONTHLY' | 'ANNUALLY');
+  const nowIso = new Date().toISOString();
+
+  await db
+    .update(projects)
+    .set({
+      recurringRenewalDate: nextDateString,
+      updatedAt: nowIso,
+    })
+    .where(eq(projects.id, projectId));
+
+  return c.json({
+    ok: true,
+    message: `Renovación registrada exitosamente. Próxima fecha: ${nextDateString}`,
+    nextRenewalDate: nextDateString,
+  });
+}
+
+// 5. POST /api/projects/:id/renew — Suma un período de renovación (+1 mes o +1 año) (RN-08)
+projectsApp.post('/:id/renew', async (c) => {
+  const id = c.req.param('id');
+  return handleProjectRenewal(c, id);
 });
 
 export default projectsApp;

@@ -3,19 +3,11 @@ import { serveStatic } from '@hono/node-server/serve-static';
 import Database from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
-import { eq } from 'drizzle-orm';
-import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import app from './app';
 import * as schema from './db/schema';
-
-// Helper nativo para hash de sembrado
-const hashValue = (val: string) =>
-  crypto
-    .createHash('sha256')
-    .update(val.trim().toLowerCase() + (process.env.PIN_SECRET || 'kodex_ops_default_insecure_secret_change_in_prod'))
-    .digest('hex');
+import { seedInitialAuthIfNeeded } from './db';
 
 // 1. Inicialización y conexión de SQLite local (better-sqlite3)
 const dbPath = process.env.DATABASE_URL?.replace('file:', '') || './data/kodex-ops.db';
@@ -35,7 +27,7 @@ app.use('*', async (c, next) => {
   await next();
 });
 
-// 2. Ejecución automática de migraciones Drizzle en el arranque
+// 2. Ejecución automática de migraciones Drizzle y sembrado en el arranque
 try {
   const migrationsFolder = './drizzle';
   if (fs.existsSync(migrationsFolder) && fs.readdirSync(migrationsFolder).some((f) => f.endsWith('.sql'))) {
@@ -47,25 +39,9 @@ try {
   }
 
   // Sembrado inicial (seed) si la tabla AUTH_CONFIG está vacía
-  const existingAuth = db.select().from(schema.authConfig).where(eq(schema.authConfig.id, 1)).get();
-  if (!existingAuth) {
-    const initialPin = process.env.INITIAL_PIN || '123456';
-    const q1 = process.env.SECURITY_Q1 || '¿Cuál es el nombre de tu primera mascota?';
-    const a1 = process.env.SECURITY_A1 || 'kodex';
-    const q2 = process.env.SECURITY_Q2 || '¿En qué ciudad se fundó la agencia?';
-    const a2 = process.env.SECURITY_A2 || 'valencia';
-
-    db.insert(schema.authConfig)
-      .values({
-        id: 1,
-        pinHash: hashValue(initialPin),
-        q1,
-        a1Hash: hashValue(a1),
-        q2,
-        a2Hash: hashValue(a2),
-        updatedAt: new Date().toISOString(),
-      })
-      .run();
+  const secret = process.env.PIN_SECRET || 'kodex_ops_default_insecure_secret_change_in_prod';
+  const seeded = await seedInitialAuthIfNeeded(db, secret);
+  if (seeded) {
     console.log('🌱 Credenciales maestras iniciales sembradas en AUTH_CONFIG.');
   }
 } catch (error) {
@@ -86,3 +62,4 @@ serve({
   port,
   hostname: '0.0.0.0',
 });
+

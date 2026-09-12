@@ -24,10 +24,10 @@ backupApp.get('/export', async (c) => {
   };
 
   const filenameDate = new Date().toISOString().split('T')[0];
-  c.header('Content-Type', 'application/json');
   c.header('Content-Disposition', `attachment; filename="kodex-ops-backup-${filenameDate}.json"`);
-
-  return c.text(JSON.stringify(backupData, null, 2));
+  return c.body(JSON.stringify(backupData, null, 2), 200, {
+    'Content-Type': 'application/json',
+  });
 });
 
 export default backupApp;

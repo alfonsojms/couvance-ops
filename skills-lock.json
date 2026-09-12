@@ -25,6 +25,12 @@
       "skillPath": "toolchains/javascript/frameworks/hono/hono-cloudflare/SKILL.md",
       "computedHash": "123145c2b3743dd3937193a611757a9b42f864d41631dddab961ee5d0fd5e9a0"
     },
+    "impeccable": {
+      "source": "pbakaus/impeccable",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/impeccable/SKILL.md",
+      "computedHash": "439bb6cc56565d56e51825808b978468fb802d7ec9a593b8b045701b1569b6a6"
+    },
     "nodejs-best-practices": {
       "source": "sickn33/agentic-awesome-skills",
       "sourceType": "github",

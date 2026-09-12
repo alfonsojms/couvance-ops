@@ -20,11 +20,13 @@ showcaseApp.get('/', async (c) => {
         ne(projects.productionUrl, '')
       )
     )
-    .all();
+  const validProjects = showcaseProjects.filter(
+    (p) => Boolean(p.productionUrl && p.productionUrl.trim().length > 0)
+  );
 
   const filtered = categoryFilter
-    ? showcaseProjects.filter((p) => p.category.toUpperCase() === categoryFilter.toUpperCase())
-    : showcaseProjects;
+    ? validProjects.filter((p) => p.category.toUpperCase() === categoryFilter.toUpperCase())
+    : validProjects;
 
   const allClients = await db.select().from(clients).all();
   const clientsMap = new Map(allClients.map((cl) => [cl.id, cl]));

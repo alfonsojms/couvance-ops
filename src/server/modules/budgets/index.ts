@@ -6,17 +6,17 @@ import { getDb, budgets, milestones, projects } from '../../db';
 const budgetsApp = new Hono();
 
 // Esquema de creación de hito
-const milestoneInputSchema = z.object({
-  title: z.string().min(1, 'El título del hito es obligatorio'),
-  percentage: z.number().int('El porcentaje debe ser un número entero').min(1).max(100),
-  dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de fecha YYYY-MM-DD').optional().nullable().or(z.literal('')),
+export const milestoneInputSchema = z.object({
+  title: z.string({ required_error: 'El título del hito es obligatorio' }).trim().min(1, 'El título del hito es obligatorio'),
+  percentage: z.number({ required_error: 'El porcentaje es obligatorio' }).int('El porcentaje debe ser un número entero').min(1, 'El porcentaje debe ser al menos 1').max(100, 'El porcentaje no puede superar 100'),
+  dueDate: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de fecha YYYY-MM-DD').optional().nullable().or(z.literal('')),
 });
 
 // Esquema de creación de presupuesto (RN-01 & RN-02)
-const budgetCreateSchema = z.object({
-  title: z.string().min(1, 'El concepto o título del presupuesto es obligatorio'),
-  totalAmount: z.number().int('El monto total debe ser un entero estricto sin decimales').positive('El monto debe ser mayor a 0'),
-  currency: z.string().default('USD'),
+export const budgetCreateSchema = z.object({
+  title: z.string({ required_error: 'El concepto o título del presupuesto es obligatorio' }).trim().min(1, 'El concepto o título del presupuesto es obligatorio'),
+  totalAmount: z.number({ required_error: 'El monto total es obligatorio' }).int('El monto total debe ser un entero estricto sin decimales (RN-01)').positive('El monto debe ser mayor a 0'),
+  currency: z.string().trim().default('USD'),
   milestones: z.array(milestoneInputSchema).min(1, 'Debe incluir al menos 1 hito de cobro'),
 }).refine(
   (data) => {
@@ -28,6 +28,9 @@ const budgetCreateSchema = z.object({
     path: ['milestones'],
   }
 );
+
+export type MilestoneInput = z.infer<typeof milestoneInputSchema>;
+export type BudgetCreateInput = z.infer<typeof budgetCreateSchema>;
 
 // Helper para calcular montos enteros de hitos absorbiendo residuo en el último hito (RN-01)
 export function calculateMilestonesAmounts(
@@ -207,6 +210,23 @@ budgetsApp.put('/budgets/:id', async (c) => {
   });
 });
 
+// GET /api/budgets/:id — Detalle del presupuesto con sus hitos
+budgetsApp.get('/budgets/:id', async (c) => {
+  const id = c.req.param('id');
+  const db = getDb(c);
+
+  const [budget] = await db.select().from(budgets).where(eq(budgets.id, id)).all();
+  if (!budget) {
+    return c.json({ error: 'Presupuesto no encontrado' }, 404);
+  }
+
+  const ms = await db.select().from(milestones).where(eq(milestones.budgetId, id)).all();
+  return c.json({
+    ...budget,
+    milestones: ms,
+  });
+});
+
 // 4. POST /api/budgets/:id/approve — Aprobación en 1 Clic (RN-03)
 budgetsApp.post('/budgets/:id/approve', async (c) => {
   const id = c.req.param('id');
@@ -219,39 +239,32 @@ budgetsApp.post('/budgets/:id/approve', async (c) => {
 
   const nowIso = new Date().toISOString();
 
-  // 1. Presupuesto pasa a APPROVED
-  await db
-    .update(budgets)
-    .set({
-      status: 'APPROVED',
-      updatedAt: nowIso,
-    })
-    .where(eq(budgets.id, id));
+  // Ejecución atómica: D1 batch, SQLite transaction, o fallback
+  if ('batch' in db && typeof (db as any).batch === 'function') {
+    await (db as any).batch([
+      db.update(budgets).set({ status: 'APPROVED', updatedAt: nowIso }).where(eq(budgets.id, id)),
+      db.update(projects).set({ status: 'IN_PROGRESS', updatedAt: nowIso }).where(eq(projects.id, budget.projectId)),
+      db.update(milestones).set({ status: 'PENDING', updatedAt: nowIso }).where(and(eq(milestones.budgetId, id), eq(milestones.status, 'DRAFT'))),
+    ]);
+  } else if ('transaction' in db && typeof (db as any).transaction === 'function') {
+    (db as any).transaction((tx: any) => {
+      tx.update(budgets).set({ status: 'APPROVED', updatedAt: nowIso }).where(eq(budgets.id, id)).run();
+      tx.update(projects).set({ status: 'IN_PROGRESS', updatedAt: nowIso }).where(eq(projects.id, budget.projectId)).run();
+      tx.update(milestones).set({ status: 'PENDING', updatedAt: nowIso }).where(and(eq(milestones.budgetId, id), eq(milestones.status, 'DRAFT'))).run();
+    });
+  } else {
+    await db.update(budgets).set({ status: 'APPROVED', updatedAt: nowIso }).where(eq(budgets.id, id));
+    await db.update(projects).set({ status: 'IN_PROGRESS', updatedAt: nowIso }).where(eq(projects.id, budget.projectId));
+    await db.update(milestones).set({ status: 'PENDING', updatedAt: nowIso }).where(and(eq(milestones.budgetId, id), eq(milestones.status, 'DRAFT')));
+  }
 
-  // 2. Proyecto pasa a IN_PROGRESS
-  await db
-    .update(projects)
-    .set({
-      status: 'IN_PROGRESS',
-      updatedAt: nowIso,
-    })
-    .where(eq(projects.id, budget.projectId));
-
-  // 3. Hitos asociados pasan de DRAFT a PENDING
-  await db
-    .update(milestones)
-    .set({
-      status: 'PENDING',
-      updatedAt: nowIso,
-    })
-    .where(and(eq(milestones.budgetId, id), eq(milestones.status, 'DRAFT')));
-
+  const [updatedBudget] = await db.select().from(budgets).where(eq(budgets.id, id)).all();
   const updatedMilestones = await db.select().from(milestones).where(eq(milestones.budgetId, id)).all();
 
   return c.json({
     ok: true,
     message: 'Presupuesto aprobado y proyecto activado exitosamente.',
-    budget: { ...budget, status: 'APPROVED', updatedAt: nowIso },
+    budget: updatedBudget || { ...budget, status: 'APPROVED', updatedAt: nowIso },
     milestones: updatedMilestones,
   });
 });
@@ -275,7 +288,12 @@ budgetsApp.post('/budgets/:id/reject', async (c) => {
     })
     .where(eq(budgets.id, id));
 
-  return c.json({ ok: true, message: 'Presupuesto rechazado.' });
+  const [updatedBudget] = await db.select().from(budgets).where(eq(budgets.id, id)).all();
+  return c.json({
+    ok: true,
+    message: 'Presupuesto rechazado.',
+    budget: updatedBudget || { ...budget, status: 'REJECTED', updatedAt: nowIso },
+  });
 });
 
 // 6. PATCH /api/milestones/:id/pay — Marca hito individual como PAID
@@ -286,6 +304,10 @@ budgetsApp.patch('/milestones/:id/pay', async (c) => {
   const [milestone] = await db.select().from(milestones).where(eq(milestones.id, id)).all();
   if (!milestone) {
     return c.json({ error: 'Hito no encontrado' }, 404);
+  }
+
+  if (milestone.status === 'CANCELLED') {
+    return c.json({ error: 'No es posible cobrar un hito que ha sido cancelado.' }, 400);
   }
 
   const nowIso = new Date().toISOString();
