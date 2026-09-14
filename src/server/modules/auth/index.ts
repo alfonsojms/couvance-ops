@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { eq } from 'drizzle-orm';
-import { getDb, authConfig } from '../../db';
+import { getDb, authConfig, seedInitialAuthIfNeeded } from '../../db';
 import {
   sha256,
   timingSafeEqual,
@@ -103,7 +103,13 @@ authApp.post('/unlock', rateLimitMiddleware, async (c) => {
   const db = getDb(c);
   const secret = getPinSecret(c);
 
-  const [auth] = await db.select().from(authConfig).where(eq(authConfig.id, 1)).all();
+  let [auth] = await db.select().from(authConfig).where(eq(authConfig.id, 1)).all();
+  if (!auth) {
+    // Si la BD está recién migrada (ej. Cloudflare D1 en frío), auto-sembrar credenciales iniciales
+    await seedInitialAuthIfNeeded(db, secret);
+    [auth] = await db.select().from(authConfig).where(eq(authConfig.id, 1)).all();
+  }
+
   if (!auth) {
     return c.json({ error: 'Sistema no configurado o credenciales no sembradas.' }, 500);
   }
@@ -132,11 +138,21 @@ authApp.post('/unlock', rateLimitMiddleware, async (c) => {
 // 2. GET /api/auth/questions — Retorna preguntas de seguridad públicas (sin respuestas ni hashes)
 authApp.get('/questions', async (c) => {
   const db = getDb(c);
-  const [auth] = await db
+  let [auth] = await db
     .select()
     .from(authConfig)
     .where(eq(authConfig.id, 1))
     .all();
+
+  if (!auth) {
+    const secret = getPinSecret(c);
+    await seedInitialAuthIfNeeded(db, secret);
+    [auth] = await db
+      .select()
+      .from(authConfig)
+      .where(eq(authConfig.id, 1))
+      .all();
+  }
 
   if (!auth) {
     return c.json({ error: 'No se encontraron preguntas de seguridad configuradas.' }, 404);
