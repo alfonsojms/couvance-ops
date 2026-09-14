@@ -82,6 +82,13 @@ En finanzas de agencia, los errores de redondeo destruyen la confianza contable.
 - **RN-09 (WhatsApp & Portapapeles):** Generación de enlace directo a API de WhatsApp o copia automática al portapapeles con toast Sonner.
 - **RN-10 (Seguridad en Exportación JSON):** El respaldo (`/api/backup/export`) extrae clientes, proyectos, presupuestos e hitos, pero **excluye taxativamente `auth_config`** y cualquier hash.
 
+### 4. Sanitización Exhaustiva de Inputs & Defensa Anti-Inyección SQL
+La seguridad se implementa bajo el principio de **defensa en profundidad multicapa**:
+- **Consultas 100% Parametrizadas (Prepared Statements):** Drizzle ORM enlaza todas las variables mediante parámetros posicionales (`?`). Cero uso de cadenas concatenadas o `sql.raw()` en todo el backend.
+- **Protección contra Bytes Nulos (`\0` / `%00`):** En motores escritos en C/C++ como SQLite, los bytes nulos provocan truncamiento de buffers. El middleware [`sanitizeMiddleware`](src/server/middlewares/sanitize.ts) intercepta la URL, cadenas de consulta y payloads, abortando con `400 Bad Request` ante cualquier intento de evasión por terminación nula.
+- **Validación Estricta de Identificadores de Ruta (`validateAndSanitizeId`):** Todos los parámetros de ruta (`:id`, `:projectId`, `:budgetId`) son sanitizados y validados contra la expresión regular `/^[a-zA-Z0-9_-]{1,64}$/`. Si un atacante inyecta comillas, operadores SQL (`UNION`, `SELECT`), comentarios (`--`, `/*`) o delimitadores (`;`), la petición es rechazada en la entrada sin tocar la base de datos.
+- **Sanitización de Strings en Esquemas Zod:** Cada entrada de texto es normalizada en forma canónica Unicode (`NFC`), se purgan caracteres de control invisibles y se imponen límites máximos de longitud (nombres $\le 200$, notas $\le 2000$, URLs $\le 500$) mitigando ataques de denegación de servicio por agotamiento de memoria.
+
 ---
 
 ## 🎨 Frontend: Filosofía Anti-"AI Slop" & Ergonomía
@@ -108,7 +115,7 @@ kodexops/
 ├── src/
 │   ├── server/                 # BACKEND (Hono + Drizzle)
 │   │   ├── db/                 # Conectores agnósticos (D1, SQLite WAL, schemas, seed)
-│   │   ├── middlewares/        # Auth Web Crypto, Rate Limiting en memoria
+│   │   ├── middlewares/        # Auth Web Crypto, Rate Limiting, Sanitización Anti-SQLi
 │   │   ├── modules/
 │   │   │   ├── auth/           # Login PIN, preguntas secretas, cambio de PIN en sesión
 │   │   │   ├── clients/        # Directorio de clientes & protección 409
