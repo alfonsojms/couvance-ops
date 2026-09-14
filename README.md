@@ -35,8 +35,8 @@ flowchart TD
     end
 
     subgraph Entrypoints [Adaptadores de Entrada HTTP]
-        CFPages[Cloudflare Pages Functions<br/>functions/api/[[route]].ts]
-        NodeServer[@hono/node-server<br/>src/server/node-entry.ts]
+        CFPages["Cloudflare Pages Functions<br/>functions/api/[[route]].ts"]
+        NodeServer["@hono/node-server<br/>src/server/node-entry.ts"]
     end
 
     subgraph Backend [Backend Core — Hono TS]
