@@ -1,30 +1,34 @@
-# ⚡ Kodex Ops — Motor Operativo & Radar de Cobranzas para Agencias
+# ⚡ Kodex Ops — Radar de Cobranzas y Operaciones sin Burocracia
 
-> **Resumen Ejecutivo:** Kodex Ops es una herramienta interna de ingeniería diseñada específicamente para los 2 socios directores de la agencia digital **Kodex**. Su propósito es eliminar la fricción administrativa en cobros, control de proyectos y renovaciones de hosting/mantenimiento, priorizando velocidad de ejecución con una sola mano en smartphones, costo de infraestructura $0 y cero tolerancia al software inflado ("anti-AI slop").
+> **Cobra hitos por WhatsApp en 1 segundo, liquida presupuestos con un toque y mantén las renovaciones bajo control desde el móvil.**  
+> Herramienta interna de alta velocidad construida para los 2 socios directores de **Kodex**, con coste de infraestructura $0 (Cloudflare Edge Serverless / Docker SQLite) y cero tolerancia al software inflado ("anti-AI slop").
 
 ---
 
 ## 🎯 ¿Por qué existe este proyecto? (El Problema Real)
 
-Las agencias digitales pequeñas no quiebran por falta de trabajo; quiebran por **desfase de flujo de caja (*cashflow drag*)**:
-1. **Cobros en el limbo:** Hitos de desarrollo terminados que nadie cobra a tiempo porque revisar facturas en un ERP corporativo (Notion, Jira, HubSpot) toma demasiados clics.
-2. **Renovaciones olvidadas:** Dominios, servidores e hitos de mantenimiento que expiran sin facturarse al cliente, costando miles de dólares al año en fugas silenciosas.
-3. **Fricción en calle:** Cobrar a un cliente por WhatsApp mientras estás en un taxi o en una reunión requiere buscar el monto exacto, copiar el texto cordial y abrir WhatsApp manualmente.
+Las agencias digitales rara vez se detienen por falta de clientes; se asfixian por **fuga de flujo de caja (*cashflow drag*)**:
 
-**Kodex Ops resuelve esto transformando el cobro en una acción de 1 segundo:**
-- **Radar de Cobranzas:** Un tablero que ordena hitos pendientes por fecha y alerta con 30 días de anticipación de cualquier servicio recurrente por vencer.
-- **Cobro Express WhatsApp:** Un botón que genera y abre directamente el enlace `wa.me` con el monto, proyecto e hito codificado, con fallback inteligente al portapapeles si el cliente no tiene teléfono registrado.
-- **Aprobación & Liquidación en 1 Clic:** Un presupuesto aprobado transiciona atómicamente el proyecto a "En Progreso" y los hitos a "Pendiente". Un botón "Cobrar Todo" liquida hitos simultáneos sin burocracia.
+1. **Hitos entregados que nadie cobra:** El trabajo está listo y publicado, pero la factura se retrasa días porque abrir un ERP corporativo (Notion, Jira, HubSpot) toma demasiados clics.
+2. **Renovaciones silenciosas que expiran:** Dominios, servidores y servicios de mantenimiento que vencen sin facturarse al cliente. Cientos de dólares al año absorbidos por la agencia por simple falta de aviso.
+3. **La incomodidad de cobrar en la calle:** Recordar el monto pendiente, redactar un mensaje cordial y buscar el teléfono del cliente mientras estás en un taxi o entre reuniones es engorroso. Se pospone para "luego", y el dinero no entra.
+
+**Kodex Ops elimina esa fricción convirtiendo cada cobro en una acción de 1 segundo:**
+
+- 📡 **Radar de Cobranzas Proactivo:** Mira en segundos qué hitos vencen hoy y qué servicios recurrentes expiran en los próximos 30 días.
+- 💬 **Cobro Express por WhatsApp (o Portapapeles):** Un toque abre la conversación con el monto exacto, proyecto y mensaje cordial listo. Si el cliente no tiene teléfono guardado, lo copia al portapapeles sin romper tu ritmo.
+- ⚡ **Aprobación y Liquidación en 1 Clic:** Aprobar un presupuesto activa el proyecto y pasa los hitos a pendientes en una sola transacción atómica. El botón *Cobrar Todo* liquida pagos simultáneos al instante.
+- 📐 **Presupuestos con Conciliación Exacta (RN-01):** Cotiza esquemas [50/50] o [40/30/30] en segundos. El último hito absorbe automáticamente cualquier residuo de decimales: las cuentas siempre cuadran al céntimo.
 
 ---
 
 ## 🏗️ Arquitectura Técnica & Decisiones de Ingeniería
 
-El proyecto está diseñado bajo un principio de **monolito modular agnóstico del runtime**, capaz de ejecutarse idénticamente en la nube serverless o en hardware local:
+El sistema es un **monolito modular agnóstico del runtime**, diseñado para operar con idéntico comportamiento en la nube serverless o en hardware local:
 
 ```mermaid
 flowchart TD
-    subgraph Client [Frontend SPA - React 18.3 + Vite 6]
+    subgraph Client [Frontend SPA — React 18.3 + Vite 6]
         UI[Design System Impeccable<br/>Radix UI + Tailwind CSS]
         Unlock[Desbloqueo PIN 6 dígitos<br/>Teclado físico + CSS Shake]
         Radar[Radar de Tesorería<br/>Desacoplamiento cromático WhatsApp]
@@ -35,7 +39,7 @@ flowchart TD
         NodeServer[@hono/node-server<br/>src/server/node-entry.ts]
     end
 
-    subgraph Backend [Backend Core - Hono TS]
+    subgraph Backend [Backend Core — Hono TS]
         Router[Router Hono Modular<br/>src/server/modules/*]
         AuthMW[pinAuthMiddleware<br/>Sesión Lax 30d + Rate Limiter]
         Rules[Motor de Reglas de Negocio<br/>RN-01 a RN-10]
@@ -56,57 +60,57 @@ flowchart TD
     Rules -->|Local getSqliteDb| SQLite
 ```
 
-### 1. Ejecución Dual Agnóstica (Cloudflare Edge vs. Node.js Docker)
-- **Producción Serverless ($0 TCO):** Corre sobre **Cloudflare Pages Functions** y **Cloudflare D1**. Cero servidores que parchar, latencia ultra-baja en el edge y tier gratuito permanente para el volumen de la agencia.
-- **Autonomía On-Premise / Local:** El mismo backend corre sobre Node.js con `@hono/node-server` y `better-sqlite3` en modo `WAL` (Write-Ahead Logging) dentro de un contenedor Docker multi-stage (`node:20-slim`).
-- **Factoría de Persistencia Unificada:** [`src/server/db/index.ts`](src/server/db/index.ts) detecta el runtime (`c.env.DB` para D1 o instancia local SQLite) y expone la misma API tipada con **Drizzle ORM**, incorporando auto-sembrado inicial ante bases de datos recién migradas.
+### 1. Ejecución Dual Agnóstica: Nube $0 o Servidor Propio
+- **Producción Serverless ($0 TCO):** Se ejecuta sobre **Cloudflare Pages Functions** y **Cloudflare D1**. Cero servidores que mantener o parchar, latencia ultra-baja en el edge y tier gratuito permanente para el volumen operativo de la agencia.
+- **Autonomía On-Premise / Docker:** El mismo backend corre sobre Node.js con `@hono/node-server` y `better-sqlite3` en modo `WAL` (Write-Ahead Logging) dentro de un contenedor Docker multi-stage (`node:20-slim`).
+- **Factoría de Persistencia Unificada:** [`src/server/db/index.ts`](src/server/db/index.ts) detecta el entorno en ejecución (`c.env.DB` para D1 o SQLite local) y expone la misma API tipada con **Drizzle ORM**, incorporando auto-sembrado inicial ante bases de datos recién migradas.
 
-### 2. Criptografía Nativa con Web Crypto (Cero Binarios C++)
-- **El reto:** Librerías estándar como `bcrypt` o `argon2` requieren binarios compilados en C++, incompatibles con el entorno V8 aislado de Cloudflare Workers/Pages.
-- **La solución:** Implementación criptográfica basada en el estándar W3C **Web Crypto API** (`crypto.subtle`):
-  - Hashing con SHA-256 + secreto pepper (`PIN_SECRET`).
-  - Firmas de sesión HMAC-SHA256 seguras.
-  - Prevención de ataques de temporización (*timing attacks*) mediante comparación en tiempo constante (`timingSafeEqual`).
-  - Cookie de sesión `kodex_session` con `SameSite: 'Lax'` (imprescindible para que el navegador no invalide la sesión al saltar de WhatsApp de vuelta a la app) y duración de 30 días.
+### 2. Criptografía Isomórfica con Web Crypto (Cero Binarios C++)
+- **El reto:** Dependencias tradicionales como `bcrypt` o `argon2` requieren compilación de binarios C++, incompatibles con los isolates V8 de Cloudflare Workers/Pages.
+- **La solución:** Criptografía basada en el estándar W3C **Web Crypto API** (`crypto.subtle`):
+  - Hashing seguro SHA-256 con sal/pimienta de servidor (`PIN_SECRET`).
+  - Firmas de sesión HMAC-SHA256 para prevenir manipulaciones.
+  - Mitigación de ataques de temporización (*timing attacks*) mediante comparación en tiempo constante (`timingSafeEqual`).
+  - Cookie de sesión `kodex_session` con `SameSite: 'Lax'` (fundamental para que el navegador no cierre la sesión al saltar de WhatsApp de vuelta a la app) y validez de 30 días.
 
-### 3. Rigor Financiero: Las 10 Reglas de Negocio (RN-01 a RN-10)
-En finanzas de agencia, los errores de redondeo destruyen la confianza contable. Kodex Ops implementa invariantes estrictas:
-- **RN-01 (Sin Decimales & Conciliación de Residuos):** Presupuestos e hitos son estrictamente enteros. La distribución de porcentajes enteros (ej: 34%, 33%, 33%) calcula montos monetarios enteros redondeados y **fuerza al último hito a absorber cualquier diferencia fraccional**, garantizando que $\sum \text{hitos} \equiv \text{total}$ con exactitud matemática.
-- **RN-02 (Regla de Oro del 100%):** La suma de los porcentajes enteros de un presupuesto debe ser exactamente 100%, validada en Zod tanto en cliente como en servidor.
-- **RN-03 (Aprobación Atómica en 1 Clic):** `POST /api/budgets/:id/approve` ejecuta una transacción atómica (D1 `batch` o SQLite `transaction`) que pasa el presupuesto a `APPROVED`, el proyecto a `IN_PROGRESS` y los hitos a `PENDING`.
-- **RN-04 (Cobro Express Pay-All):** Liquidación de todos los hitos pendientes con timestamp de pago en un solo toque.
-- **RN-05 (Cancelación No Destructiva):** Si un proyecto se cancela, se cancelan los hitos pendientes pero **se preservan intactos los hitos pagados (`PAID`)**, salvaguardando el histórico tributario y de ingresos.
-- **RN-06 (Integridad Referencial 409):** `DELETE /api/clients/:id` verifica que el cliente tenga cero proyectos. Si tiene proyectos asociados, responde `409 Conflict` impidiendo la corrupción de relaciones.
-- **RN-07 (Criterio de Showcase):** Portafolio público solo expone proyectos `COMPLETED` con web activa (`ACTIVE`) y URL comprobada.
-- **RN-08 (Radar de Recurrentes a 30 Días):** Detección proactiva de servicios de hosting o mantenimiento próximos a vencer.
-- **RN-09 (WhatsApp & Portapapeles):** Generación de enlace directo a API de WhatsApp o copia automática al portapapeles con toast Sonner.
-- **RN-10 (Seguridad en Exportación JSON):** El respaldo (`/api/backup/export`) extrae clientes, proyectos, presupuestos e hitos, pero **excluye taxativamente `auth_config`** y cualquier hash.
+### 3. Rigor Contable: Las 10 Reglas de Negocio Innegociables
+En finanzas de agencia, los errores de redondeo destruyen la confianza con los clientes y la contabilidad interna:
 
-### 4. Sanitización Exhaustiva de Inputs & Defensa Anti-Inyección SQL
-La seguridad se implementa bajo el principio de **defensa en profundidad multicapa**:
-- **Consultas 100% Parametrizadas (Prepared Statements):** Drizzle ORM enlaza todas las variables mediante parámetros posicionales (`?`). Cero uso de cadenas concatenadas o `sql.raw()` en todo el backend.
-- **Protección contra Bytes Nulos (`\0` / `%00`):** En motores escritos en C/C++ como SQLite, los bytes nulos provocan truncamiento de buffers. El middleware [`sanitizeMiddleware`](src/server/middlewares/sanitize.ts) intercepta la URL, cadenas de consulta y payloads, abortando con `400 Bad Request` ante cualquier intento de evasión por terminación nula.
-- **Validación Estricta de Identificadores de Ruta (`validateAndSanitizeId`):** Todos los parámetros de ruta (`:id`, `:projectId`, `:budgetId`) son sanitizados y validados contra la expresión regular `/^[a-zA-Z0-9_-]{1,64}$/`. Si un atacante inyecta comillas, operadores SQL (`UNION`, `SELECT`), comentarios (`--`, `/*`) o delimitadores (`;`), la petición es rechazada en la entrada sin tocar la base de datos.
-- **Sanitización de Strings en Esquemas Zod:** Cada entrada de texto es normalizada en forma canónica Unicode (`NFC`), se purgan caracteres de control invisibles y se imponen límites máximos de longitud (nombres $\le 200$, notas $\le 2000$, URLs $\le 500$) mitigando ataques de denegación de servicio por agotamiento de memoria.
+- **RN-01 (Sin Decimales & Absorción de Residuos):** Presupuestos e hitos operan con enteros estrictos. Si la distribución porcentual (ej: 33.33% en 3 pagos) genera decimales, **el último hito absorbe la diferencia fraccional**, garantizando que $\sum \text{hitos} \equiv \text{total}$ con exactitud matemática.
+- **RN-02 (Regla de Oro del 100%):** La suma de los porcentajes de un presupuesto debe ser exactamente 100%, validada con Zod en frontend y backend antes de persistir.
+- **RN-03 (Aprobación Atómica en 1 Clic):** `POST /api/budgets/:id/approve` ejecuta una transacción atómica que aprueba el presupuesto, cambia el proyecto a `IN_PROGRESS` y pasa los hitos a `PENDING`.
+- **RN-04 (Cobro Express Pay-All):** Liquidación de todos los hitos pendientes de un presupuesto con registro de fecha de pago en un solo toque.
+- **RN-05 (Cancelación No Destructiva):** Si un proyecto se cancela, se anulan los hitos pendientes pero **se preservan intactos los hitos ya pagados (`PAID`)**, salvaguardando el histórico tributario y de caja.
+- **RN-06 (Integridad Referencial 409):** `DELETE /api/clients/:id` valida que el cliente no tenga proyectos asociados; de tenerlos, responde `409 Conflict` impidiendo registros huérfanos.
+- **RN-07 (Criterio de Showcase):** El catálogo comercial público solo expone proyectos con estado `COMPLETED`, servicio activo (`ACTIVE`) y URL de producción comprobada.
+- **RN-08 (Radar Preventivo a 30 Días):** Detección anticipada de contratos de hosting o mantenimiento próximos a expirar.
+- **RN-09 (Flujo WhatsApp & Portapapeles):** Abre automáticamente la URL nativa de WhatsApp o copia el mensaje al portapapeles con confirmación visual vía Sonner.
+- **RN-10 (Seguridad en Respaldo JSON):** La exportación (`/api/backup/export`) extrae clientes, proyectos, presupuestos e hitos, pero **excluye taxativamente `auth_config`** y cualquier hash criptográfico.
+
+### 4. Defensa en Profundidad: Sanitización y Anti-Inyección SQL
+- **Consultas 100% Parametrizadas:** Drizzle ORM gestiona todas las variables mediante parámetros posicionales (`?`). Cero concatenación de cadenas o uso de `sql.raw()`.
+- **Protección contra Bytes Nulos (`\0` / `%00`):** En motores C/C++ como SQLite, los bytes nulos provocan truncamiento de buffers. El middleware [`sanitizeMiddleware`](src/server/middlewares/sanitize.ts) intercepta URLs, query params y payloads, rechazando con `400 Bad Request` cualquier intento de inyección.
+- **Validación Estricta de Identificadores (`validateAndSanitizeId`):** Todos los parámetros de ruta (`:id`, `:projectId`, `:budgetId`) se verifican contra `/^[a-zA-Z0-9_-]{1,64}$/`. Comillas, delimitadores (`;`) u operadores SQL son bloqueados antes de tocar la base de datos.
+- **Normalización Unicode en Zod:** Textos normalizados en forma canónica `NFC`, caracteres de control invisibles purgados y límites de caracteres estrictos en cada campo.
 
 ---
 
-## 🎨 Frontend: Filosofía Anti-"AI Slop" & Ergonomía
+## 🎨 Frontend: Filosofía Anti-"AI Slop" & Ergonomía Operativa
 
-Diseñado con la metodología **Spec-Driven Design (SDD)** documentada en `PRODUCT.md` y `DESIGN.md`:
+Construido bajo el principio de **utilidad pura sin adornos innecesarios**:
 
-| Característica | Implementación de Ingeniería | Beneficio de Negocio |
+| Característica | Implementación Técnica | Impacto Operativo Real |
 | :--- | :--- | :--- |
-| **Cero Bloat en Animaciones** | Prohibido Framer Motion. Transiciones CSS nativas de 150ms aceleradas por GPU. | Bundle JS ultraligero (~339 kB total) y renderizado fluido a 60 FPS en smartphones. |
-| **Desacoplamiento Cromático** | Botón de WhatsApp en verde esmeralda (`#25D366`) vs. botón "Cobrado" en gris secundario neutro con icono check. | **Previene cobros falsos accidentales.** El operador nunca confunde el botón de contacto con el de asentar el cobro en el sistema. |
-| **Desbloqueo Ultrarrápido (0.8s)** | Listener de teclado físico global (`0-9`, `Backspace`, `Escape`, `Enter`) en `Unlock.tsx`. | El socio en su laptop desbloquea el sistema en menos de un segundo sin levantar las manos hacia el ratón. |
-| **Touch Targets Móviles** | Controles y botones con área mínima de contacto de $44 \times 44$ px (`touchFriendly`). | Operabilidad precisa con el pulgar mientras se camina por la calle. |
-| **Semáforo Dinámico de Urgencia** | Badges calculados al vuelo: Rose (Vencido), Ámbar (Vence $\le 2$ días), Neutral (Futuro). | Jerarquía visual inmediata de dónde está retenido el capital de la agencia. |
-| **Generador de Fichas de Venta** | Botón en 1 clic en Showcase que formatea una propuesta visual lista para enviar por WhatsApp a prospectos. | Conversión comercial acelerada durante reuniones de prospección. |
+| **Cero Sobrecarga de Animaciones** | Prohibido Framer Motion. Transiciones CSS nativas de 150ms aceleradas por GPU. | Bundle JS ultraligero (~339 kB) y respuesta a 60 FPS sin tirones en cualquier smartphone. |
+| **Desacoplamiento Cromático** | Botón de WhatsApp en verde esmeralda (`#25D366`) vs. botón "Cobrado" en gris neutro con icono check. | **Previene cobros falsos por error.** El operador nunca confunde el botón de contacto con el de asentar el cobro en caja. |
+| **Desbloqueo en 0.8 Segundos** | Listener de teclado físico global (`0-9`, `Backspace`, `Escape`, `Enter`) en `Unlock.tsx`. | En tu portátil abres y desbloqueas la herramienta en menos de un segundo sin tocar el ratón. |
+| **Touch Targets Móviles de 44px** | Controles con área táctil mínima de $44 \times 44$ px (`touchFriendly`). | Se usa con comodidad y precisión con una sola mano caminando por la calle. |
+| **Semáforo Visual de Urgencia** | Badges dinámicos: Rose (Vencido), Ámbar (Vence en $\le 2$ días), Neutral (Futuro). | Identificas de un vistazo dónde está retenido el dinero de la agencia. |
+| **Fichas de Venta en 1 Clic** | Generador de propuestas en Showcase listo para compartir por WhatsApp a prospectos. | Muestra trabajos previos y envía propuestas al instante en reuniones de ventas. |
 
 ---
 
-## 📂 Estructura del Código
+## 📂 Estructura del Proyecto
 
 ```text
 kodexops/
@@ -130,27 +134,27 @@ kodexops/
 │       └── src/
 │           ├── components/
 │           │   ├── ui/         # Design System Atómico (Button, Badge, Card, Dialog, Input, MetricCard)
-│           │   ├── Navbar.tsx  # Navegación con descarga de respaldo y modal de seguridad
-│           │   ├── NumericKeypad.tsx         # Teclado numérico táctil accesible
+│           │   ├── Navbar.tsx  # Barra de navegación con respaldo y ajustes de seguridad
+│           │   ├── NumericKeypad.tsx         # Teclado táctil numérico
 │           │   ├── SecuritySettingsModal.tsx # Gestión de PIN maestro y preguntas secretas
-│           │   └── WhatsAppButton.tsx        # Botón inteligente con fallback a portapapeles
+│           │   └── WhatsAppButton.tsx        # Botón con enlace wa.me y fallback a portapapeles
 │           ├── hooks/
-│           │   └── useAuth.ts  # Estado de sesión y verificación de autenticación
+│           │   └── useAuth.ts  # Estado de sesión y autenticación
 │           ├── pages/
-│           │   ├── Dashboard.tsx   # Radar de cobranzas & métricas monumentales
+│           │   ├── Dashboard.tsx   # Radar de cobranzas y métricas clave
 │           │   ├── Projects.tsx    # Gestión de proyectos, cotizador 50/50 y 40/30/30
 │           │   ├── Showcase.tsx    # Catálogo de ventas & ficha WhatsApp para prospectos
 │           │   ├── Clients.tsx     # Directorio de clientes con protección de integridad
-│           │   └── Unlock.tsx      # Teclado numérico PIN y recuperación con preguntas
+│           │   └── Unlock.tsx      # Pantalla de desbloqueo PIN y recuperación
 │           └── lib/
 │               ├── api.ts      # Cliente HTTP tipado
-│               └── utils.ts    # Utilidades wa.me y copia segura al portapapeles
+│               └── utils.ts    # Enlaces wa.me y portapapeles seguro
 │
 ├── Dockerfile                  # Multi-stage build optimizado (node:20-slim)
-├── docker-compose.yml          # Especificación con volumen persistente kodex_data
+├── docker-compose.yml          # Configuración con volumen persistente kodex_data
 ├── wrangler.toml               # Configuración Cloudflare Pages & binding D1
 ├── drizzle.config.ts           # Configuración de Drizzle Kit
-├── vite.config.ts              # Configuración de Vite con proxy /api hacia backend
+├── vite.config.ts              # Configuración de Vite con proxy /api
 ├── .env.example                # Plantilla de variables de entorno y secretos
 ├── package.json
 └── tsconfig.json
@@ -158,20 +162,20 @@ kodexops/
 
 ---
 
-## ⚖️ Análisis Crítico & Compromisos de Ingeniería (La Verdad sin Filtros)
+## ⚖️ Análisis Crítico & Compromisos de Ingeniería
 
-Para un evaluador técnico o reclutador senior, lo que se decide omitir deliberadamente es tan relevante como lo implementado:
+En software interno, lo que decides no construir es tan importante como lo que implementas:
 
-### ✅ Decisiones que Demuestran Criterio Senior:
-1. **No sobre-ingeniería innecesaria:** Para una herramienta operativa interna de 2 socios, implementar microservicios, Kubernetes o SSO con Auth0/Okta habría sido un despilfarro injustificado. Un PIN maestro protegido con HMAC-SHA256, cookie `SameSite=Lax` y recuperación por preguntas secretas resuelve el 100% de la necesidad con cero fricción.
-2. **Respeto a las limitaciones del Edge:** Cero dependencias nativas de Node (`fs`, `child_process`, `bcrypt`) en el núcleo compartido. El backend completo es isomórfico y corre de forma idéntica en Cloudflare Pages Functions y Node.js.
-3. **Modelado financiero defensivo:** La absorción del residuo entero en el último hito garantiza consistencia contable exacta frente a redondeos matemáticos.
+### ✅ Decisiones que Priorizan Criterio Práctico
+1. **Sin sobreingeniería:** Para un equipo de 2 socios, implementar microservicios, Kubernetes o SSO con Auth0/Okta habría añadido complejidad injustificada. Un PIN maestro con HMAC-SHA256, cookie `SameSite=Lax` y recuperación por preguntas secretas resuelve el 100% de la necesidad sin fricciones.
+2. **Compatibilidad Edge Real:** Cero dependencias nativas de Node (`fs`, `child_process`, `bcrypt`) en el núcleo compartido. El backend es isomórfico y corre idéntico en Cloudflare Pages Functions y Node.js.
+3. **Modelado Financiero Defensivo:** La absorción del residuo fraccionario en el último hito elimina descuadres contables por redondeo.
 
-### ⚠️ Trade-offs y Deuda Técnica Deliberada:
-1. **Monotenant / Acceso Compartido:** El sistema está diseñado para un acceso ágil compartido entre socios mediante un PIN común de 6 dígitos. No cuenta con RBAC (control de acceso por roles) ni separación multi-empresa.
-2. **Estrategia de Pruebas Actual:** Siguiendo la premisa de máxima velocidad sin sobreingeniería en esta fase, la garantía de corrección recae en el tipado estricto de TypeScript (`0 errores`), validación exhaustiva de esquemas Zod en todos los endpoints y transacciones atómicas de base de datos. **No cuenta actualmente con una suite automatizada de tests (Vitest/Jest) ni pipeline de CI/CD**. Una suite formal de integración e2e es el compromiso inmediato en el roadmap V2.
-3. **Rate Limiting en Edge vs. Node:** El limitador de fuerza bruta en memoria (`rate-limit.ts`) opera de forma estricta en el proceso único de Node.js/Docker, mientras que en Cloudflare Pages actúa como mitigación oportunista por cada isolate efímero de V8.
-4. **Escalabilidad de Base de Datos:** SQLite (WAL) y D1 están optimizados para lectura intensiva y concurrencia baja/media. Para miles de transacciones de escritura simultáneas se requeriría una base de datos distribuida (PostgreSQL/Spanner), lo cual excede por completo el alcance de esta herramienta interna.
+### ⚠️ Trade-offs y Compromisos Asumidos
+1. **Acceso Compartido (Monotenant):** Diseñado para la operativa conjunta de los socios con un PIN común. No incluye permisos por roles (RBAC) ni separación multi-empresa.
+2. **Estrategia de Validación en MVP:** La garantía de funcionamiento descansa en el tipado estricto de TypeScript (`0 errores`), validación exhaustiva con Zod en todos los endpoints y transacciones de base de datos. **No cuenta actualmente con una suite automatizada de tests (Vitest/Jest) ni pipeline de CI/CD**. Una suite formal e2e está contemplada para la siguiente fase.
+3. **Rate Limiting en Edge vs. Node:** El limitador de intentos en memoria (`rate-limit.ts`) opera de forma estricta en el proceso único de Node.js/Docker, mientras que en Cloudflare Pages actúa como mitigación por cada isolate de V8.
+4. **Escalabilidad de Base de Datos:** SQLite y D1 están optimizados para lectura intensiva y concurrencia baja/media. Para miles de escrituras concurrentes se requeriría una base de datos distribuida (PostgreSQL/Spanner), fuera del alcance de esta herramienta interna.
 
 ---
 
@@ -189,7 +193,7 @@ git clone https://github.com/tu-usuario/kodexops.git
 cd kodexops
 npm install
 
-# Copiar variables de entorno
+# Configurar variables de entorno
 cp .env.example .env
 
 # Terminal 1: Iniciar backend (Node + SQLite en ./data)
@@ -198,8 +202,8 @@ npm run dev:server
 # Terminal 2: Iniciar frontend (Vite)
 npm run dev
 ```
-- **Frontend SPA:** `http://localhost:5173` (redirige llamadas `/api` a `http://localhost:3000` mediante el proxy de Vite).
-- **Backend API Directa:** `http://localhost:3000`.
+- **Frontend SPA:** `http://localhost:5173` (redirige `/api` a `http://localhost:3000` mediante el proxy de Vite).
+- **Backend API:** `http://localhost:3000`.
 
 > **Credenciales Iniciales por Defecto:**
 > - **PIN Maestro:** `123456`
@@ -208,11 +212,11 @@ npm run dev
 
 ---
 
-### 2. Ejecución Autónoma con Docker
+### 2. Ejecución con Docker
 ```bash
 docker compose up -d --build
 ```
-La aplicación compilará cliente y servidor, ejecutará las migraciones automáticamente en el arranque y levantará la aplicación lista en `http://localhost:3000` con persistencia en el volumen `kodex_data`.
+La aplicación compilará cliente y servidor, aplicará las migraciones automáticamente en el arranque y quedará disponible en `http://localhost:3000` con persistencia en el volumen `kodex_data`.
 
 ---
 
@@ -224,28 +228,28 @@ La aplicación compilará cliente y servidor, ejecutará las migraciones automá
    ```
    Copia el `database_id` generado y colócalo en `wrangler.toml`.
 
-2. **Aplicar las migraciones de base de datos a D1:**
+2. **Aplicar las migraciones a D1:**
    ```bash
    npm run db:migrate:prod
    ```
 
-3. **Configurar el secreto maestro de sesión:**
+3. **Configurar el secreto de sesión:**
    ```bash
    npx wrangler pages secret put PIN_SECRET
    ```
 
-4. **Compilar el frontend y desplegar:**
+4. **Compilar y desplegar el frontend:**
    ```bash
    npm run build:client
    npx wrangler pages deploy dist/client
    ```
-> *Nota:* En Cloudflare Pages, el sistema auto-siembra las credenciales iniciales (`123456`) en la primera petición de autenticación si la base de datos está vacía.
+> *Nota:* En Cloudflare Pages, el sistema auto-siembra las credenciales iniciales (`123456`) en la primera petición si la base de datos está vacía.
 
 ---
 
-## 📊 Métricas de Build & Calidad
+## 📊 Métricas de Build & Rendimiento
 
 - **TypeScript:** 0 errores en compilación estricta (`npx tsc --noEmit`).
 - **Bundle Frontend:** 28.02 kB CSS / 339.46 kB JS (Vite v6 sobre React 18.3).
 - **Bundle Servidor:** 57 kB bundle ESM autónomo (tsup).
-- **Rendimiento UI:** Auditoría local en Google Chrome DevTools / Lighthouse Mobile sobre el contenedor de producción arrojando $\ge 98/100$ en Performance gracias a la ausencia de librerías de animación pesadas.
+- **Rendimiento UI:** Puntuación de $\ge 98/100$ en Lighthouse Mobile en producción, lograda al prescindir de librerías pesadas de animación y renderizar con transiciones CSS directas.
