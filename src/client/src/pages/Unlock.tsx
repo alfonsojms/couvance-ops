@@ -1,8 +1,17 @@
-import React, { useState } from 'react';
-import * as Dialog from '@radix-ui/react-dialog';
-import { Lock, KeyRound, ArrowRight, X, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Lock, KeyRound, ArrowRight, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { NumericKeypad } from '../components/NumericKeypad';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '../components/ui/Dialog';
+import { FormField, Input } from '../components/ui/Input';
+import { Button } from '../components/ui/Button';
 import { api } from '../lib/api';
 
 interface UnlockProps {
@@ -13,6 +22,7 @@ export const Unlock: React.FC<UnlockProps> = ({ onUnlockSuccess }) => {
   const [pin, setPin] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isShaking, setIsShaking] = useState(false);
 
   // Estados del modal de recuperación
   const [recoveryOpen, setRecoveryOpen] = useState(false);
@@ -24,22 +34,71 @@ export const Unlock: React.FC<UnlockProps> = ({ onUnlockSuccess }) => {
   const [confirmPin, setConfirmPin] = useState('');
   const [recoveryLoading, setRecoveryLoading] = useState(false);
 
-  const handleUnlock = async (pinToSubmit: string) => {
-    if (loading || pinToSubmit.length !== 6) return;
-    setLoading(true);
-    setErrorMsg(null);
+  const handleUnlock = useCallback(
+    async (pinToSubmit: string) => {
+      if (loading || pinToSubmit.length !== 6) return;
+      setLoading(true);
+      setErrorMsg(null);
 
-    try {
-      await api.post('/api/auth/unlock', { pin: pinToSubmit });
-      toast.success('Desbloqueado exitosamente');
-      onUnlockSuccess();
-    } catch (err: any) {
-      setErrorMsg(err.message || 'PIN incorrecto.');
-      setPin('');
-    } finally {
-      setLoading(false);
-    }
-  };
+      try {
+        await api.post('/api/auth/unlock', { pin: pinToSubmit });
+        toast.success('Desbloqueado exitosamente');
+        onUnlockSuccess();
+      } catch (err: any) {
+        setErrorMsg(err.message || 'PIN incorrecto.');
+        setPin('');
+        setIsShaking(true);
+        setTimeout(() => setIsShaking(false), 400);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [loading, onUnlockSuccess]
+  );
+
+  // Escuchar eventos globales de teclado físico (0-9, Backspace, Escape, Enter)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignorar si el usuario está escribiendo en un input o textarea (ej. modal de recuperación)
+      const target = e.target as HTMLElement | null;
+      if (
+        recoveryOpen ||
+        loading ||
+        target?.tagName === 'INPUT' ||
+        target?.tagName === 'TEXTAREA' ||
+        target?.isContentEditable
+      ) {
+        return;
+      }
+
+      if (/^[0-9]$/.test(e.key)) {
+        e.preventDefault();
+        setPin((prev) => {
+          if (prev.length >= 6) return prev;
+          const next = prev + e.key;
+          if (next.length === 6) {
+            handleUnlock(next);
+          }
+          return next;
+        });
+      } else if (e.key === 'Backspace') {
+        e.preventDefault();
+        setPin((prev) => prev.slice(0, -1));
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        setPin('');
+        setErrorMsg(null);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (pin.length === 6) {
+          handleUnlock(pin);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [recoveryOpen, loading, pin, handleUnlock]);
 
   const handleOpenRecovery = async () => {
     setRecoveryOpen(true);
@@ -60,7 +119,7 @@ export const Unlock: React.FC<UnlockProps> = ({ onUnlockSuccess }) => {
 
   const handleVerifyQuestions = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!a1 || !a2) {
+    if (!a1.trim() || !a2.trim()) {
       toast.error('Por favor responda ambas preguntas');
       return;
     }
@@ -68,8 +127,8 @@ export const Unlock: React.FC<UnlockProps> = ({ onUnlockSuccess }) => {
     setRecoveryLoading(true);
     try {
       const res = await api.post<{ ok: boolean; resetToken: string }>('/api/auth/recover', {
-        a1,
-        a2,
+        a1: a1.trim(),
+        a2: a2.trim(),
       });
       setResetToken(res.resetToken);
       toast.success('Respuestas correctas. Configure su nuevo PIN.');
@@ -124,18 +183,22 @@ export const Unlock: React.FC<UnlockProps> = ({ onUnlockSuccess }) => {
 
         {/* Mensaje de error si falla el PIN */}
         {errorMsg && (
-          <div className="w-full mb-6 p-3 rounded-lg bg-red-950/40 border border-red-900/60 text-red-300 text-xs flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+          <div className="w-full mb-6 p-3 rounded-lg bg-rose-950/40 border border-rose-900/60 text-rose-300 text-xs flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
             <span>{errorMsg}</span>
           </div>
         )}
 
-        {/* Teclado Numérico */}
+        {/* Teclado Numérico con animación shake */}
         <NumericKeypad
           pin={pin}
-          onChange={setPin}
+          onChange={(newVal) => {
+            setErrorMsg(null);
+            setPin(newVal);
+          }}
           onSubmit={handleUnlock}
           disabled={loading}
+          isShaking={isShaking}
         />
 
         {/* Botón de Recuperación */}
@@ -148,135 +211,132 @@ export const Unlock: React.FC<UnlockProps> = ({ onUnlockSuccess }) => {
         </button>
       </div>
 
-      {/* Modal de Recuperación con Preguntas Secretas (Radix Dialog) */}
-      <Dialog.Root open={recoveryOpen} onOpenChange={setRecoveryOpen}>
-        <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 animate-in fade-in duration-150" />
-          <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-neutral-900 border border-neutral-800 rounded-xl p-6 shadow-2xl z-50 focus:outline-none">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <KeyRound className="w-5 h-5 text-neutral-300" />
-                <Dialog.Title className="text-sm font-semibold text-neutral-100">
-                  Recuperación de PIN
-                </Dialog.Title>
-              </div>
-              <Dialog.Close className="p-1 rounded-md text-neutral-400 hover:text-neutral-100 hover:bg-neutral-800 transition-colors">
-                <X className="w-4 h-4" />
-              </Dialog.Close>
+      {/* Modal de Recuperación con Preguntas Secretas (Nuevo Dialog UI & FormField) */}
+      <Dialog open={recoveryOpen} onOpenChange={setRecoveryOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-2 mb-1">
+              <KeyRound className="w-4 h-4 text-neutral-300" />
+              <DialogTitle>Recuperación de PIN</DialogTitle>
             </div>
+            <DialogDescription>
+              {!resetToken
+                ? 'Responde las 2 preguntas de seguridad secretas para desbloquear el restablecimiento de PIN.'
+                : 'Respuestas verificadas. Ingresa y confirma tu nuevo PIN de 6 dígitos.'}
+            </DialogDescription>
+          </DialogHeader>
 
-            {!resetToken ? (
-              <form onSubmit={handleVerifyQuestions} className="space-y-4">
-                <p className="text-xs text-neutral-400">
-                  Responde las 2 preguntas de seguridad secretas para desbloquear el cambio de PIN:
-                </p>
+          {!resetToken ? (
+            <form onSubmit={handleVerifyQuestions} className="space-y-4">
+              <FormField
+                id="recovery-a1"
+                label={questions?.q1 || 'Pregunta de seguridad 1'}
+                required
+              >
+                <Input
+                  required
+                  value={a1}
+                  onChange={(e) => setA1(e.target.value)}
+                  placeholder="Tu respuesta secreta..."
+                  autoFocus
+                />
+              </FormField>
 
-                <div>
-                  <label className="block text-xs font-medium text-neutral-300 mb-1">
-                    {questions?.q1 || 'Pregunta 1'}
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={a1}
-                    onChange={(e) => setA1(e.target.value)}
-                    placeholder="Tu respuesta..."
-                    className="w-full px-3 py-2 text-sm bg-neutral-950 border border-neutral-800 rounded-lg text-neutral-100 focus:outline-none focus:border-neutral-600 transition-colors"
-                  />
-                </div>
+              <FormField
+                id="recovery-a2"
+                label={questions?.q2 || 'Pregunta de seguridad 2'}
+                required
+              >
+                <Input
+                  required
+                  value={a2}
+                  onChange={(e) => setA2(e.target.value)}
+                  placeholder="Tu respuesta secreta..."
+                />
+              </FormField>
 
-                <div>
-                  <label className="block text-xs font-medium text-neutral-300 mb-1">
-                    {questions?.q2 || 'Pregunta 2'}
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={a2}
-                    onChange={(e) => setA2(e.target.value)}
-                    placeholder="Tu respuesta..."
-                    className="w-full px-3 py-2 text-sm bg-neutral-950 border border-neutral-800 rounded-lg text-neutral-100 focus:outline-none focus:border-neutral-600 transition-colors"
-                  />
-                </div>
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setRecoveryOpen(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="sm"
+                  isLoading={recoveryLoading}
+                >
+                  <span>Validar respuestas</span>
+                  <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                </Button>
+              </DialogFooter>
+            </form>
+          ) : (
+            <form onSubmit={handleResetPin} className="space-y-4">
+              <FormField
+                id="recovery-new-pin"
+                label="Nuevo PIN (6 dígitos numéricos)"
+                required
+              >
+                <Input
+                  type="password"
+                  inputMode="numeric"
+                  maxLength={6}
+                  pattern="\d{6}"
+                  required
+                  value={newPin}
+                  onChange={(e) => setNewPin(e.target.value)}
+                  placeholder="••••••"
+                  className="font-mono tracking-widest text-center text-lg"
+                  autoFocus
+                />
+              </FormField>
 
-                <div className="pt-2 flex justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setRecoveryOpen(false)}
-                    className="px-3 py-1.5 text-xs text-neutral-400 hover:text-neutral-200"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={recoveryLoading}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-neutral-100 text-neutral-950 text-xs font-medium hover:bg-neutral-200 active:scale-95 transition-all disabled:opacity-50"
-                  >
-                    <span>Validar respuestas</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <form onSubmit={handleResetPin} className="space-y-4">
-                <p className="text-xs text-neutral-400">
-                  Respuestas validadas. Ingresa tu nuevo PIN de 6 dígitos:
-                </p>
+              <FormField
+                id="recovery-confirm-pin"
+                label="Confirmar Nuevo PIN"
+                required
+              >
+                <Input
+                  type="password"
+                  inputMode="numeric"
+                  maxLength={6}
+                  pattern="\d{6}"
+                  required
+                  value={confirmPin}
+                  onChange={(e) => setConfirmPin(e.target.value)}
+                  placeholder="••••••"
+                  className="font-mono tracking-widest text-center text-lg"
+                />
+              </FormField>
 
-                <div>
-                  <label className="block text-xs font-medium text-neutral-300 mb-1">
-                    Nuevo PIN (6 dígitos)
-                  </label>
-                  <input
-                    type="password"
-                    maxLength={6}
-                    required
-                    pattern="\d{6}"
-                    value={newPin}
-                    onChange={(e) => setNewPin(e.target.value)}
-                    placeholder="123456"
-                    className="w-full px-3 py-2 text-sm font-mono tracking-widest bg-neutral-950 border border-neutral-800 rounded-lg text-neutral-100 focus:outline-none focus:border-neutral-600 transition-colors"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-neutral-300 mb-1">
-                    Confirmar Nuevo PIN
-                  </label>
-                  <input
-                    type="password"
-                    maxLength={6}
-                    required
-                    pattern="\d{6}"
-                    value={confirmPin}
-                    onChange={(e) => setConfirmPin(e.target.value)}
-                    placeholder="123456"
-                    className="w-full px-3 py-2 text-sm font-mono tracking-widest bg-neutral-950 border border-neutral-800 rounded-lg text-neutral-100 focus:outline-none focus:border-neutral-600 transition-colors"
-                  />
-                </div>
-
-                <div className="pt-2 flex justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setRecoveryOpen(false)}
-                    className="px-3 py-1.5 text-xs text-neutral-400 hover:text-neutral-200"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={recoveryLoading}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-neutral-100 text-neutral-950 text-xs font-medium hover:bg-neutral-200 active:scale-95 transition-all disabled:opacity-50"
-                  >
-                    <span>Guardar y Entrar</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </form>
-            )}
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setRecoveryOpen(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="sm"
+                  isLoading={recoveryLoading}
+                >
+                  <span>Guardar y Entrar</span>
+                  <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

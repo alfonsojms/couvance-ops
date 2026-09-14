@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Sparkles, ExternalLink, Copy, Globe, RefreshCw } from 'lucide-react';
+import { Sparkles, ExternalLink, Copy, Globe, RefreshCw, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '../lib/api';
 import { copyToClipboard } from '../lib/utils';
+import { Button, Card, CardPanel, Badge } from '../components/ui';
 
 interface ShowcaseProject {
   id: string;
@@ -12,6 +13,13 @@ interface ShowcaseProject {
   productionStatus: 'ACTIVE' | 'INACTIVE';
   clientName: string;
 }
+
+const categoryLabels: Record<string, string> = {
+  LANDING: 'Landing Page',
+  ECOMMERCE: 'E-commerce',
+  CORPORATE: 'Corporativa',
+  WEBAPP: 'Web App',
+};
 
 export const Showcase: React.FC = () => {
   const [projects, setProjects] = useState<ShowcaseProject[]>([]);
@@ -39,6 +47,17 @@ export const Showcase: React.FC = () => {
     return p.category === categoryFilter;
   });
 
+  // Generador de Ficha de Venta para WhatsApp
+  const handleCopySalesPitch = (p: ShowcaseProject) => {
+    const pitch = `🚀 *Proyecto:* ${p.title}\n🏢 *Cliente:* ${p.clientName}\n🌐 *Ver online:* ${p.productionUrl}\n💼 *Desarrollado por:* Kodex`;
+    copyToClipboard(pitch, 'Ficha de venta copiada para WhatsApp');
+  };
+
+  // Copiar enlace web directo
+  const handleCopyDirectLink = (url: string) => {
+    copyToClipboard(url, 'Enlace directo copiado al portapapeles');
+  };
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
       {/* Cabecera */}
@@ -55,19 +74,23 @@ export const Showcase: React.FC = () => {
           </p>
         </div>
 
-        <button
+        <Button
           type="button"
+          variant="secondary"
+          size="sm"
+          touchFriendly
           onClick={loadShowcase}
           disabled={loading}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-neutral-900 border border-neutral-800 text-neutral-300 hover:text-neutral-100 active:scale-95 transition-all self-start sm:self-auto disabled:opacity-50"
+          isLoading={loading}
+          className="self-start sm:self-auto"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+          {!loading && <RefreshCw className="w-3.5 h-3.5" />}
           <span>Actualizar</span>
-        </button>
+        </Button>
       </div>
 
-      {/* Categorías */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+      {/* Categorías con botones táctiles accesibles */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1.5 scrollbar-none">
         {[
           { id: 'ALL', label: 'Todas las Categorías' },
           { id: 'LANDING', label: 'Landing Pages' },
@@ -75,74 +98,103 @@ export const Showcase: React.FC = () => {
           { id: 'CORPORATE', label: 'Corporativas' },
           { id: 'WEBAPP', label: 'Web Apps' },
         ].map((cat) => (
-          <button
+          <Button
             key={cat.id}
             type="button"
+            variant={categoryFilter === cat.id ? 'primary' : 'secondary'}
+            size="sm"
+            touchFriendly
             onClick={() => setCategoryFilter(cat.id)}
-            className={`px-3 py-1 rounded-md text-xs font-medium transition-all select-none ${
-              categoryFilter === cat.id
-                ? 'bg-neutral-800 text-neutral-100 border border-neutral-700'
-                : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-900 border border-transparent'
-            }`}
+            className="shrink-0"
           >
             {cat.label}
-          </button>
+          </Button>
         ))}
       </div>
 
       {/* Grid de Proyectos */}
       {filtered.length === 0 ? (
-        <div className="bg-neutral-900/30 border border-neutral-800/80 rounded-xl p-12 text-center">
+        <Card className="p-12 text-center bg-neutral-900/30 border-neutral-800/80">
           <Globe className="w-8 h-8 text-neutral-600 mx-auto mb-2" />
-          <p className="text-sm text-neutral-300 font-medium">No hay proyectos terminados en esta categoría</p>
-          <p className="text-xs text-neutral-500 mt-1">
-            Los proyectos deben tener estado "COMPLETED", web en producción activa y URL válida para figurar aquí (RN-07).
+          <p className="text-sm text-neutral-300 font-medium">
+            No hay proyectos terminados en esta categoría
           </p>
-        </div>
+          <p className="text-xs text-neutral-500 mt-1 max-w-md mx-auto">
+            Los proyectos deben estar marcados como completados, tener su web activa y una URL de producción válida para figurar en este catálogo.
+          </p>
+        </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((p) => (
-            <div
+            <Card
               key={p.id}
-              className="bg-neutral-900/60 border border-neutral-800 rounded-xl p-5 flex flex-col justify-between hover:border-neutral-700 transition-colors space-y-4"
+              className="p-5 flex flex-col justify-between hover:border-neutral-700 transition-colors space-y-4"
             >
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-neutral-800 text-neutral-300 border border-neutral-700">
-                    {p.category}
-                  </span>
-                  <span className="flex items-center gap-1.5 text-[11px] text-emerald-400 font-medium">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <span>Activa</span>
-                  </span>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Badge variant="neutral">
+                    {categoryLabels[p.category] || p.category}
+                  </Badge>
+                  <Badge status="ACTIVE" showDot />
                 </div>
 
-                <h3 className="font-semibold text-sm text-neutral-100 mb-1">{p.title}</h3>
-                <span className="text-xs text-neutral-400 block">{p.clientName}</span>
+                <div>
+                  <h3 className="font-semibold text-base text-neutral-100 mb-1 leading-snug">
+                    {p.title}
+                  </h3>
+                  <span className="text-xs text-neutral-400 block">{p.clientName}</span>
+                </div>
+
+                {/* Previsualización de URL */}
+                <CardPanel className="flex items-center gap-2 text-xs text-neutral-300 truncate">
+                  <Globe className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                  <span className="truncate font-mono">{p.productionUrl}</span>
+                </CardPanel>
               </div>
 
-              {/* URL y Enlaces */}
-              <div className="pt-3 border-t border-neutral-800 flex items-center justify-between gap-2">
+              {/* Acciones de Venta: Ficha WhatsApp, Copiar Enlace y Visitar */}
+              <div className="pt-3 border-t border-neutral-800/80 flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                {/* Generador de Ficha de Venta para Prospectos */}
+                <Button
+                  type="button"
+                  variant="whatsapp"
+                  size="sm"
+                  touchFriendly
+                  onClick={() => handleCopySalesPitch(p)}
+                  title="Copiar ficha de venta estructurada para enviar por WhatsApp"
+                  className="flex-1 justify-center"
+                >
+                  <MessageSquare className="w-4 h-4 text-neutral-950 shrink-0" />
+                  <span>Ficha de Venta</span>
+                </Button>
+
+                {/* Copiar enlace web directo */}
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  touchFriendly
+                  onClick={() => handleCopyDirectLink(p.productionUrl)}
+                  title="Copiar enlace web directo al portapapeles"
+                  className="shrink-0"
+                >
+                  <Copy className="w-4 h-4 text-neutral-400 shrink-0" />
+                  <span className="hidden sm:inline">Enlace</span>
+                </Button>
+
+                {/* Visitar sitio en nueva pestaña */}
                 <a
                   href={p.productionUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-200 text-xs font-medium border border-neutral-700 transition-colors truncate max-w-[200px]"
+                  title="Visitar web en nueva pestaña"
+                  className="inline-flex items-center justify-center rounded-md font-medium select-none border transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950 bg-neutral-800 text-neutral-100 border-neutral-700 hover:bg-neutral-700 hover:border-neutral-600 px-3 py-1.5 text-xs gap-1.5 min-h-[44px] min-w-[44px] shrink-0 active:scale-[0.98]"
                 >
-                  <ExternalLink className="w-3.5 h-3.5 shrink-0" />
-                  <span className="truncate">{p.productionUrl.replace(/^https?:\/\//, '')}</span>
+                  <ExternalLink className="w-4 h-4 text-neutral-400 shrink-0" />
+                  <span className="hidden sm:inline">Visitar</span>
                 </a>
-
-                <button
-                  type="button"
-                  onClick={() => copyToClipboard(p.productionUrl, 'Enlace copiado para compartir')}
-                  className="p-2 rounded-lg bg-neutral-900 hover:bg-neutral-800 text-neutral-400 hover:text-neutral-100 border border-neutral-800 active:scale-95 transition-all"
-                  title="Copiar enlace para WhatsApp"
-                >
-                  <Copy className="w-4 h-4" />
-                </button>
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       )}

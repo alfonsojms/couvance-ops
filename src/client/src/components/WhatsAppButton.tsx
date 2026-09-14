@@ -1,13 +1,16 @@
 import React from 'react';
 import { MessageSquare, Copy } from 'lucide-react';
 import { handleWhatsAppOrCopy } from '../lib/utils';
+import { Button } from './ui/Button';
 
-interface WhatsAppButtonProps {
+export interface WhatsAppButtonProps
+  extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'size'> {
   phone?: string | null;
   message: string;
   label?: string;
   className?: string;
-  size?: 'sm' | 'md';
+  size?: 'sm' | 'md' | 'lg';
+  touchFriendly?: boolean;
 }
 
 export const WhatsAppButton: React.FC<WhatsAppButtonProps> = ({
@@ -16,29 +19,40 @@ export const WhatsAppButton: React.FC<WhatsAppButtonProps> = ({
   label = 'Cobrar por WhatsApp',
   className = '',
   size = 'md',
+  touchFriendly = true,
+  onClick,
+  ...props
 }) => {
   const hasPhone = Boolean(phone && phone.trim().length > 0);
 
-  const handleClick = (e: React.MouseEvent) => {
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     handleWhatsAppOrCopy(phone, message);
+    onClick?.(e);
   };
 
-  const sizeClasses = size === 'sm' ? 'px-2.5 py-1 text-xs' : 'px-3.5 py-2 text-sm';
-
   return (
-    <button
+    <Button
       type="button"
+      variant={hasPhone ? 'whatsapp' : 'secondary'}
+      size={size}
+      touchFriendly={touchFriendly}
       onClick={handleClick}
-      title={hasPhone ? `Enviar a WhatsApp (${phone})` : 'Cliente sin teléfono: copiar mensaje'}
-      className={`inline-flex items-center gap-2 rounded-md font-medium border transition-all duration-150 ease-out active:scale-95 select-none ${
+      title={
         hasPhone
-          ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/80 hover:bg-emerald-900/50 hover:border-emerald-700'
-          : 'bg-neutral-900 text-neutral-300 border-neutral-800 hover:bg-neutral-800 hover:text-neutral-100'
-      } ${sizeClasses} ${className}`}
+          ? `Enviar a WhatsApp (${phone})`
+          : 'Cliente sin teléfono registrado: copiar mensaje al portapapeles'
+      }
+      className={className}
+      {...props}
     >
-      {hasPhone ? <MessageSquare className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-neutral-400" />}
+      {hasPhone ? (
+        <MessageSquare className="w-4 h-4 shrink-0 text-neutral-950" />
+      ) : (
+        <Copy className="w-4 h-4 shrink-0 text-neutral-400" />
+      )}
       <span>{hasPhone ? label : 'Copiar Mensaje'}</span>
-    </button>
+    </Button>
   );
 };
+

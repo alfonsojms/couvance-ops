@@ -5,6 +5,7 @@ import {
   Clock,
   AlertTriangle,
   CheckCircle2,
+  Check,
   Calendar,
   RefreshCw,
   Zap,
@@ -13,6 +14,19 @@ import { toast } from 'sonner';
 import { api } from '../lib/api';
 import { formatCurrency, formatDate } from '../lib/utils';
 import { WhatsAppButton } from '../components/WhatsAppButton';
+import {
+  Button,
+  Badge,
+  Card,
+  CardPanel,
+  MetricCard,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '../components/ui';
 
 interface PendingMilestoneDTO {
   id: string;
@@ -49,12 +63,86 @@ interface FinancialMetrics {
   totalProjectsCount: number;
 }
 
+interface PayAllModalData {
+  budgetId: string;
+  projectTitle: string;
+  clientName: string;
+  totalAmount: number;
+  currency: string;
+  milestonesCount: number;
+}
+
+interface UrgencyInfo {
+  variant: 'danger' | 'warning' | 'neutral';
+  label: string;
+  cardBorderClass: string;
+  isOverdue: boolean;
+}
+
+function getMilestoneUrgency(dueDateStr?: string | null): UrgencyInfo {
+  if (!dueDateStr) {
+    return {
+      variant: 'neutral',
+      label: 'Sin fecha límite',
+      cardBorderClass: 'border-neutral-800 hover:border-neutral-700',
+      isOverdue: false,
+    };
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const parts = dueDateStr.split('-');
+  let due: Date;
+  if (parts.length === 3) {
+    due = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+  } else {
+    due = new Date(dueDateStr);
+  }
+  due.setHours(0, 0, 0, 0);
+
+  const diffTime = due.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 0) {
+    const absDays = Math.abs(diffDays);
+    return {
+      variant: 'danger',
+      label: `Vencido hace ${absDays} ${absDays === 1 ? 'día' : 'días'}`,
+      cardBorderClass: 'border-rose-500/30 bg-rose-950/10 hover:border-rose-500/50',
+      isOverdue: true,
+    };
+  } else if (diffDays === 0) {
+    return {
+      variant: 'warning',
+      label: 'Vence hoy',
+      cardBorderClass: 'border-amber-500/30 bg-amber-950/10 hover:border-amber-500/50',
+      isOverdue: false,
+    };
+  } else if (diffDays <= 2) {
+    return {
+      variant: 'warning',
+      label: `Vence en ${diffDays} ${diffDays === 1 ? 'día' : 'días'}`,
+      cardBorderClass: 'border-amber-500/30 bg-amber-950/10 hover:border-amber-500/50',
+      isOverdue: false,
+    };
+  } else {
+    return {
+      variant: 'neutral',
+      label: `Vence: ${formatDate(dueDateStr)}`,
+      cardBorderClass: 'border-neutral-800 hover:border-neutral-700',
+      isOverdue: false,
+    };
+  }
+}
+
 export const Dashboard: React.FC = () => {
   const [metrics, setMetrics] = useState<FinancialMetrics | null>(null);
   const [pendingMilestones, setPendingMilestones] = useState<PendingMilestoneDTO[]>([]);
   const [recurringAlerts, setRecurringAlerts] = useState<RecurringAlertDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [payAllTarget, setPayAllTarget] = useState<PayAllModalData | null>(null);
 
   const loadDashboardData = useCallback(async () => {
     try {
@@ -91,12 +179,29 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  // Operación Cobro Express "Cobrar Todo" (RN-04)
-  const handlePayAllBudget = async (budgetId: string) => {
+  // Abrir modal para Cobro Express "Cobrar Todo"
+  const handleOpenPayAllModal = (m: PendingMilestoneDTO) => {
+    const related = pendingMilestones.filter((item) => item.budgetId === m.budgetId);
+    const total = related.reduce((acc, curr) => acc + curr.amount, 0);
+    setPayAllTarget({
+      budgetId: m.budgetId,
+      projectTitle: m.projectTitle,
+      clientName: m.clientName,
+      totalAmount: total,
+      currency: m.currency,
+      milestonesCount: related.length,
+    });
+  };
+
+  // Confirmar ejecución de "Cobrar Todo"
+  const handleConfirmPayAll = async () => {
+    if (!payAllTarget) return;
+    const targetBudgetId = payAllTarget.budgetId;
     try {
-      setProcessingId(`budget-${budgetId}`);
-      await api.post(`/api/budgets/${budgetId}/pay-all`);
+      setProcessingId(`budget-${targetBudgetId}`);
+      await api.post(`/api/budgets/${targetBudgetId}/pay-all`);
       toast.success('Todos los hitos del presupuesto fueron liquidados.');
+      setPayAllTarget(null);
       loadDashboardData();
     } catch (err: any) {
       toast.error(err.message || 'Error al liquidar hitos');
@@ -105,7 +210,7 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  // Cobrar y renovar hosting/mantenimiento recurrente (RN-08)
+  // Cobrar y renovar hosting/mantenimiento recurrente (+1 mes o +1 año)
   const handleRenewProject = async (projectId: string) => {
     try {
       setProcessingId(`renew-${projectId}`);
@@ -131,56 +236,51 @@ export const Dashboard: React.FC = () => {
             Control de cuentas por cobrar, renovaciones preventivas y cobro express por WhatsApp
           </p>
         </div>
-        <button
+        <Button
           type="button"
+          variant="secondary"
+          size="sm"
+          touchFriendly
           onClick={loadDashboardData}
           disabled={loading}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-neutral-900 border border-neutral-800 text-neutral-300 hover:text-neutral-100 hover:border-neutral-700 active:scale-95 transition-all self-start sm:self-auto disabled:opacity-50"
+          isLoading={loading}
+          className="self-start sm:self-auto"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+          {!loading && <RefreshCw className="w-3.5 h-3.5" />}
           <span>Actualizar</span>
-        </button>
+        </Button>
       </div>
 
-      {/* Métricas Principales (Anti-AI Slop: limpias, sin gradientes pesados) */}
+      {/* Métricas Principales: Jerarquía de Tesorería ("Total en la Calle" como métrica reina) */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-neutral-900/60 border border-neutral-800 rounded-xl p-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-neutral-400">Total en la Calle (Pendiente)</span>
-            <Clock className="w-4 h-4 text-amber-400" />
-          </div>
-          <div className="text-2xl font-mono font-bold text-neutral-100">
-            {formatCurrency(metrics?.totalInTheStreet || 0)}
-          </div>
-          <span className="text-[11px] text-neutral-500">Hitos activos por cobrar</span>
-        </div>
+        <MetricCard
+          title="Total en la Calle (Pendiente)"
+          value={
+            <span className="text-3xl sm:text-4xl text-amber-400 font-extrabold tracking-tight">
+              {formatCurrency(metrics?.totalInTheStreet || 0)}
+            </span>
+          }
+          subtitle="Hitos activos pendientes de cobro"
+          icon={<Clock className="w-5 h-5 text-amber-400" />}
+          className="border-amber-500/30 bg-amber-500/5 relative overflow-hidden ring-1 ring-amber-500/20 shadow-sm"
+        />
 
-        <div className="bg-neutral-900/60 border border-neutral-800 rounded-xl p-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-neutral-400">Total Cobrado (Histórico)</span>
-            <DollarSign className="w-4 h-4 text-emerald-400" />
-          </div>
-          <div className="text-2xl font-mono font-bold text-neutral-100">
-            {formatCurrency(metrics?.totalCollected || 0)}
-          </div>
-          <span className="text-[11px] text-neutral-500">Ingresos efectivos registrados</span>
-        </div>
+        <MetricCard
+          title="Total Cobrado (Histórico)"
+          value={formatCurrency(metrics?.totalCollected || 0)}
+          subtitle="Ingresos efectivos registrados"
+          icon={<DollarSign className="w-5 h-5 text-emerald-400" />}
+        />
 
-        <div className="bg-neutral-900/60 border border-neutral-800 rounded-xl p-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-neutral-400">Proyectos en Progreso</span>
-            <TrendingUp className="w-4 h-4 text-blue-400" />
-          </div>
-          <div className="text-2xl font-mono font-bold text-neutral-100">
-            {metrics?.activeProjectsCount || 0}
-          </div>
-          <span className="text-[11px] text-neutral-500">
-            de {metrics?.totalProjectsCount || 0} proyectos registrados
-          </span>
-        </div>
+        <MetricCard
+          title="Proyectos en Progreso"
+          value={metrics?.activeProjectsCount ?? 0}
+          subtitle={`de ${metrics?.totalProjectsCount ?? 0} proyectos registrados`}
+          icon={<TrendingUp className="w-5 h-5 text-blue-400" />}
+        />
       </div>
 
-      {/* Alerta Preventiva de Recurrentes a 30 Días (RN-08) */}
+      {/* Alertas Preventivas de Renovación Recurrente a 30 Días */}
       {recurringAlerts.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center gap-2">
@@ -192,16 +292,17 @@ export const Dashboard: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {recurringAlerts.map((rec) => {
+              const renewalPeriodLabel = rec.recurringPeriod === 'MONTHLY' ? 'mes' : 'año';
               const renewalMsg = `Hola ${rec.clientName}, te escribimos de Kodex para avisarte que tu servicio de hosting y mantenimiento de ${rec.projectTitle} está próximo a renovar por ${formatCurrency(rec.recurringAmount || 0, rec.recurringCurrency)} (${rec.recurringPeriod === 'MONTHLY' ? 'mensual' : 'anual'}). ¡Avisanos cuando puedas para coordinar!`;
 
               return (
-                <div
+                <Card
                   key={rec.projectId}
-                  className={`p-4 rounded-xl border ${
+                  className={`p-4 flex flex-col justify-between gap-3 ${
                     rec.isOverdue
-                      ? 'bg-red-950/20 border-red-900/60'
-                      : 'bg-amber-950/20 border-amber-900/60'
-                  } flex flex-col justify-between gap-3`}
+                      ? 'border-rose-500/30 bg-rose-950/10'
+                      : 'border-amber-500/30 bg-amber-950/10'
+                  }`}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div>
@@ -210,48 +311,55 @@ export const Dashboard: React.FC = () => {
                       </span>
                       <span className="text-xs text-neutral-400">{rec.clientName}</span>
                     </div>
-                    <span
-                      className={`px-2 py-0.5 rounded text-[11px] font-medium font-mono ${
-                        rec.isOverdue
-                          ? 'bg-red-950 text-red-300 border border-red-800'
-                          : 'bg-amber-950 text-amber-300 border border-amber-800'
-                      }`}
+
+                    <Badge
+                      variant={rec.isOverdue ? 'danger' : 'warning'}
+                      showDot
                     >
                       {rec.isOverdue
-                        ? `Vencido hace ${Math.abs(rec.daysRemaining)}d`
-                        : `Vence en ${rec.daysRemaining}d`}
-                    </span>
+                        ? `Vencido hace ${Math.abs(rec.daysRemaining)} ${
+                            Math.abs(rec.daysRemaining) === 1 ? 'día' : 'días'
+                          }`
+                        : rec.daysRemaining === 0
+                        ? 'Vence hoy'
+                        : `Vence en ${rec.daysRemaining} días`}
+                    </Badge>
                   </div>
 
-                  <div className="flex items-center justify-between text-xs text-neutral-400 font-mono">
-                    <span>
-                      {formatCurrency(rec.recurringAmount || 0, rec.recurringCurrency)} /{' '}
-                      {rec.recurringPeriod === 'MONTHLY' ? 'mes' : 'año'}
+                  <CardPanel className="flex items-center justify-between text-xs text-neutral-300">
+                    <span className="font-semibold">
+                      {formatCurrency(rec.recurringAmount || 0, rec.recurringCurrency)} / {renewalPeriodLabel}
                     </span>
-                    <span>Fecha: {formatDate(rec.recurringRenewalDate)}</span>
-                  </div>
+                    <span className="text-neutral-400">Fecha: {formatDate(rec.recurringRenewalDate)}</span>
+                  </CardPanel>
 
-                  <div className="flex items-center gap-2 pt-1">
+                  {/* Desacoplamiento Cromático: WhatsApp en verde oficial y Cobro en neutro */}
+                  <div className="flex items-center gap-2 pt-1 flex-wrap sm:flex-nowrap">
                     <WhatsAppButton
                       phone={rec.clientPhone}
                       message={renewalMsg}
                       label="Avisar por WhatsApp"
                       size="sm"
+                      touchFriendly
                       className="flex-1 justify-center"
                     />
 
-                    <button
+                    <Button
                       type="button"
+                      variant="secondary"
+                      size="sm"
+                      touchFriendly
                       disabled={processingId === `renew-${rec.projectId}`}
+                      isLoading={processingId === `renew-${rec.projectId}`}
                       onClick={() => handleRenewProject(rec.projectId)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium bg-neutral-800 border border-neutral-700 text-neutral-100 hover:bg-neutral-700 active:scale-95 transition-all select-none disabled:opacity-50"
-                      title="Registrar cobro y avanzar siguiente ciclo de renovación"
+                      title={`Cobrar y renovar servicio (+1 ${renewalPeriodLabel})`}
+                      className="shrink-0"
                     >
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>Cobrado</span>
-                    </button>
+                      <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span>Cobrar y Renovar (+1 {renewalPeriodLabel})</span>
+                    </Button>
                   </div>
-                </div>
+                </Card>
               );
             })}
           </div>
@@ -267,38 +375,48 @@ export const Dashboard: React.FC = () => {
               Hitos Pendientes de Cobro ({pendingMilestones.length})
             </h2>
           </div>
-          <span className="text-[11px] text-neutral-500 font-mono">
+          <span className="text-xs text-neutral-500 font-mono">
             Ordenados por fecha de vencimiento
           </span>
         </div>
 
         {pendingMilestones.length === 0 ? (
-          <div className="bg-neutral-900/30 border border-neutral-800/80 rounded-xl p-8 text-center">
+          <Card className="p-8 text-center bg-neutral-900/30 border-neutral-800/80">
             <CheckCircle2 className="w-8 h-8 text-emerald-500/60 mx-auto mb-2" />
             <p className="text-sm text-neutral-300 font-medium">¡Cero cuentas pendientes!</p>
             <p className="text-xs text-neutral-500 mt-1">
               Todos los hitos aprobados han sido cobrados con éxito.
             </p>
-          </div>
+          </Card>
         ) : (
           <div className="space-y-3">
             {pendingMilestones.map((m) => {
+              const urgency = getMilestoneUrgency(m.dueDate);
               const waMessage = `Hola ${m.clientName}, te escribimos de Kodex para recordarte sobre el hito "${m.milestoneTitle}" correspondiente al proyecto ${m.projectTitle} por un total de ${formatCurrency(m.amount, m.currency)}. ¡Quedamos atentos a tu comprobante!`;
 
               return (
-                <div
+                <Card
                   key={m.id}
-                  className="bg-neutral-900/70 border border-neutral-800 rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors hover:border-neutral-700"
+                  className={`p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors ${urgency.cardBorderClass}`}
                 >
                   {/* Info Proyecto y Cliente */}
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-semibold text-sm text-neutral-100">
                         {m.projectTitle}
                       </span>
-                      <span className="text-xs px-2 py-0.5 rounded bg-neutral-800 text-neutral-300 border border-neutral-700 font-mono">
+                      <Badge variant="neutral">
                         {m.percentage}%
-                      </span>
+                      </Badge>
+                      <Badge
+                        variant={urgency.variant}
+                        showDot={urgency.variant !== 'neutral'}
+                      >
+                        {urgency.variant === 'neutral' && (
+                          <Calendar className="w-3 h-3 mr-1 inline-block" />
+                        )}
+                        {urgency.label}
+                      </Badge>
                     </div>
 
                     <div className="text-xs text-neutral-400 flex items-center gap-2">
@@ -306,60 +424,124 @@ export const Dashboard: React.FC = () => {
                       <span>•</span>
                       <span className="text-neutral-300 font-medium">{m.milestoneTitle}</span>
                     </div>
-
-                    <div className="flex items-center gap-1.5 text-xs text-neutral-500 pt-0.5">
-                      <Calendar className="w-3.5 h-3.5" />
-                      <span>Vence: {formatDate(m.dueDate)}</span>
-                    </div>
                   </div>
 
-                  {/* Monto y Botones Operativos Móvil Primero */}
+                  {/* Monto y Botones Operativos con Desacoplamiento Cromático */}
                   <div className="flex flex-col sm:flex-row sm:items-center gap-3 self-end md:self-auto w-full md:w-auto">
-                    <div className="text-right font-mono text-lg font-bold text-neutral-100 shrink-0">
+                    <div className="text-right font-mono text-xl font-bold text-neutral-100 shrink-0">
                       {formatCurrency(m.amount, m.currency)}
                     </div>
 
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {/* Botón WhatsApp con Fallback */}
+                    <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                      {/* Botón WhatsApp con Verde Oficial (#25D366) */}
                       <WhatsAppButton
                         phone={m.clientPhone}
                         message={waMessage}
                         label="Cobrar"
                         size="sm"
+                        touchFriendly
                         className="flex-1 sm:flex-none justify-center"
                       />
 
-                      {/* Botón Cobrado Individual */}
-                      <button
+                      {/* Botón Cobrado Individual (Neutro Secundario con icono Check) */}
+                      <Button
                         type="button"
+                        variant="secondary"
+                        size="sm"
+                        touchFriendly
                         disabled={processingId === m.id}
+                        isLoading={processingId === m.id}
                         onClick={() => handlePayMilestone(m.id)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium bg-emerald-950/60 text-emerald-300 border border-emerald-800 hover:bg-emerald-900 hover:border-emerald-700 active:scale-95 transition-all select-none disabled:opacity-50"
-                        title="Marcar como cobrado"
+                        title="Marcar hito como cobrado"
+                        className="shrink-0"
                       >
-                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <Check className="w-4 h-4 text-emerald-400 shrink-0" />
                         <span>Cobrado</span>
-                      </button>
+                      </Button>
 
-                      {/* Botón Cobro Express "Cobrar Todo" */}
-                      <button
+                      {/* Botón Cobro Express "Cobrar Todo" con apertura de diálogo */}
+                      <Button
                         type="button"
-                        disabled={processingId === `budget-${m.budgetId}`}
-                        onClick={() => handlePayAllBudget(m.budgetId)}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-neutral-800 text-neutral-300 border border-neutral-700 hover:bg-neutral-700 hover:text-neutral-100 active:scale-95 transition-all select-none disabled:opacity-50"
-                        title="Liquidar todos los hitos pendientes de este presupuesto (RN-04)"
+                        variant="ghost"
+                        size="sm"
+                        touchFriendly
+                        disabled={processingId?.startsWith('budget-')}
+                        onClick={() => handleOpenPayAllModal(m)}
+                        title="Liquidar todos los hitos pendientes de este presupuesto"
+                        className="shrink-0 text-amber-400 hover:text-amber-300 hover:bg-amber-950/20"
                       >
-                        <Zap className="w-3.5 h-3.5 text-amber-400" />
-                        <span className="hidden sm:inline">Cobrar Todo</span>
-                      </button>
+                        <Zap className="w-4 h-4 text-amber-400 shrink-0" />
+                        <span>Cobrar Todo</span>
+                      </Button>
                     </div>
                   </div>
-                </div>
+                </Card>
               );
             })}
           </div>
         )}
       </div>
+
+      {/* Modal de Confirmación para "Cobrar Todo" (Previene errores táctiles) */}
+      <Dialog
+        open={Boolean(payAllTarget)}
+        onOpenChange={(open) => !open && setPayAllTarget(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <div className="flex items-center gap-2 text-amber-400 mb-1">
+              <Zap className="w-5 h-5 shrink-0" />
+              <DialogTitle>¿Confirmar liquidación total del presupuesto?</DialogTitle>
+            </div>
+            <DialogDescription>
+              Esta acción marcará de forma inmediata todos los hitos pendientes de este presupuesto como cobrados, registrando la fecha de pago de hoy.
+            </DialogDescription>
+          </DialogHeader>
+
+          {payAllTarget && (
+            <CardPanel className="space-y-2 mb-2">
+              <div className="flex justify-between items-center text-xs sm:text-sm">
+                <span className="text-neutral-400">Proyecto:</span>
+                <span className="font-semibold text-neutral-100">{payAllTarget.projectTitle}</span>
+              </div>
+              <div className="flex justify-between items-center text-xs sm:text-sm">
+                <span className="text-neutral-400">Cliente:</span>
+                <span className="text-neutral-200">{payAllTarget.clientName}</span>
+              </div>
+              <div className="flex justify-between items-center text-xs sm:text-sm">
+                <span className="text-neutral-400">Hitos a liquidar:</span>
+                <span className="font-mono text-neutral-200">{payAllTarget.milestonesCount} pendientes</span>
+              </div>
+              <div className="flex justify-between items-center text-xs sm:text-sm pt-2 border-t border-neutral-800">
+                <span className="text-neutral-300 font-medium">Monto Total a Cobrar:</span>
+                <span className="font-mono font-bold text-base text-emerald-400">
+                  {formatCurrency(payAllTarget.totalAmount, payAllTarget.currency)}
+                </span>
+              </div>
+            </CardPanel>
+          )}
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="ghost"
+              touchFriendly
+              onClick={() => setPayAllTarget(null)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              touchFriendly
+              isLoading={processingId?.startsWith('budget-')}
+              onClick={handleConfirmPayAll}
+            >
+              Confirmar Cobro Total
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
