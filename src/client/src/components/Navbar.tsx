@@ -105,7 +105,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onTabChange, onLock 
             className="inline-flex items-center justify-center gap-1.5 min-h-[44px] sm:min-h-[34px] px-2.5 sm:px-3 rounded-md text-xs font-medium text-neutral-300 bg-neutral-900 border border-neutral-800 hover:border-neutral-700 hover:text-neutral-100 active:scale-95 transition-all duration-150 ease-out select-none touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400"
           >
             <Shield className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-emerald-400 shrink-0" />
-            <span className="hidden lg:inline">Seguridad</span>
+            <span className="hidden sm:inline">Seguridad</span>
           </button>
 
           <button
