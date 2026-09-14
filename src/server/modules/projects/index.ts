@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { eq, and } from 'drizzle-orm';
 import { getDb, projects, clients, budgets, milestones } from '../../db';
+import { sanitizeString, validateAndSanitizeId, idParamSchema } from '../../middlewares/sanitize';
 
 const projectsApp = new Hono();
 
@@ -11,19 +12,50 @@ export const productionStatusSchema = z.enum(['ACTIVE', 'INACTIVE']);
 export const recurringPeriodSchema = z.enum(['MONTHLY', 'ANNUALLY']);
 
 export const projectCreateSchema = z.object({
-  clientId: z.string({ required_error: 'El cliente es obligatorio' }).min(1, 'El cliente es obligatorio'),
-  title: z.string({ required_error: 'El título del proyecto es obligatorio' }).trim().min(1, 'El título del proyecto es obligatorio'),
+  clientId: idParamSchema,
+  title: z
+    .string({ required_error: 'El título del proyecto es obligatorio' })
+    .transform(sanitizeString)
+    .refine((v) => v.length >= 1, 'El título del proyecto es obligatorio')
+    .refine((v) => v.length <= 200, 'El título no puede superar los 200 caracteres'),
   category: projectCategorySchema,
   status: projectStatusSchema.default('PROSPECT'),
-  productionUrl: z.string().trim().url('URL de producción inválida').optional().nullable().or(z.literal('')),
+  productionUrl: z
+    .string()
+    .transform(sanitizeString)
+    .refine((v) => v.length <= 500, 'La URL no puede superar los 500 caracteres')
+    .pipe(z.string().url('URL de producción inválida').or(z.literal('')))
+    .optional()
+    .nullable(),
   productionStatus: productionStatusSchema.default('ACTIVE'),
-  codeRepoUrl: z.string().trim().url('URL de repositorio inválida').optional().nullable().or(z.literal('')),
-  resourcesUrl: z.string().trim().url('URL de recursos inválida').optional().nullable().or(z.literal('')),
+  codeRepoUrl: z
+    .string()
+    .transform(sanitizeString)
+    .refine((v) => v.length <= 500, 'La URL no puede superar los 500 caracteres')
+    .pipe(z.string().url('URL de repositorio inválida').or(z.literal('')))
+    .optional()
+    .nullable(),
+  resourcesUrl: z
+    .string()
+    .transform(sanitizeString)
+    .refine((v) => v.length <= 500, 'La URL no puede superar los 500 caracteres')
+    .pipe(z.string().url('URL de recursos inválida').or(z.literal('')))
+    .optional()
+    .nullable(),
   hasRecurring: z.number().int().min(0).max(1).default(0),
   recurringAmount: z.number().nonnegative('El monto recurrente debe ser mayor o igual a 0').optional().nullable(),
-  recurringCurrency: z.string().trim().default('USD'),
+  recurringCurrency: z
+    .string()
+    .transform(sanitizeString)
+    .refine((v) => v.length <= 10, 'La moneda no puede superar los 10 caracteres')
+    .default('USD'),
   recurringPeriod: recurringPeriodSchema.default('ANNUALLY'),
-  recurringRenewalDate: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato YYYY-MM-DD').optional().nullable().or(z.literal('')),
+  recurringRenewalDate: z
+    .string()
+    .transform(sanitizeString)
+    .pipe(z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato YYYY-MM-DD').or(z.literal('')))
+    .optional()
+    .nullable(),
 });
 
 export const projectUpdateSchema = projectCreateSchema.partial();
@@ -33,12 +65,15 @@ export type ProjectUpdateInput = z.infer<typeof projectUpdateSchema>;
 
 // 1. GET /api/projects — Listado general de proyectos con filtros
 projectsApp.get('/', async (c) => {
-  const statusFilter = c.req.query('status');
+  const rawStatus = c.req.query('status');
+  const cleanStatus = rawStatus ? sanitizeString(rawStatus).toUpperCase() : null;
+  const statusParsed = cleanStatus ? projectStatusSchema.safeParse(cleanStatus) : null;
+  const statusFilter = statusParsed?.success ? statusParsed.data : null;
   const db = getDb(c);
 
   const allProjects = await db.select().from(projects).all();
   const filtered = statusFilter
-    ? allProjects.filter((p) => p.status.toUpperCase() === statusFilter.toUpperCase())
+    ? allProjects.filter((p) => p.status === statusFilter)
     : allProjects;
 
   const allClients = await db.select().from(clients).all();
@@ -97,7 +132,12 @@ projectsApp.get('/', async (c) => {
 
 // 2. GET /api/projects/:id — Detalle completo del proyecto con cliente, presupuestos e hitos
 projectsApp.get('/:id', async (c) => {
-  const id = c.req.param('id');
+  const rawId = c.req.param('id');
+  const id = validateAndSanitizeId(rawId);
+  if (!id) {
+    return c.json({ error: 'Identificador de proyecto inválido o malformado.' }, 400);
+  }
+
   const db = getDb(c);
 
   const [proj] = await db.select().from(projects).where(eq(projects.id, id)).all();
@@ -147,13 +187,13 @@ projectsApp.post('/', async (c) => {
   const newProject = {
     id: newId,
     clientId: parsed.data.clientId,
-    title: parsed.data.title.trim(),
+    title: parsed.data.title,
     category: parsed.data.category,
     status: parsed.data.status,
-    productionUrl: parsed.data.productionUrl?.trim() || null,
+    productionUrl: parsed.data.productionUrl || null,
     productionStatus: parsed.data.productionStatus,
-    codeRepoUrl: parsed.data.codeRepoUrl?.trim() || null,
-    resourcesUrl: parsed.data.resourcesUrl?.trim() || null,
+    codeRepoUrl: parsed.data.codeRepoUrl || null,
+    resourcesUrl: parsed.data.resourcesUrl || null,
     hasRecurring: parsed.data.hasRecurring,
     recurringAmount: parsed.data.hasRecurring ? parsed.data.recurringAmount || null : null,
     recurringCurrency: parsed.data.recurringCurrency,
@@ -169,7 +209,12 @@ projectsApp.post('/', async (c) => {
 
 // 4. PUT /api/projects/:id — Actualización y Cancelación No Destructiva (RN-05)
 projectsApp.put('/:id', async (c) => {
-  const id = c.req.param('id');
+  const rawId = c.req.param('id');
+  const id = validateAndSanitizeId(rawId);
+  if (!id) {
+    return c.json({ error: 'Identificador de proyecto inválido o malformado.' }, 400);
+  }
+
   const body = await c.req.json().catch(() => null);
   const parsed = projectUpdateSchema.safeParse(body);
 
@@ -188,13 +233,13 @@ projectsApp.put('/:id', async (c) => {
     updatedAt: nowIso,
   };
 
-  if (parsed.data.title !== undefined) updateData.title = parsed.data.title.trim();
+  if (parsed.data.title !== undefined) updateData.title = parsed.data.title;
   if (parsed.data.category !== undefined) updateData.category = parsed.data.category;
   if (parsed.data.status !== undefined) updateData.status = parsed.data.status;
-  if (parsed.data.productionUrl !== undefined) updateData.productionUrl = parsed.data.productionUrl?.trim() || null;
+  if (parsed.data.productionUrl !== undefined) updateData.productionUrl = parsed.data.productionUrl || null;
   if (parsed.data.productionStatus !== undefined) updateData.productionStatus = parsed.data.productionStatus;
-  if (parsed.data.codeRepoUrl !== undefined) updateData.codeRepoUrl = parsed.data.codeRepoUrl?.trim() || null;
-  if (parsed.data.resourcesUrl !== undefined) updateData.resourcesUrl = parsed.data.resourcesUrl?.trim() || null;
+  if (parsed.data.codeRepoUrl !== undefined) updateData.codeRepoUrl = parsed.data.codeRepoUrl || null;
+  if (parsed.data.resourcesUrl !== undefined) updateData.resourcesUrl = parsed.data.resourcesUrl || null;
   if (parsed.data.hasRecurring !== undefined) {
     updateData.hasRecurring = parsed.data.hasRecurring;
     if (parsed.data.hasRecurring === 0) {
@@ -275,7 +320,11 @@ export async function handleProjectRenewal(c: any, projectId: string) {
 
 // 5. POST /api/projects/:id/renew — Suma un período de renovación (+1 mes o +1 año) (RN-08)
 projectsApp.post('/:id/renew', async (c) => {
-  const id = c.req.param('id');
+  const rawId = c.req.param('id');
+  const id = validateAndSanitizeId(rawId);
+  if (!id) {
+    return c.json({ error: 'Identificador de proyecto inválido o malformado.' }, 400);
+  }
   return handleProjectRenewal(c, id);
 });
 

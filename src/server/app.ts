@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { pinAuthMiddleware } from './middlewares/auth';
+import { sanitizeMiddleware } from './middlewares/sanitize';
 import authApp from './modules/auth';
 import clientsApp from './modules/clients';
 import projectsApp from './modules/projects';
@@ -20,6 +21,9 @@ export type AppEnv = {
 };
 
 const app = new Hono<AppEnv>();
+
+// Middleware global de sanitización contra inyecciones SQL y bytes nulos
+app.use('*', sanitizeMiddleware);
 
 // Middleware CORS para desarrollo
 app.use(

@@ -2,21 +2,46 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { eq, and } from 'drizzle-orm';
 import { getDb, budgets, milestones, projects } from '../../db';
+import { sanitizeString, validateAndSanitizeId } from '../../middlewares/sanitize';
 
 const budgetsApp = new Hono();
 
 // Esquema de creación de hito
 export const milestoneInputSchema = z.object({
-  title: z.string({ required_error: 'El título del hito es obligatorio' }).trim().min(1, 'El título del hito es obligatorio'),
-  percentage: z.number({ required_error: 'El porcentaje es obligatorio' }).int('El porcentaje debe ser un número entero').min(1, 'El porcentaje debe ser al menos 1').max(100, 'El porcentaje no puede superar 100'),
-  dueDate: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de fecha YYYY-MM-DD').optional().nullable().or(z.literal('')),
+  title: z
+    .string({ required_error: 'El título del hito es obligatorio' })
+    .transform(sanitizeString)
+    .refine((v) => v.length >= 1, 'El título del hito es obligatorio')
+    .refine((v) => v.length <= 200, 'El título no puede superar los 200 caracteres'),
+  percentage: z
+    .number({ required_error: 'El porcentaje es obligatorio' })
+    .int('El porcentaje debe ser un número entero')
+    .min(1, 'El porcentaje debe ser al menos 1')
+    .max(100, 'El porcentaje no puede superar 100'),
+  dueDate: z
+    .string()
+    .transform(sanitizeString)
+    .pipe(z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de fecha YYYY-MM-DD').or(z.literal('')))
+    .optional()
+    .nullable(),
 });
 
 // Esquema de creación de presupuesto (RN-01 & RN-02)
 export const budgetCreateSchema = z.object({
-  title: z.string({ required_error: 'El concepto o título del presupuesto es obligatorio' }).trim().min(1, 'El concepto o título del presupuesto es obligatorio'),
-  totalAmount: z.number({ required_error: 'El monto total es obligatorio' }).int('El monto total debe ser un entero estricto sin decimales (RN-01)').positive('El monto debe ser mayor a 0'),
-  currency: z.string().trim().default('USD'),
+  title: z
+    .string({ required_error: 'El concepto o título del presupuesto es obligatorio' })
+    .transform(sanitizeString)
+    .refine((v) => v.length >= 1, 'El concepto o título del presupuesto es obligatorio')
+    .refine((v) => v.length <= 200, 'El título no puede superar los 200 caracteres'),
+  totalAmount: z
+    .number({ required_error: 'El monto total es obligatorio' })
+    .int('El monto total debe ser un entero estricto sin decimales (RN-01)')
+    .positive('El monto debe ser mayor a 0'),
+  currency: z
+    .string()
+    .transform(sanitizeString)
+    .refine((v) => v.length <= 10, 'La moneda no puede superar los 10 caracteres')
+    .default('USD'),
   milestones: z.array(milestoneInputSchema).min(1, 'Debe incluir al menos 1 hito de cobro'),
 }).refine(
   (data) => {
@@ -62,7 +87,12 @@ export function calculateMilestonesAmounts(
 
 // 1. POST /api/projects/:projectId/budgets — Crea presupuesto e hitos en estado DRAFT
 budgetsApp.post('/projects/:projectId/budgets', async (c) => {
-  const projectId = c.req.param('projectId');
+  const rawProjectId = c.req.param('projectId');
+  const projectId = validateAndSanitizeId(rawProjectId);
+  if (!projectId) {
+    return c.json({ error: 'Identificador de proyecto inválido o malformado.' }, 400);
+  }
+
   const body = await c.req.json().catch(() => null);
   const parsed = budgetCreateSchema.safeParse(body);
 
@@ -126,7 +156,11 @@ budgetsApp.post('/projects/:projectId/budgets', async (c) => {
 
 // 2. GET /api/projects/:projectId/budgets — Historial de presupuestos del proyecto
 budgetsApp.get('/projects/:projectId/budgets', async (c) => {
-  const projectId = c.req.param('projectId');
+  const rawProjectId = c.req.param('projectId');
+  const projectId = validateAndSanitizeId(rawProjectId);
+  if (!projectId) {
+    return c.json({ error: 'Identificador de proyecto inválido o malformado.' }, 400);
+  }
   const db = getDb(c);
 
   const projBudgets = await db.select().from(budgets).where(eq(budgets.projectId, projectId)).all();
@@ -146,7 +180,12 @@ budgetsApp.get('/projects/:projectId/budgets', async (c) => {
 
 // 3. PUT /api/budgets/:id — Edición de presupuesto (solo en estado DRAFT)
 budgetsApp.put('/budgets/:id', async (c) => {
-  const id = c.req.param('id');
+  const rawId = c.req.param('id');
+  const id = validateAndSanitizeId(rawId);
+  if (!id) {
+    return c.json({ error: 'Identificador de presupuesto inválido o malformado.' }, 400);
+  }
+
   const body = await c.req.json().catch(() => null);
   const parsed = budgetCreateSchema.safeParse(body);
 
@@ -168,7 +207,7 @@ budgetsApp.put('/budgets/:id', async (c) => {
   await db
     .update(budgets)
     .set({
-      title: parsed.data.title.trim(),
+      title: parsed.data.title,
       totalAmount: parsed.data.totalAmount,
       currency: parsed.data.currency,
       updatedAt: nowIso,
@@ -186,7 +225,7 @@ budgetsApp.put('/budgets/:id', async (c) => {
   const milestoneRows = computedMilestones.map((m) => ({
     id: crypto.randomUUID(),
     budgetId: id,
-    title: m.title.trim(),
+    title: m.title,
     percentage: m.percentage,
     amount: m.amount,
     dueDate: m.dueDate,
@@ -202,7 +241,7 @@ budgetsApp.put('/budgets/:id', async (c) => {
 
   return c.json({
     ...existing,
-    title: parsed.data.title.trim(),
+    title: parsed.data.title,
     totalAmount: parsed.data.totalAmount,
     currency: parsed.data.currency,
     updatedAt: nowIso,
@@ -212,7 +251,11 @@ budgetsApp.put('/budgets/:id', async (c) => {
 
 // GET /api/budgets/:id — Detalle del presupuesto con sus hitos
 budgetsApp.get('/budgets/:id', async (c) => {
-  const id = c.req.param('id');
+  const rawId = c.req.param('id');
+  const id = validateAndSanitizeId(rawId);
+  if (!id) {
+    return c.json({ error: 'Identificador de presupuesto inválido o malformado.' }, 400);
+  }
   const db = getDb(c);
 
   const [budget] = await db.select().from(budgets).where(eq(budgets.id, id)).all();
@@ -229,7 +272,11 @@ budgetsApp.get('/budgets/:id', async (c) => {
 
 // 4. POST /api/budgets/:id/approve — Aprobación en 1 Clic (RN-03)
 budgetsApp.post('/budgets/:id/approve', async (c) => {
-  const id = c.req.param('id');
+  const rawId = c.req.param('id');
+  const id = validateAndSanitizeId(rawId);
+  if (!id) {
+    return c.json({ error: 'Identificador de presupuesto inválido o malformado.' }, 400);
+  }
   const db = getDb(c);
 
   const [budget] = await db.select().from(budgets).where(eq(budgets.id, id)).all();
@@ -271,7 +318,11 @@ budgetsApp.post('/budgets/:id/approve', async (c) => {
 
 // 5. POST /api/budgets/:id/reject — Marca presupuesto como REJECTED
 budgetsApp.post('/budgets/:id/reject', async (c) => {
-  const id = c.req.param('id');
+  const rawId = c.req.param('id');
+  const id = validateAndSanitizeId(rawId);
+  if (!id) {
+    return c.json({ error: 'Identificador de presupuesto inválido o malformado.' }, 400);
+  }
   const db = getDb(c);
 
   const [budget] = await db.select().from(budgets).where(eq(budgets.id, id)).all();
@@ -298,7 +349,11 @@ budgetsApp.post('/budgets/:id/reject', async (c) => {
 
 // 6. PATCH /api/milestones/:id/pay — Marca hito individual como PAID
 budgetsApp.patch('/milestones/:id/pay', async (c) => {
-  const id = c.req.param('id');
+  const rawId = c.req.param('id');
+  const id = validateAndSanitizeId(rawId);
+  if (!id) {
+    return c.json({ error: 'Identificador de hito inválido o malformado.' }, 400);
+  }
   const db = getDb(c);
 
   const [milestone] = await db.select().from(milestones).where(eq(milestones.id, id)).all();
@@ -326,7 +381,11 @@ budgetsApp.patch('/milestones/:id/pay', async (c) => {
 
 // 7. POST /api/budgets/:id/pay-all — Operación Cobro Express "Cobrar Todo" (RN-04)
 budgetsApp.post('/budgets/:id/pay-all', async (c) => {
-  const id = c.req.param('id');
+  const rawId = c.req.param('id');
+  const id = validateAndSanitizeId(rawId);
+  if (!id) {
+    return c.json({ error: 'Identificador de presupuesto inválido o malformado.' }, 400);
+  }
   const db = getDb(c);
 
   const [budget] = await db.select().from(budgets).where(eq(budgets.id, id)).all();

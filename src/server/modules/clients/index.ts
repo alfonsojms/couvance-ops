@@ -2,15 +2,41 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { eq } from 'drizzle-orm';
 import { getDb, clients, projects, budgets, milestones } from '../../db';
+import { sanitizeString, validateAndSanitizeId } from '../../middlewares/sanitize';
 
 const clientsApp = new Hono();
 
 export const clientCreateSchema = z.object({
-  name: z.string({ required_error: 'El nombre o empresa es obligatorio' }).trim().min(1, 'El nombre o empresa es obligatorio'),
-  contactName: z.string().trim().optional().nullable(),
-  phone: z.string().trim().optional().nullable(),
-  email: z.string().trim().email('Email inválido').optional().nullable().or(z.literal('')),
-  notes: z.string().trim().optional().nullable(),
+  name: z
+    .string({ required_error: 'El nombre o empresa es obligatorio' })
+    .transform(sanitizeString)
+    .refine((v) => v.length >= 1, 'El nombre o empresa es obligatorio')
+    .refine((v) => v.length <= 200, 'El nombre no puede superar los 200 caracteres'),
+  contactName: z
+    .string()
+    .transform(sanitizeString)
+    .refine((v) => v.length <= 200, 'El nombre de contacto no puede superar los 200 caracteres')
+    .optional()
+    .nullable(),
+  phone: z
+    .string()
+    .transform(sanitizeString)
+    .refine((v) => v.length <= 50, 'El teléfono no puede superar los 50 caracteres')
+    .optional()
+    .nullable(),
+  email: z
+    .string()
+    .transform(sanitizeString)
+    .refine((v) => v.length <= 150, 'El email no puede superar los 150 caracteres')
+    .pipe(z.string().email('Email inválido').or(z.literal('')))
+    .optional()
+    .nullable(),
+  notes: z
+    .string()
+    .transform(sanitizeString)
+    .refine((v) => v.length <= 2000, 'Las notas no pueden superar los 2000 caracteres')
+    .optional()
+    .nullable(),
 });
 
 export const clientUpdateSchema = clientCreateSchema.partial();
@@ -106,7 +132,12 @@ clientsApp.post('/', async (c) => {
 
 // 3. PUT /api/clients/:id — Actualiza cliente
 clientsApp.put('/:id', async (c) => {
-  const id = c.req.param('id');
+  const rawId = c.req.param('id');
+  const id = validateAndSanitizeId(rawId);
+  if (!id) {
+    return c.json({ error: 'Identificador de cliente inválido o malformado.' }, 400);
+  }
+
   const body = await c.req.json().catch(() => null);
   const parsed = clientUpdateSchema.safeParse(body);
 
@@ -125,11 +156,11 @@ clientsApp.put('/:id', async (c) => {
     updatedAt: nowIso,
   };
 
-  if (parsed.data.name !== undefined) updateData.name = parsed.data.name.trim();
-  if (parsed.data.contactName !== undefined) updateData.contactName = parsed.data.contactName?.trim() || null;
-  if (parsed.data.phone !== undefined) updateData.phone = parsed.data.phone?.trim() || null;
-  if (parsed.data.email !== undefined) updateData.email = parsed.data.email?.trim() || null;
-  if (parsed.data.notes !== undefined) updateData.notes = parsed.data.notes?.trim() || null;
+  if (parsed.data.name !== undefined) updateData.name = parsed.data.name;
+  if (parsed.data.contactName !== undefined) updateData.contactName = parsed.data.contactName || null;
+  if (parsed.data.phone !== undefined) updateData.phone = parsed.data.phone || null;
+  if (parsed.data.email !== undefined) updateData.email = parsed.data.email || null;
+  if (parsed.data.notes !== undefined) updateData.notes = parsed.data.notes || null;
 
   await db.update(clients).set(updateData).where(eq(clients.id, id));
 
@@ -139,7 +170,12 @@ clientsApp.put('/:id', async (c) => {
 
 // 4. DELETE /api/clients/:id — Eliminación con protección 409 (RN-06)
 clientsApp.delete('/:id', async (c) => {
-  const id = c.req.param('id');
+  const rawId = c.req.param('id');
+  const id = validateAndSanitizeId(rawId);
+  if (!id) {
+    return c.json({ error: 'Identificador de cliente inválido o malformado.' }, 400);
+  }
+
   const db = getDb(c);
 
   const [existing] = await db.select().from(clients).where(eq(clients.id, id)).all();
