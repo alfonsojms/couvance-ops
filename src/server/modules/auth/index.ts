@@ -50,9 +50,45 @@ export const resetPinSchema = z.object({
     .regex(/^\d{6}$/, 'El PIN debe ser numérico'),
 });
 
+export const changePinSchema = z.object({
+  currentPin: z
+    .string({ required_error: 'El PIN actual es obligatorio' })
+    .length(6, 'El PIN actual debe tener exactamente 6 dígitos')
+    .regex(/^\d{6}$/, 'El PIN actual debe ser numérico'),
+  newPin: z
+    .string({ required_error: 'El nuevo PIN es obligatorio' })
+    .length(6, 'El nuevo PIN debe tener exactamente 6 dígitos')
+    .regex(/^\d{6}$/, 'El nuevo PIN debe ser numérico'),
+});
+
+export const updateQuestionsSchema = z.object({
+  currentPin: z
+    .string({ required_error: 'El PIN actual es requerido para autorizar el cambio' })
+    .length(6, 'El PIN actual debe tener exactamente 6 dígitos')
+    .regex(/^\d{6}$/, 'El PIN actual debe ser numérico'),
+  q1: z
+    .string({ required_error: 'La pregunta 1 es obligatoria' })
+    .trim()
+    .min(3, 'La pregunta 1 debe tener al menos 3 caracteres'),
+  a1: z
+    .string({ required_error: 'La respuesta 1 es obligatoria' })
+    .trim()
+    .min(1, 'La respuesta 1 no puede estar vacía'),
+  q2: z
+    .string({ required_error: 'La pregunta 2 es obligatoria' })
+    .trim()
+    .min(3, 'La pregunta 2 debe tener al menos 3 caracteres'),
+  a2: z
+    .string({ required_error: 'La respuesta 2 es obligatoria' })
+    .trim()
+    .min(1, 'La respuesta 2 no puede estar vacía'),
+});
+
 export type UnlockInput = z.infer<typeof unlockSchema>;
 export type RecoverInput = z.infer<typeof recoverSchema>;
 export type ResetPinInput = z.infer<typeof resetPinSchema>;
+export type ChangePinInput = z.infer<typeof changePinSchema>;
+export type UpdateQuestionsInput = z.infer<typeof updateQuestionsSchema>;
 
 // 1. POST /api/auth/unlock — Valida el PIN de 6 dígitos
 authApp.post('/unlock', rateLimitMiddleware, async (c) => {
@@ -225,6 +261,107 @@ async function checkAuthStatus(c: any) {
 // 6. GET /api/auth/status y GET /api/auth/me — Verifica estado de sesión activa
 authApp.get('/status', checkAuthStatus);
 authApp.get('/me', checkAuthStatus);
+
+// 7. GET /api/auth/settings — Retorna preguntas de seguridad actuales para la vista de configuración
+authApp.get('/settings', async (c) => {
+  const db = getDb(c);
+  const [auth] = await db.select().from(authConfig).where(eq(authConfig.id, 1)).all();
+  if (!auth) {
+    return c.json({ error: 'Configuración no encontrada.' }, 404);
+  }
+  return c.json({
+    q1: auth.q1,
+    q2: auth.q2,
+    updatedAt: auth.updatedAt,
+  });
+});
+
+// 8. POST /api/auth/change-pin — Cambia el PIN maestro tras validar el PIN actual
+authApp.post('/change-pin', async (c) => {
+  const body = await c.req.json().catch(() => null);
+  const parsed = changePinSchema.safeParse(body);
+
+  if (!parsed.success) {
+    return c.json({ error: parsed.error.issues[0]?.message || 'Datos de PIN inválidos.' }, 400);
+  }
+
+  const db = getDb(c);
+  const secret = getPinSecret(c);
+  const [auth] = await db.select().from(authConfig).where(eq(authConfig.id, 1)).all();
+  if (!auth) {
+    return c.json({ error: 'Configuración no encontrada.' }, 500);
+  }
+
+  // Verificar PIN actual
+  const currentHash = await sha256(parsed.data.currentPin, secret);
+  if (!timingSafeEqual(currentHash, auth.pinHash)) {
+    return c.json({ error: 'El PIN actual ingresado es incorrecto.' }, 401);
+  }
+
+  const newPinHash = await sha256(parsed.data.newPin, secret);
+  const nowIso = new Date().toISOString();
+
+  await db
+    .update(authConfig)
+    .set({
+      pinHash: newPinHash,
+      updatedAt: nowIso,
+    })
+    .where(eq(authConfig.id, 1));
+
+  // Actualizar cookie de sesión
+  const sessionToken = await signToken(
+    {
+      sub: 'session',
+      exp: Date.now() + 30 * 24 * 60 * 60 * 1000,
+      iat: Date.now(),
+    },
+    secret
+  );
+  setSessionCookie(c, sessionToken);
+
+  return c.json({ ok: true, message: 'PIN maestro actualizado exitosamente.' });
+});
+
+// 9. POST /api/auth/update-questions — Actualiza las preguntas y respuestas secretas tras validar el PIN actual
+authApp.post('/update-questions', async (c) => {
+  const body = await c.req.json().catch(() => null);
+  const parsed = updateQuestionsSchema.safeParse(body);
+
+  if (!parsed.success) {
+    return c.json({ error: parsed.error.issues[0]?.message || 'Datos de preguntas inválidos.' }, 400);
+  }
+
+  const db = getDb(c);
+  const secret = getPinSecret(c);
+  const [auth] = await db.select().from(authConfig).where(eq(authConfig.id, 1)).all();
+  if (!auth) {
+    return c.json({ error: 'Configuración no encontrada.' }, 500);
+  }
+
+  // Verificar PIN actual para autorizar el cambio
+  const currentHash = await sha256(parsed.data.currentPin, secret);
+  if (!timingSafeEqual(currentHash, auth.pinHash)) {
+    return c.json({ error: 'El PIN actual ingresado es incorrecto. No se autorizó el cambio.' }, 401);
+  }
+
+  const a1Hash = await sha256(parsed.data.a1, secret);
+  const a2Hash = await sha256(parsed.data.a2, secret);
+  const nowIso = new Date().toISOString();
+
+  await db
+    .update(authConfig)
+    .set({
+      q1: parsed.data.q1.trim(),
+      a1Hash,
+      q2: parsed.data.q2.trim(),
+      a2Hash,
+      updatedAt: nowIso,
+    })
+    .where(eq(authConfig.id, 1));
+
+  return c.json({ ok: true, message: 'Preguntas y respuestas de seguridad actualizadas exitosamente.' });
+});
 
 export default authApp;
 

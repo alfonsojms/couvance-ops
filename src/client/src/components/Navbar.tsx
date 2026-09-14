@@ -1,6 +1,7 @@
-import React from 'react';
-import { LayoutDashboard, FolderKanban, Sparkles, Users, Download, Lock } from 'lucide-react';
+import React, { useState } from 'react';
+import { LayoutDashboard, FolderKanban, Sparkles, Users, Download, Lock, Shield } from 'lucide-react';
 import { toast } from 'sonner';
+import { SecuritySettingsModal } from './SecuritySettingsModal';
 
 export type NavTab = 'dashboard' | 'projects' | 'showcase' | 'clients';
 
@@ -11,7 +12,8 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ currentTab, onTabChange, onLock }) => {
-  const [downloading, setDownloading] = React.useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [securityModalOpen, setSecurityModalOpen] = useState(false);
 
   const handleExportBackup = async () => {
     try {
@@ -81,7 +83,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onTabChange, onLock 
           })}
         </nav>
 
-        {/* Acciones Rápidas (Exportar Respaldo + Bloquear) */}
+        {/* Acciones Rápidas (Exportar Respaldo + Seguridad + Bloquear) */}
         <div className="flex items-center gap-1.5 sm:gap-2">
           <button
             type="button"
@@ -97,6 +99,17 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onTabChange, onLock 
 
           <button
             type="button"
+            onClick={() => setSecurityModalOpen(true)}
+            aria-label="Seguridad y PIN maestro"
+            title="Cambiar PIN o preguntas de seguridad"
+            className="inline-flex items-center justify-center gap-1.5 min-h-[44px] sm:min-h-[34px] px-2.5 sm:px-3 rounded-md text-xs font-medium text-neutral-300 bg-neutral-900 border border-neutral-800 hover:border-neutral-700 hover:text-neutral-100 active:scale-95 transition-all duration-150 ease-out select-none touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400"
+          >
+            <Shield className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-emerald-400 shrink-0" />
+            <span className="hidden lg:inline">Seguridad</span>
+          </button>
+
+          <button
+            type="button"
             onClick={onLock}
             aria-label="Bloquear sesión"
             title="Bloquear sesión"
@@ -106,6 +119,11 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onTabChange, onLock 
           </button>
         </div>
       </div>
+
+      <SecuritySettingsModal
+        isOpen={securityModalOpen}
+        onClose={() => setSecurityModalOpen(false)}
+      />
     </header>
   );
 };
