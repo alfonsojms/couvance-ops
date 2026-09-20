@@ -6,6 +6,6 @@ pages_build_output_dir = "dist/client"
 [[d1_databases]]
 binding = "DB"
 database_name = "couvance-ops-db"
-database_id = "82bc7d29-4ccb-4d66-bfb9-170a3af527e6"
+database_id = "eaed759c-4051-4cbd-824a-97cff5109e79"
 migrations_dir = "drizzle"
 
