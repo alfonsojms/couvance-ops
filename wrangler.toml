@@ -5,4 +5,6 @@ pages_build_output_dir = "dist/client"
 [[d1_databases]]
 binding = "DB"
 database_name = "kodex-ops-db"
-database_id = "local-db-placeholder"
+database_id = "82bc7d29-4ccb-4d66-bfb9-170a3af527e6"
+migrations_dir = "drizzle"
+
