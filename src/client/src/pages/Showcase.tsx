@@ -49,7 +49,7 @@ export const Showcase: React.FC = () => {
 
   // Generador de Ficha de Venta para WhatsApp
   const handleCopySalesPitch = (p: ShowcaseProject) => {
-    const pitch = `🚀 *Proyecto:* ${p.title}\n🏢 *Cliente:* ${p.clientName}\n🌐 *Ver online:* ${p.productionUrl}\n💼 *Desarrollado por:* Kodex`;
+    const pitch = `🚀 *Proyecto:* ${p.title}\n🏢 *Cliente:* ${p.clientName}\n🌐 *Ver online:* ${p.productionUrl}\n💼 *Desarrollado por:* Couvance`;
     copyToClipboard(pitch, 'Ficha de venta copiada para WhatsApp');
   };
 

@@ -10,7 +10,7 @@ import * as schema from './db/schema';
 import { seedInitialAuthIfNeeded } from './db';
 
 // 1. Inicialización y conexión de SQLite local (better-sqlite3)
-const dbPath = process.env.DATABASE_URL?.replace('file:', '') || './data/kodex-ops.db';
+const dbPath = process.env.DATABASE_URL?.replace('file:', '') || './data/couvance-ops.db';
 const dbDir = path.dirname(dbPath);
 if (!fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir, { recursive: true });
@@ -39,7 +39,7 @@ try {
   }
 
   // Sembrado inicial (seed) si la tabla AUTH_CONFIG está vacía
-  const secret = process.env.PIN_SECRET || 'kodex_ops_default_insecure_secret_change_in_prod';
+  const secret = process.env.PIN_SECRET || 'couvance_ops_default_insecure_secret_change_in_prod';
   const seeded = await seedInitialAuthIfNeeded(db, secret);
   if (seeded) {
     console.log('🌱 Credenciales maestras iniciales sembradas en AUTH_CONFIG.');
@@ -56,7 +56,7 @@ if (fs.existsSync('./dist/client')) {
 
 // 4. Arranque del servidor con @hono/node-server
 const port = Number(process.env.PORT) || 3000;
-console.log(`🚀 Servidor Kodex Ops escuchando en http://0.0.0.0:${port}`);
+console.log(`🚀 Servidor Couvance Ops escuchando en http://0.0.0.0:${port}`);
 serve({
   fetch: app.fetch,
   port,

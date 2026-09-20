@@ -1,13 +1,13 @@
-# 📋 Kodex Ops — Especificación Funcional & Alcance del MVP
+# 📋 Couvance Ops — Especificación Funcional & Alcance del MVP
 
-> **Documento de Definición de Producto:** Especificación simplificada, ágil y agnóstica de tecnología para el MVP de uso personal e interno de **Kodex Ops** (herramienta operativa para 2 personas).
+> **Documento de Definición de Producto:** Especificación simplificada, ágil y agnóstica de tecnología para el MVP de uso personal e interno de **Couvance Ops** (herramienta operativa para 2 personas).
 
 ---
 
 ## 🎯 1. Visión y Propósito del MVP
 
 ### 1.1 Contexto Real
-**Kodex Ops** nace como una herramienta interna y personal para los **2 socios/operadores** de la agencia digital (Kodex). No busca ser un software corporativo con burocracia administrativa, sino una solución ligera y directa para reemplazar notas dispersas, chats de WhatsApp y hojas de cálculo desactualizadas.
+**Couvance Ops** nace como una herramienta interna y personal para los **2 socios/operadores** de la agencia digital (Couvance). No busca ser un software corporativo con burocracia administrativa, sino una solución ligera y directa para reemplazar notas dispersas, chats de WhatsApp y hojas de cálculo desactualizadas.
 
 ### 1.2 Objetivo Central
 Tener en un solo lugar y en tiempo real la respuesta a 4 necesidades fundamentales del día a día:
@@ -93,7 +93,7 @@ Definidos bajo la realidad operativa de los 2 socios:
 ### CU-01: Acceso al Sistema mediante PIN
 * **Actor:** Cualquiera de los 2 socios.
 * **Flujo Principal:**
-  1. El usuario abre la URL de Kodex Ops.
+  1. El usuario abre la URL de Couvance Ops.
   2. Si el dispositivo no está recordado, se presenta la pantalla con teclado numérico para ingresar el PIN de 6 dígitos.
   3. Al validar el PIN, entra de inmediato al panel principal y el dispositivo queda recordado.
 * **Flujo Alterno (Recuperación):** Si no recuerda el PIN, pulsa "¿Olvidaste el PIN?", responde correctamente las 2 preguntas de seguridad y el sistema le permite configurar un nuevo PIN de 6 dígitos.

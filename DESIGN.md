@@ -1,5 +1,5 @@
 ---
-name: Kodex Ops Design System
+name: Couvance Ops Design System
 description: Utilitarian high-contrast dark design system with 1px hairline borders and zero AI slop
 colors:
   background: "#09090b"
@@ -71,11 +71,11 @@ components:
     padding: "8px 16px"
 ---
 
-# Design System — Kodex Ops
+# Design System — Couvance Ops
 
 ## Overview
 
-Kodex Ops adopta una filosofía de diseño utilitaria, de autor y estrictamente anti-"AI slop". La herramienta está concebida para la velocidad operativa de 2 socios que gestionan cotizaciones y cobranzas desde escritorio y smartphones. El diseño rechaza sombras difusas excesivas, gradientes llamativos y radios gigantes, favoreciendo la precisión de bordes finos de 1px (`border-neutral-800`), contraste tipográfico alto y feedback táctil inmediato.
+Couvance Ops adopta una filosofía de diseño utilitaria, de autor y estrictamente anti-"AI slop". La herramienta está concebida para la velocidad operativa de 2 socios que gestionan cotizaciones y cobranzas desde escritorio y smartphones. El diseño rechaza sombras difusas excesivas, gradientes llamativos y radios gigantes, favoreciendo la precisión de bordes finos de 1px (`border-neutral-800`), contraste tipográfico alto y feedback táctil inmediato.
 
 ## Colors
 

@@ -1,17 +1,16 @@
 import { Context } from 'hono';
 import { eq } from 'drizzle-orm';
 import { createD1Db, D1Db } from './d1';
-import { getSqliteDb, SqliteDb } from './sqlite';
+import type { SqliteDb } from './sqlite';
 import * as schema from './schema';
 import { authConfig } from './schema';
 import { sha256 } from '../middlewares/auth';
 
 export * from './schema';
-export { getSqliteDb, type SqliteDb } from './sqlite';
+export { type SqliteDb } from './sqlite';
 export { createD1Db, type D1Db } from './d1';
 
 export type AppDatabase = D1Db | SqliteDb;
-
 
 export function getDb(c: Context): AppDatabase {
   // 1. Cloudflare Pages Functions (c.env.DB)
@@ -29,9 +28,7 @@ export function getDb(c: Context): AppDatabase {
     return contextDb;
   }
 
-  // 3. Fallback to local SQLite instance
-  const { db } = getSqliteDb();
-  return db;
+  throw new Error('Database connection not available in context. Ensure c.env.DB or c.get("db") is configured.');
 }
 
 export async function seedInitialAuthIfNeeded(db: AppDatabase, secret: string): Promise<boolean> {
@@ -39,7 +36,7 @@ export async function seedInitialAuthIfNeeded(db: AppDatabase, secret: string): 
   if (!existingAuth) {
     const initialPin = (typeof process !== 'undefined' && process.env?.INITIAL_PIN) || '123456';
     const q1 = (typeof process !== 'undefined' && process.env?.SECURITY_Q1) || '¿Cuál es el nombre de tu primera mascota?';
-    const a1 = (typeof process !== 'undefined' && process.env?.SECURITY_A1) || 'kodex';
+    const a1 = (typeof process !== 'undefined' && process.env?.SECURITY_A1) || 'couvance';
     const q2 = (typeof process !== 'undefined' && process.env?.SECURITY_Q2) || '¿En qué ciudad se fundó la agencia?';
     const a2 = (typeof process !== 'undefined' && process.env?.SECURITY_A2) || 'valencia';
 

@@ -1,5 +1,5 @@
 {
-  "name": "kodex-ops",
+  "name": "couvance-ops",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -10,8 +10,8 @@
     "build:server": "tsup src/server/node-entry.ts --format esm --out-dir dist/server --external better-sqlite3",
     "build": "npm run build:client && npm run build:server",
     "db:generate": "drizzle-kit generate",
-    "db:migrate:local": "wrangler d1 migrations apply kodex-ops-db --local",
-    "db:migrate:prod": "wrangler d1 migrations apply kodex-ops-db --remote",
+    "db:migrate:local": "wrangler d1 migrations apply couvance-ops-db --local",
+    "db:migrate:prod": "wrangler d1 migrations apply couvance-ops-db --remote",
     "start": "node dist/server/node-entry.js"
   },
   "dependencies": {

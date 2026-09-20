@@ -175,7 +175,7 @@ export const Unlock: React.FC<UnlockProps> = ({ onUnlockSuccess }) => {
         </div>
 
         <h1 className="text-xl font-bold tracking-tight text-neutral-100 mb-1 text-center">
-          Kodex Ops
+          Couvance Ops
         </h1>
         <p className="text-xs text-neutral-400 mb-8 text-center">
           Ingresa el PIN maestro de 6 dígitos para acceder

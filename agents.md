@@ -1,16 +1,16 @@
 # 🤖 AGENTS.md — Guía de Desarrollo e Instrucciones para Agentes de IA
 
-> **Propósito del Archivo:** Este documento sirve como la guía definitiva de contexto, arquitectura, reglas de negocio y directrices de implementación para agentes de IA y desarrolladores que operen sobre el repositorio de **Kodex Ops**. Está derivado directamente de la especificación técnica (`kodex-ops-tech-spec.md`) y funcional (`kodex-ops-functional-spec.md`).
+> **Propósito del Archivo:** Este documento sirve como la guía definitiva de contexto, arquitectura, reglas de negocio y directrices de implementación para agentes de IA y desarrolladores que operen sobre el repositorio de **Couvance Ops**. Está derivado directamente de la especificación técnica (`couvance-ops-tech-spec.md`) y funcional (`couvance-ops-functional-spec.md`).
 
 ---
 
 ## 🧭 1. Resumen Ejecutivo del Proyecto
 
-* **Nombre:** Kodex Ops
-* **Naturaleza:** Herramienta interna para los 2 socios/operadores de la agencia digital Kodex.
+* **Nombre:** Couvance Ops
+* **Naturaleza:** Herramienta interna para los 2 socios/operadores de la agencia digital Couvance.
 * **Arquitectura:** Monolito modular fullstack en TypeScript con ejecución dual:
   1. **Edge Serverless (Producción $0):** Cloudflare Pages + Cloudflare Pages Functions + Cloudflare D1 (SQLite serverless).
-  2. **Contenedor Autónomo (Local / Docker / VPS):** Node.js (@hono/node-server) + SQLite embebido local (`better-sqlite3` con modo WAL) en volumen persistente `/app/data/kodex-ops.db`.
+  2. **Contenedor Autónomo (Local / Docker / VPS):** Node.js (@hono/node-server) + SQLite embebido local (`better-sqlite3` con modo WAL) en volumen persistente `/app/data/couvance-ops.db`.
 * **Filosofía de Producto:** Cero burocracia administrativa, agilidad operativa máxima, acceso mediante PIN de 6 dígitos recordado en dispositivo, cobro express vía WhatsApp con fallback al portapapeles, y diseño de autor ultraligero anti-"AI slop".
 
 ---
@@ -38,7 +38,7 @@
 ## 🏛️ 3. Estructura de Directorios del Repositorio
 
 ```text
-kodexops/
+couvance-ops/
 ├── drizzle/                    # Migraciones SQL generadas por Drizzle Kit
 │   └── 0000_init.sql
 ├── functions/                  # Adaptador nativo Cloudflare Pages Functions
@@ -84,7 +84,7 @@ kodexops/
 │       └── vite.config.ts
 │
 ├── Dockerfile                  # Multi-stage build (node:20-slim)
-├── docker-compose.yml          # Compose specification con volumen persistente kodex_data
+├── docker-compose.yml          # Compose specification con volumen persistente couvance_data
 ├── wrangler.toml               # Configuración Cloudflare Pages & D1 binding
 ├── drizzle.config.ts           # Configuración Drizzle Kit
 ├── package.json
@@ -222,7 +222,7 @@ Cualquier agente o desarrollador que modifique la lógica del sistema debe garan
    - No se emplean dependencias externas pesadas.
 
 2. **Propiedades de la Cookie de Sesión:**
-   - Nombre sugerido: `kodex_session`
+   - Nombre sugerido: `couvance_session`
    - Opciones: `HttpOnly = true`, `Secure = true` (en producción), `SameSite = 'Lax'` (**Lax es requerido para soportar apertura directa de links desde WhatsApp en smartphones**), `Max-Age = 30 días` (2,592,000 s).
    - Token firmado con `PIN_SECRET` (HMAC-SHA256 o JWT ligero).
 
@@ -296,8 +296,8 @@ Cualquier agente o desarrollador que modifique la lógica del sistema debe garan
     "build:server": "tsup src/server/node-entry.ts --format esm --out-dir dist/server --external better-sqlite3",
     "build": "npm run build:client && npm run build:server",
     "db:generate": "drizzle-kit generate",
-    "db:migrate:local": "wrangler d1 migrations apply kodex-ops-db --local",
-    "db:migrate:prod": "wrangler d1 migrations apply kodex-ops-db --remote",
+    "db:migrate:local": "wrangler d1 migrations apply couvance-ops-db --local",
+    "db:migrate:prod": "wrangler d1 migrations apply couvance-ops-db --remote",
     "start": "node dist/server/node-entry.js"
   }
 }
@@ -309,7 +309,7 @@ Cualquier agente o desarrollador que modifique la lógica del sistema debe garan
 docker compose up -d --build
 
 # Verificar logs y migraciones automáticas
-docker compose logs -f kodex-ops
+docker compose logs -f couvance-ops
 ```
 
 ---

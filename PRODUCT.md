@@ -8,7 +8,7 @@ web
 
 ## Users
 
-Los 2 socios/operadores de la agencia digital **Kodex**. No es un software multi-inquilino ni corporativo, sino una herramienta interna privada utilizada en dos escenarios clave: frente a la computadora (gestión de proyectos y cotizaciones) y en la calle desde el smartphone (cobranza inmediata por WhatsApp y consulta de tesorería).
+Los 2 socios/operadores de la agencia digital **Couvance**. No es un software multi-inquilino ni corporativo, sino una herramienta interna privada utilizada en dos escenarios clave: frente a la computadora (gestión de proyectos y cotizaciones) y en la calle desde el smartphone (cobranza inmediata por WhatsApp y consulta de tesorería).
 
 ## Product Purpose
 
@@ -49,8 +49,8 @@ Micro-ERP de alta velocidad y cero burocracia diseñado específicamente para la
 
 ## Evidence on Hand
 
-- `kodex-ops-functional-spec.md` (Especificación funcional completa del MVP).
-- `kodex-ops-tech-spec.md` (Arquitectura técnica y modelo de datos relacional).
+- `couvance-ops-functional-spec.md` (Especificación funcional completa del MVP).
+- `couvance-ops-tech-spec.md` (Arquitectura técnica y modelo de datos relacional).
 - `AGENTS.md` (Directrices del repositorio y reglas de negocio RN-01 a RN-10).
 - Backend API totalmente funcional y testeado (Fases 1 y 2 completadas con paridad SQLite/D1 y 66 pruebas exitosas).
 

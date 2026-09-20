@@ -14,7 +14,7 @@ export function getSqliteDb(customPath?: string): { db: SqliteDb; sqlite: Databa
     return { db: dbInstance, sqlite: sqliteInstance };
   }
 
-  const dbPath = customPath || process.env.DATABASE_URL?.replace('file:', '') || './data/kodex-ops.db';
+  const dbPath = customPath || process.env.DATABASE_URL?.replace('file:', '') || './data/couvance-ops.db';
   const dbDir = path.dirname(dbPath);
   if (!fs.existsSync(dbDir)) {
     fs.mkdirSync(dbDir, { recursive: true });

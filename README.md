@@ -1,7 +1,7 @@
-# ⚡ Kodex Ops — Radar de Cobranzas y Operaciones sin Burocracia
+# ⚡ Couvance Ops — Radar de Cobranzas y Operaciones sin Burocracia
 
 > **Cobra hitos por WhatsApp en 1 segundo, liquida presupuestos con un toque y mantén las renovaciones bajo control desde el móvil.**  
-> Herramienta interna de alta velocidad construida para los 2 socios directores de **Kodex**, con coste de infraestructura $0 (Cloudflare Edge Serverless / Docker SQLite) y cero tolerancia al software inflado ("anti-AI slop").
+> Herramienta interna de alta velocidad construida para los 2 socios directores de **Couvance**, con coste de infraestructura $0 (Cloudflare Edge Serverless / Docker SQLite) y cero tolerancia al software inflado ("anti-AI slop").
 
 ---
 
@@ -13,7 +13,7 @@ Las agencias digitales rara vez se detienen por falta de clientes; se asfixian p
 2. **Renovaciones silenciosas que expiran:** Dominios, servidores y servicios de mantenimiento que vencen sin facturarse al cliente. Cientos de dólares al año absorbidos por la agencia por simple falta de aviso.
 3. **La incomodidad de cobrar en la calle:** Recordar el monto pendiente, redactar un mensaje cordial y buscar el teléfono del cliente mientras estás en un taxi o entre reuniones es engorroso. Se pospone para "luego", y el dinero no entra.
 
-**Kodex Ops elimina esa fricción convirtiendo cada cobro en una acción de 1 segundo:**
+**Couvance Ops elimina esa fricción convirtiendo cada cobro en una acción de 1 segundo:**
 
 - 📡 **Radar de Cobranzas Proactivo:** Mira en segundos qué hitos vencen hoy y qué servicios recurrentes expiran en los próximos 30 días.
 - 💬 **Cobro Express por WhatsApp (o Portapapeles):** Un toque abre la conversación con el monto exacto, proyecto y mensaje cordial listo. Si el cliente no tiene teléfono guardado, lo copia al portapapeles sin romper tu ritmo.
@@ -47,7 +47,7 @@ flowchart TD
 
     subgraph Persistence [Persistencia Agnóstica Drizzle ORM]
         D1[(Cloudflare D1<br/>SQLite Serverless Edge)]
-        SQLite[(better-sqlite3 WAL<br/>/app/data/kodex-ops.db)]
+        SQLite[(better-sqlite3 WAL<br/>/app/data/couvance-ops.db)]
     end
 
     Client -->|Peticiones HTTP JSON| CFPages
@@ -71,7 +71,7 @@ flowchart TD
   - Hashing seguro SHA-256 con sal/pimienta de servidor (`PIN_SECRET`).
   - Firmas de sesión HMAC-SHA256 para prevenir manipulaciones.
   - Mitigación de ataques de temporización (*timing attacks*) mediante comparación en tiempo constante (`timingSafeEqual`).
-  - Cookie de sesión `kodex_session` con `SameSite: 'Lax'` (fundamental para que el navegador no cierre la sesión al saltar de WhatsApp de vuelta a la app) y validez de 30 días.
+  - Cookie de sesión `couvance_session` con `SameSite: 'Lax'` (fundamental para que el navegador no cierre la sesión al saltar de WhatsApp de vuelta a la app) y validez de 30 días.
 
 ### 3. Rigor Contable: Las 10 Reglas de Negocio Innegociables
 En finanzas de agencia, los errores de redondeo destruyen la confianza con los clientes y la contabilidad interna:
@@ -113,7 +113,7 @@ Construido bajo el principio de **utilidad pura sin adornos innecesarios**:
 ## 📂 Estructura del Proyecto
 
 ```text
-kodexops/
+couvance-ops/
 ├── drizzle/                    # Migraciones SQL generadas por Drizzle Kit
 ├── functions/api/[[route]].ts  # Entrypoint Edge para Cloudflare Pages Functions
 ├── src/
@@ -151,7 +151,7 @@ kodexops/
 │               └── utils.ts    # Enlaces wa.me y portapapeles seguro
 │
 ├── Dockerfile                  # Multi-stage build optimizado (node:20-slim)
-├── docker-compose.yml          # Configuración con volumen persistente kodex_data
+├── docker-compose.yml          # Configuración con volumen persistente couvance_data
 ├── wrangler.toml               # Configuración Cloudflare Pages & binding D1
 ├── drizzle.config.ts           # Configuración de Drizzle Kit
 ├── vite.config.ts              # Configuración de Vite con proxy /api
@@ -189,8 +189,8 @@ En software interno, lo que decides no construir es tan importante como lo que i
 ### 1. Desarrollo Local
 ```bash
 # Clonar e instalar dependencias
-git clone https://github.com/tu-usuario/kodexops.git
-cd kodexops
+git clone https://github.com/tu-usuario/couvance-ops.git
+cd couvance-ops
 npm install
 
 # Configurar variables de entorno
@@ -207,7 +207,7 @@ npm run dev
 
 > **Credenciales Iniciales por Defecto:**
 > - **PIN Maestro:** `123456`
-> - **Pregunta Secreta 1:** `¿Cuál es el nombre de tu primera mascota?` &rarr; `kodex`
+> - **Pregunta Secreta 1:** `¿Cuál es el nombre de tu primera mascota?` &rarr; `couvance`
 > - **Pregunta Secreta 2:** `¿En qué ciudad se fundó la agencia?` &rarr; `valencia`
 
 ---
@@ -216,7 +216,7 @@ npm run dev
 ```bash
 docker compose up -d --build
 ```
-La aplicación compilará cliente y servidor, aplicará las migraciones automáticamente en el arranque y quedará disponible en `http://localhost:3000` con persistencia en el volumen `kodex_data`.
+La aplicación compilará cliente y servidor, aplicará las migraciones automáticamente en el arranque y quedará disponible en `http://localhost:3000` con persistencia en el volumen `couvance_data`.
 
 ---
 
@@ -224,7 +224,7 @@ La aplicación compilará cliente y servidor, aplicará las migraciones automát
 
 1. **Crear la base de datos D1 en Cloudflare:**
    ```bash
-   npx wrangler d1 create kodex-ops-db
+   npx wrangler d1 create couvance-ops-db
    ```
    Copia el `database_id` generado y colócalo en `wrangler.toml`.
 

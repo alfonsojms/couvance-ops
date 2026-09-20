@@ -149,7 +149,7 @@ export const SecuritySettingsModal: React.FC<SecuritySettingsModalProps> = ({
             <div>
               <DialogTitle>Seguridad & Credenciales</DialogTitle>
               <DialogDescription>
-                Gestione el PIN maestro y las preguntas de recuperación de Kodex Ops
+                Gestione el PIN maestro y las preguntas de recuperación de Couvance Ops
               </DialogDescription>
             </div>
           </div>

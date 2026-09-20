@@ -194,7 +194,7 @@ export const Clients: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {clients.map((c) => {
-            const contactMsg = `Hola ${c.name}, te escribimos de Kodex. ¿Cómo estás?`;
+            const contactMsg = `Hola ${c.name}, te escribimos de Couvance. ¿Cómo estás?`;
 
             return (
               <Card

@@ -1,6 +1,6 @@
-# 🏗️ Kodex Ops — Especificación Técnica y Arquitectura del Sistema
+# 🏗️ Couvance Ops — Especificación Técnica y Arquitectura del Sistema
 
-> **Documento de Arquitectura y Stack Tecnológico:** Especificación técnica detallada para el desarrollo y despliegue del MVP de **Kodex Ops**, diseñado como un monolito modular fullstack en TypeScript de alto rendimiento y costo de infraestructura $0 sobre el ecosistema de Cloudflare.
+> **Documento de Arquitectura y Stack Tecnológico:** Especificación técnica detallada para el desarrollo y despliegue del MVP de **Couvance Ops**, diseñado como un monolito modular fullstack en TypeScript de alto rendimiento y costo de infraestructura $0 sobre el ecosistema de Cloudflare.
 
 ---
 
@@ -19,7 +19,7 @@
 | **ORM & Migraciones** | **Drizzle ORM + Drizzle Kit** | Máxima velocidad, SQL tipado en TypeScript sin binarios pesados (a diferencia de Prisma), diseñado para Edge runtimes. |
 | **Validación de Datos** | **Zod** | Esquemas de validación compartidos entre cliente y servidor, asegurando que ningún dato inconsistente toque la base de datos. |
 | **Seguridad de Acceso** | **PIN Maestro de 6 Dígitos (D1 Persistente)** | Almacenamiento de hash y preguntas de seguridad en tabla `AUTH_CONFIG` de D1 (permite reseteo mutable en Edge), cookie `HttpOnly` / `Secure` / `SameSite=Lax` (soporte WhatsApp móvil), rate limiting (5 intentos/15 min) y token firmado con `PIN_SECRET`. |
-| **Hosting & Dominio** | **Cloudflare Pages** (`ops.wearekodex.com`) | Despliegue continuo con Git en el dominio ya configurado de la agencia (`wearekodex.com`) a costo $0. |
+| **Hosting & Dominio** | **Cloudflare Pages** (`ops.couvance.com`) | Despliegue continuo con Git en el dominio ya configurado de la agencia (`couvance.com`) a costo $0. |
 | **Contenerización & Portabilidad** | **Docker & Docker Compose** | Arquitectura agnóstica de runtime: ejecución en un solo contenedor ligero (<100 MB RAM) con Node/Bun y SQLite local persistido en volumen. |
 
 ---
@@ -28,7 +28,7 @@
 
 ```mermaid
 graph TD
-    User["Socio (Móvil / Escritorio)"] -->|HTTPS / ops.wearekodex.com| CF["Cloudflare Edge Network"]
+    User["Socio (Móvil / Escritorio)"] -->|HTTPS / ops.couvance.com| CF["Cloudflare Edge Network"]
     
     subgraph Cloudflare Pages
         CF --> Static["Frontend (React + Vite SPA)"]
@@ -228,7 +228,7 @@ Para garantizar cero fricción sin comprometer la privacidad frente a terceros e
 ## 📂 6. Estructura de Directorios del Monolito
 
 ```text
-kodex-ops/
+couvance-ops/
 ├── drizzle/                    # Migraciones SQL generadas por Drizzle Kit
 │   └── 0000_init.sql
 ├── functions/                  # Adaptador nativo Cloudflare Pages Functions (cero fricción)
@@ -288,21 +288,21 @@ kodex-ops/
 ## ⚡ 7. Estrategia de Despliegue en Cloudflare ($0 Costo)
 
 1. **Configuración en Cloudflare Dashboard:**
-   * Crear base de datos D1: `npx wrangler d1 create kodex-ops-db`.
+   * Crear base de datos D1: `npx wrangler d1 create couvance-ops-db`.
    * Enlazar el binding de D1 en `wrangler.toml`:
      ```toml
      [[d1_databases]]
      binding = "DB"
-     database_name = "kodex-ops-db"
+     database_name = "couvance-ops-db"
      database_id = "<tu-database-id>"
      ```
 2. **Subdominio Personalizado:**
-   * En el panel de Cloudflare DNS de `wearekodex.com`, asociar el subdominio `ops.wearekodex.com` al proyecto de Cloudflare Pages.
+   * En el panel de Cloudflare DNS de `couvance.com`, asociar el subdominio `ops.couvance.com` al proyecto de Cloudflare Pages.
 3. **Variables de Entorno y Migraciones en D1:**
    * **Variable de Entorno (Cloudflare Pages):** Configurar `PIN_SECRET` (clave criptográfica para la firma de tokens JWT y salado de hashes).
    * **Aplicar Migraciones SQL:**
-     - En local (emulador): `npx wrangler d1 migrations apply kodex-ops-db --local`
-     - En producción: `npx wrangler d1 migrations apply kodex-ops-db --remote`
+     - En local (emulador): `npx wrangler d1 migrations apply couvance-ops-db --local`
+     - En producción: `npx wrangler d1 migrations apply couvance-ops-db --remote`
    * **Integración Nativa Pages Functions:** Cloudflare Pages detecta de forma automática la carpeta `functions/api/[[route]].ts`, la cual con tan solo 3 líneas (`import { handle } from 'hono/cloudflare-pages'; import app from '../../src/server/app'; export const onRequest = handle(app);`) monta de inmediato todos los endpoints del backend sobre el Edge sin requerir pasos complejos de build.
 4. **Pipeline CI/CD:**
    * Cada `git push` a la rama `main` ejecuta el build de Vite (`npm run build:client`) y Cloudflare Pages publica la SPA y monta las Pages Functions en segundos de forma automática.
@@ -311,7 +311,7 @@ kodex-ops/
 
 ## 🐳 8. Contenerización con Docker y Portabilidad Multi-Runtime
 
-Para maximizar la versatilidad técnica del proyecto y evitar el *vendor lock-in*, **Kodex Ops** cuenta con una arquitectura de ejecución dual:
+Para maximizar la versatilidad técnica del proyecto y evitar el *vendor lock-in*, **Couvance Ops** cuenta con una arquitectura de ejecución dual:
 1. **Cloudflare Edge ($0 Costo en Producción):** Despliegue serverless sobre Cloudflare Pages + D1.
 2. **Contenedor Autónomo Docker (Desarrollo Local / VPS Privado):** Ejecución como servidor Node.js autónomo mediante `@hono/node-server` y base de datos SQLite embebida en disco local persistido.
 
@@ -319,7 +319,7 @@ Para maximizar la versatilidad técnica del proyecto y evitar el *vendor lock-in
 
 Para soportar ambos entornos sin duplicar lógica de negocio, se aísla la conexión de datos y se utiliza un entrypoint dedicado para Node.js:
 * **Cloudflare D1 (`src/server/db/d1.ts`):** Inicializa `drizzle-orm/d1` utilizando el binding serverless `c.env.DB`.
-* **Node SQLite (`src/server/db/sqlite.ts`):** Inicializa `better-sqlite3` con `drizzle-orm/better-sqlite3` apuntando al volumen `/app/data/kodex-ops.db`.
+* **Node SQLite (`src/server/db/sqlite.ts`):** Inicializa `better-sqlite3` con `drizzle-orm/better-sqlite3` apuntando al volumen `/app/data/couvance-ops.db`.
 * **Selector Agnóstico (`src/server/db/index.ts`):** Factoría que entrega la instancia correcta según las variables de entorno de ejecución.
 
 #### Entrypoint Autónomo: `src/server/node-entry.ts`
@@ -341,7 +341,7 @@ const hashValue = (val: string) =>
   crypto.createHash('sha256').update(val.trim().toLowerCase() + (process.env.PIN_SECRET || 'default_secret')).digest('hex');
 
 // 1. Inicialización y conexión de SQLite local (better-sqlite3)
-const dbPath = process.env.DATABASE_URL?.replace('file:', '') || '/app/data/kodex-ops.db';
+const dbPath = process.env.DATABASE_URL?.replace('file:', '') || '/app/data/couvance-ops.db';
 const sqlite = new Database(dbPath);
 sqlite.pragma('journal_mode = WAL');
 sqlite.pragma('foreign_keys = ON');
@@ -358,7 +358,7 @@ try {
   if (!existingAuth) {
     const initialPin = process.env.INITIAL_PIN || '123456';
     const q1 = process.env.SECURITY_Q1 || '¿Cuál es el nombre de tu primera mascota?';
-    const a1 = process.env.SECURITY_A1 || 'kodex';
+    const a1 = process.env.SECURITY_A1 || 'couvance';
     const q2 = process.env.SECURITY_Q2 || '¿En qué ciudad se fundó la agencia?';
     const a2 = process.env.SECURITY_A2 || 'valencia';
 
@@ -401,7 +401,7 @@ app.get('*', serveStatic({ path: './dist/client/index.html' }));
 
 // 5. Arranque del servidor con @hono/node-server
 const port = Number(process.env.PORT) || 3000;
-console.log(`🚀 Servidor Kodex Ops escuchando en http://0.0.0.0:${port}`);
+console.log(`🚀 Servidor Couvance Ops escuchando en http://0.0.0.0:${port}`);
 serve({
   fetch: app.fetch,
   port,
@@ -420,8 +420,9 @@ Para compilar la SPA de React con Vite y el servidor Node.js autónomo en JavaSc
     "build:client": "vite build --outDir dist/client",
     "build:server": "tsup src/server/node-entry.ts --format esm --out-dir dist/server --external better-sqlite3",
     "build": "npm run build:client && npm run build:server",
-    "db:migrate:local": "wrangler d1 migrations apply kodex-ops-db --local",
-    "db:migrate:prod": "wrangler d1 migrations apply kodex-ops-db --remote",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate:local": "wrangler d1 migrations apply couvance-ops-db --local",
+    "db:migrate:prod": "wrangler d1 migrations apply couvance-ops-db --remote",
     "start": "node dist/server/node-entry.js"
   }
 }
@@ -487,13 +488,13 @@ CMD ["node", "dist/server/node-entry.js"]
 ```
 
 ### 8.3 Orquestación con Docker Compose Modernizado
-El archivo `docker-compose.yml` adopta el estándar actual de Compose Specification (sin atributo obsoleto `version`), utiliza un volumen nombrado `kodex_data` para evitar problemas de permisos de usuario (`root:root`) en la máquina host, e incorpora un mecanismo nativo de `healthcheck` sin dependencias externas (`curl`/`wget`):
+El archivo `docker-compose.yml` adopta el estándar actual de Compose Specification (sin atributo obsoleto `version`), utiliza un volumen nombrado `couvance_data` para evitar problemas de permisos de usuario (`root:root`) en la máquina host, e incorpora un mecanismo nativo de `healthcheck` sin dependencias externas (`curl`/`wget`):
 
 ```yaml
 services:
-  kodex-ops:
+  couvance-ops:
     build: .
-    container_name: kodex-ops
+    container_name: couvance-ops
     restart: unless-stopped
     ports:
       - "3000:3000"
@@ -501,14 +502,14 @@ services:
       - PORT=3000
       - NODE_ENV=production
       - PIN_SECRET=clave_secreta_super_segura_para_jwt
-      - DATABASE_URL=file:/app/data/kodex-ops.db
+      - DATABASE_URL=file:/app/data/couvance-ops.db
       - INITIAL_PIN=123456
       - SECURITY_Q1=¿Cuál es el nombre de tu primera mascota?
-      - SECURITY_A1=kodex
+      - SECURITY_A1=couvance
       - SECURITY_Q2=¿En qué ciudad se fundó la agencia?
       - SECURITY_A2=valencia
     volumes:
-      - kodex_data:/app/data
+      - couvance_data:/app/data
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))"]
       interval: 30s
@@ -517,11 +518,11 @@ services:
       start_period: 10s
 
 volumes:
-  kodex_data:
+  couvance_data:
 ```
 
 ### 8.4 Ventajas para el Portafolio y Operación:
 * **Un solo contenedor para todo el stack:** Al usar SQLite embebido con `better-sqlite3`, no se requiere un contenedor secundario de PostgreSQL o MySQL; el consumo de RAM en reposo es inferior a 80 MB y el tamaño de la imagen final es inferior a 150 MB.
 * **Arranque instantáneo en local:** Cualquier desarrollador o evaluador técnico puede clonar el repositorio y ejecutar `docker compose up -d` para probar la aplicación completa con migraciones automáticas, sembrado inicial y datos locales sin configurar cuentas de Cloudflare.
-* **Persistencia segura y permisos limpios:** El volumen administrado `kodex_data:/app/data` garantiza que los datos y cotizaciones no se pierdan al reiniciar o actualizar el contenedor, eliminando riesgos de bloqueos por permisos `root` del host.
+* **Persistencia segura y permisos limpios:** El volumen administrado `couvance_data:/app/data` garantiza que los datos y cotizaciones no se pierdan al reiniciar o actualizar el contenedor, eliminando riesgos de bloqueos por permisos `root` del host.
 * **Resiliencia y Diagnóstico en Producción:** El contenedor reporta su estado de salud (`healthy`) vía el endpoint `/api/health`, permitiendo la autorrecuperación automática ante fallos de proceso en cualquier orquestador (Docker Compose, Docker Swarm o Kubernetes).

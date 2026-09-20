@@ -293,7 +293,7 @@ export const Dashboard: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {recurringAlerts.map((rec) => {
               const renewalPeriodLabel = rec.recurringPeriod === 'MONTHLY' ? 'mes' : 'año';
-              const renewalMsg = `Hola ${rec.clientName}, te escribimos de Kodex para avisarte que tu servicio de hosting y mantenimiento de ${rec.projectTitle} está próximo a renovar por ${formatCurrency(rec.recurringAmount || 0, rec.recurringCurrency)} (${rec.recurringPeriod === 'MONTHLY' ? 'mensual' : 'anual'}). ¡Avisanos cuando puedas para coordinar!`;
+              const renewalMsg = `Hola ${rec.clientName}, te escribimos de Couvance para avisarte que tu servicio de hosting y mantenimiento de ${rec.projectTitle} está próximo a renovar por ${formatCurrency(rec.recurringAmount || 0, rec.recurringCurrency)} (${rec.recurringPeriod === 'MONTHLY' ? 'mensual' : 'anual'}). ¡Avisanos cuando puedas para coordinar!`;
 
               return (
                 <Card
@@ -392,7 +392,7 @@ export const Dashboard: React.FC = () => {
           <div className="space-y-3">
             {pendingMilestones.map((m) => {
               const urgency = getMilestoneUrgency(m.dueDate);
-              const waMessage = `Hola ${m.clientName}, te escribimos de Kodex para recordarte sobre el hito "${m.milestoneTitle}" correspondiente al proyecto ${m.projectTitle} por un total de ${formatCurrency(m.amount, m.currency)}. ¡Quedamos atentos a tu comprobante!`;
+              const waMessage = `Hola ${m.clientName}, te escribimos de Couvance para recordarte sobre el hito "${m.milestoneTitle}" correspondiente al proyecto ${m.projectTitle} por un total de ${formatCurrency(m.amount, m.currency)}. ¡Quedamos atentos a tu comprobante!`;
 
               return (
                 <Card

@@ -26,7 +26,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onTabChange, onLock 
       const a = document.createElement('a');
       const dateStr = new Date().toISOString().split('T')[0];
       a.href = url;
-      a.download = `kodex-ops-backup-${dateStr}.json`;
+      a.download = `couvance-ops-backup-${dateStr}.json`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -52,10 +52,10 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onTabChange, onLock 
         {/* Marca / Título */}
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded bg-neutral-900 border border-neutral-700 flex items-center justify-center font-mono font-bold text-xs text-neutral-100 select-none">
-            KO
+            CO
           </div>
           <span className="font-semibold text-sm tracking-tight text-neutral-100 hidden sm:inline select-none">
-            Kodex <span className="text-neutral-400 font-mono text-xs">Ops</span>
+            Couvance <span className="text-neutral-400 font-mono text-xs">Ops</span>
           </span>
         </div>
 

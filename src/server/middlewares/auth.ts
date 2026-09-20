@@ -1,13 +1,13 @@
 import { Context, Next } from 'hono';
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
 
-const SESSION_COOKIE_NAME = 'kodex_session';
+const SESSION_COOKIE_NAME = 'couvance_session';
 const SESSION_MAX_AGE = 30 * 24 * 60 * 60; // 30 días en segundos
 
 export function getPinSecret(c: Context): string {
   const envSecret = (c.env as { PIN_SECRET?: string })?.PIN_SECRET;
   const processSecret = typeof process !== 'undefined' ? process.env?.PIN_SECRET : undefined;
-  return envSecret || processSecret || 'kodex_ops_default_insecure_secret_change_in_prod';
+  return envSecret || processSecret || 'couvance_ops_default_insecure_secret_change_in_prod';
 }
 
 // SHA-256 nativo con Web Crypto para compatibilidad total Edge y Node
