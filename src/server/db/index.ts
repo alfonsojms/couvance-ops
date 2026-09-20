@@ -31,14 +31,20 @@ export function getDb(c: Context): AppDatabase {
   throw new Error('Database connection not available in context. Ensure c.env.DB or c.get("db") is configured.');
 }
 
-export async function seedInitialAuthIfNeeded(db: AppDatabase, secret: string): Promise<boolean> {
+export async function seedInitialAuthIfNeeded(db: AppDatabase, secret: string, env?: Record<string, any>): Promise<boolean> {
   const [existingAuth] = await db.select().from(authConfig).where(eq(authConfig.id, 1)).all();
   if (!existingAuth) {
-    const initialPin = (typeof process !== 'undefined' && process.env?.INITIAL_PIN) || '12345678';
-    const q1 = (typeof process !== 'undefined' && process.env?.SECURITY_Q1) || '¿Cuál es el nombre de tu primera mascota?';
-    const a1 = (typeof process !== 'undefined' && process.env?.SECURITY_A1) || 'couvance';
-    const q2 = (typeof process !== 'undefined' && process.env?.SECURITY_Q2) || '¿En qué ciudad se fundó la agencia?';
-    const a2 = (typeof process !== 'undefined' && process.env?.SECURITY_A2) || 'valencia';
+    const getVal = (key: string, fallback: string) => {
+      if (env && env[key]) return env[key];
+      if (typeof process !== 'undefined' && process.env?.[key]) return process.env[key];
+      return fallback;
+    };
+
+    const initialPin = getVal('INITIAL_PIN', '12345678');
+    const q1 = getVal('SECURITY_Q1', '¿Cuál es el nombre de tu primera mascota?');
+    const a1 = getVal('SECURITY_A1', 'couvance');
+    const q2 = getVal('SECURITY_Q2', '¿En qué ciudad se fundó la agencia?');
+    const a2 = getVal('SECURITY_A2', 'valencia');
 
     const pinHash = await sha256(initialPin, secret);
     const a1Hash = await sha256(a1, secret);

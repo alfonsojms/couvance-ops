@@ -115,7 +115,7 @@ authApp.post('/unlock', rateLimitMiddleware, async (c) => {
   let [auth] = await db.select().from(authConfig).where(eq(authConfig.id, 1)).all();
   if (!auth) {
     // Si la BD está recién migrada (ej. Cloudflare D1 en frío), auto-sembrar credenciales iniciales
-    await seedInitialAuthIfNeeded(db, secret);
+    await seedInitialAuthIfNeeded(db, secret, c.env as Record<string, any>);
     [auth] = await db.select().from(authConfig).where(eq(authConfig.id, 1)).all();
   }
 
@@ -155,7 +155,7 @@ authApp.get('/questions', async (c) => {
 
   if (!auth) {
     const secret = getPinSecret(c);
-    await seedInitialAuthIfNeeded(db, secret);
+    await seedInitialAuthIfNeeded(db, secret, c.env as Record<string, any>);
     [auth] = await db
       .select()
       .from(authConfig)
