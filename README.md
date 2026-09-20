@@ -30,7 +30,7 @@ El sistema es un **monolito modular agnóstico del runtime**, diseñado para ope
 flowchart TD
     subgraph Client [Frontend SPA — React 18.3 + Vite 6]
         UI[Design System Impeccable<br/>Radix UI + Tailwind CSS]
-        Unlock[Desbloqueo PIN 6 dígitos<br/>Teclado físico + CSS Shake]
+        Unlock[Desbloqueo PIN 8 dígitos<br/>Teclado físico + CSS Shake]
         Radar[Radar de Tesorería<br/>Desacoplamiento cromático WhatsApp]
     end
 
@@ -206,7 +206,7 @@ npm run dev
 - **Backend API:** `http://localhost:3000`.
 
 > **Credenciales Iniciales por Defecto:**
-> - **PIN Maestro:** `123456`
+> - **PIN Maestro:** `12345678`
 > - **Pregunta Secreta 1:** `¿Cuál es el nombre de tu primera mascota?` &rarr; `couvance`
 > - **Pregunta Secreta 2:** `¿En qué ciudad se fundó la agencia?` &rarr; `valencia`
 
@@ -243,7 +243,7 @@ La aplicación compilará cliente y servidor, aplicará las migraciones automát
    npm run build:client
    npx wrangler pages deploy dist/client
    ```
-> *Nota:* En Cloudflare Pages, el sistema auto-siembra las credenciales iniciales (`123456`) en la primera petición si la base de datos está vacía.
+> *Nota:* En Cloudflare Pages, el sistema auto-siembra las credenciales iniciales (`12345678`) en la primera petición si la base de datos está vacía.
 
 ---
 

@@ -18,10 +18,10 @@ export const NumericKeypad: React.FC<NumericKeypadProps> = ({
   isShaking = false,
 }) => {
   const handleDigit = (digit: string) => {
-    if (disabled || pin.length >= 6) return;
+    if (disabled || pin.length >= 8) return;
     const newPin = pin + digit;
     onChange(newPin);
-    if (newPin.length === 6 && onSubmit) {
+    if (newPin.length === 8 && onSubmit) {
       onSubmit(newPin);
     }
   };
@@ -38,21 +38,21 @@ export const NumericKeypad: React.FC<NumericKeypadProps> = ({
 
   return (
     <div className="w-full max-w-xs mx-auto flex flex-col items-center select-none">
-      {/* Indicadores de 6 dígitos con animación de sacudida (shake) sin CLS */}
+      {/* Indicadores de 8 dígitos con animación de sacudida (shake) sin CLS */}
       <div
         className={cn(
-          'flex gap-4 mb-8 justify-center items-center h-8 transition-transform will-change-transform',
+          'flex gap-2.5 sm:gap-3 mb-8 justify-center items-center h-8 transition-transform will-change-transform',
           isShaking && 'animate-shake'
         )}
-        aria-label={`${pin.length} de 6 dígitos ingresados`}
+        aria-label={`${pin.length} de 8 dígitos ingresados`}
       >
-        {[0, 1, 2, 3, 4, 5].map((idx) => {
+        {[0, 1, 2, 3, 4, 5, 6, 7].map((idx) => {
           const filled = idx < pin.length;
           return (
             <div
               key={idx}
               className={cn(
-                'w-3.5 h-3.5 rounded-full border transition-all duration-150 ease-out',
+                'w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full border transition-all duration-150 ease-out',
                 filled
                   ? 'bg-neutral-100 border-neutral-100 scale-110 shadow-sm'
                   : 'bg-transparent border-neutral-700'

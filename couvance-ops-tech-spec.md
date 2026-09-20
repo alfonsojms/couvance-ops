@@ -18,7 +18,7 @@
 | **Base de Datos** | **Cloudflare D1 (SQLite Serverless)** | Base de datos relacional SQL serverless nativa en Cloudflare. 5 millones de lecturas/día y 5 GB de almacenamiento gratuitos ($0 costo operativo). |
 | **ORM & Migraciones** | **Drizzle ORM + Drizzle Kit** | Máxima velocidad, SQL tipado en TypeScript sin binarios pesados (a diferencia de Prisma), diseñado para Edge runtimes. |
 | **Validación de Datos** | **Zod** | Esquemas de validación compartidos entre cliente y servidor, asegurando que ningún dato inconsistente toque la base de datos. |
-| **Seguridad de Acceso** | **PIN Maestro de 6 Dígitos (D1 Persistente)** | Almacenamiento de hash y preguntas de seguridad en tabla `AUTH_CONFIG` de D1 (permite reseteo mutable en Edge), cookie `HttpOnly` / `Secure` / `SameSite=Lax` (soporte WhatsApp móvil), rate limiting (5 intentos/15 min) y token firmado con `PIN_SECRET`. |
+| **Seguridad de Acceso** | **PIN Maestro de 8 Dígitos (D1 Persistente)** | Almacenamiento de hash y preguntas de seguridad en tabla `AUTH_CONFIG` de D1 (permite reseteo mutable en Edge), cookie `HttpOnly` / `Secure` / `SameSite=Lax` (soporte WhatsApp móvil), rate limiting (5 intentos/15 min) y token firmado con `PIN_SECRET`. |
 | **Hosting & Dominio** | **Cloudflare Pages** (`ops.couvance.com`) | Despliegue continuo con Git en el dominio ya configurado de la agencia (`couvance.com`) a costo $0. |
 | **Contenerización & Portabilidad** | **Docker & Docker Compose** | Arquitectura agnóstica de runtime: ejecución en un solo contenedor ligero (<100 MB RAM) con Node/Bun y SQLite local persistido en volumen. |
 
@@ -174,14 +174,14 @@ Para garantizar cero fricción sin comprometer la privacidad frente a terceros e
 5. **Flujo de Recuperación y Reseteo de PIN:**
    - **Consulta de Preguntas:** El frontend consulta de manera pública `GET /api/auth/questions`, obteniendo `{ q1, q2 }` sin exponer los hashes de respuesta.
    - **Validación de Respuestas:** El socio envía sus respuestas a `POST /api/auth/recover`. El servicio normaliza el texto (minúsculas, trim), calcula su hash y lo compara contra `a1_hash` y `a2_hash` en `AUTH_CONFIG`. Si coinciden, emite un token de recuperación temporal de corta duración (10 minutos) firmado con `PIN_SECRET`.
-   - **Actualización de PIN:** Con el token temporal, el socio llama a `POST /api/auth/reset-pin` indicando el nuevo PIN de 6 dígitos. El endpoint valida el token, genera el nuevo hash y actualiza atómicamente `AUTH_CONFIG.pin_hash` y `AUTH_CONFIG.updated_at` en D1, emitiendo de inmediato la cookie de sesión autenticada.
+   - **Actualización de PIN:** Con el token temporal, el socio llama a `POST /api/auth/reset-pin` indicando el nuevo PIN de 8 dígitos. El endpoint valida el token, genera el nuevo hash y actualiza atómicamente `AUTH_CONFIG.pin_hash` y `AUTH_CONFIG.updated_at` en D1, emitiendo de inmediato la cookie de sesión autenticada.
 
 ---
 
 ## 📡 5. Diseño de Endpoints de la API (Hono API Routes)
 
 ### Autenticación y Acceso
-* `POST /api/auth/unlock` — Valida el PIN de 6 dígitos contra `AUTH_CONFIG.pin_hash` en D1 y entrega la cookie de sesión recordada (`HttpOnly`, `Secure`, `SameSite=Lax`). Sujeto a rate limiting (máx. 5 intentos fallidos / 15 min).
+* `POST /api/auth/unlock` — Valida el PIN de 8 dígitos contra `AUTH_CONFIG.pin_hash` en D1 y entrega la cookie de sesión recordada (`HttpOnly`, `Secure`, `SameSite=Lax`). Sujeto a rate limiting (máx. 5 intentos fallidos / 15 min).
 * `GET /api/auth/questions` — Retorna `{ q1: string, q2: string }` de forma pública (sin autenticación) desde `AUTH_CONFIG` para que la UI renderice las preguntas de recuperación.
 * `POST /api/auth/recover` — Valida las respuestas a las preguntas secretas contra `a1_hash` y `a2_hash` en `AUTH_CONFIG`. Si coinciden, emite un token temporal de reseteo (validez 10 minutos). Sujeto a rate limiting.
 * `POST /api/auth/reset-pin` — Valida el token temporal emitido por `/api/auth/recover` y actualiza `pin_hash` y `updated_at` en `AUTH_CONFIG` en D1 atómicamente, emitiendo la nueva cookie de sesión.
@@ -264,7 +264,7 @@ couvance-ops/
 │       │   │   ├── Projects.tsx    # Gestión de proyectos y cotizaciones
 │       │   │   ├── Showcase.tsx    # Catálogo de ventas filtrable por categoría
 │       │   │   ├── Clients.tsx     # Directorio de clientes
-│       │   │   └── Unlock.tsx      # Teclado numérico para ingresar el PIN de 6 dígitos
+│       │   │   └── Unlock.tsx      # Teclado numérico para ingresar el PIN de 8 dígitos
 │       │   ├── lib/
 │       │   │   ├── utils.ts        # Helper para generar enlaces wa.me y copiar portapapeles
 │       │   │   └── api.ts          # Cliente API tipado
@@ -356,7 +356,7 @@ try {
   // Sembrado inicial (seed) si la tabla AUTH_CONFIG está vacía
   const existingAuth = db.select().from(authConfig).where(eq(authConfig.id, 1)).get();
   if (!existingAuth) {
-    const initialPin = process.env.INITIAL_PIN || '123456';
+    const initialPin = process.env.INITIAL_PIN || '12345678';
     const q1 = process.env.SECURITY_Q1 || '¿Cuál es el nombre de tu primera mascota?';
     const a1 = process.env.SECURITY_A1 || 'couvance';
     const q2 = process.env.SECURITY_Q2 || '¿En qué ciudad se fundó la agencia?';
@@ -503,7 +503,7 @@ services:
       - NODE_ENV=production
       - PIN_SECRET=clave_secreta_super_segura_para_jwt
       - DATABASE_URL=file:/app/data/couvance-ops.db
-      - INITIAL_PIN=123456
+      - INITIAL_PIN=12345678
       - SECURITY_Q1=¿Cuál es el nombre de tu primera mascota?
       - SECURITY_A1=couvance
       - SECURITY_Q2=¿En qué ciudad se fundó la agencia?

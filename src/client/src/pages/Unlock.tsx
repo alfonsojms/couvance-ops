@@ -36,7 +36,7 @@ export const Unlock: React.FC<UnlockProps> = ({ onUnlockSuccess }) => {
 
   const handleUnlock = useCallback(
     async (pinToSubmit: string) => {
-      if (loading || pinToSubmit.length !== 6) return;
+      if (loading || pinToSubmit.length !== 8) return;
       setLoading(true);
       setErrorMsg(null);
 
@@ -74,9 +74,9 @@ export const Unlock: React.FC<UnlockProps> = ({ onUnlockSuccess }) => {
       if (/^[0-9]$/.test(e.key)) {
         e.preventDefault();
         setPin((prev) => {
-          if (prev.length >= 6) return prev;
+          if (prev.length >= 8) return prev;
           const next = prev + e.key;
-          if (next.length === 6) {
+          if (next.length === 8) {
             handleUnlock(next);
           }
           return next;
@@ -90,7 +90,7 @@ export const Unlock: React.FC<UnlockProps> = ({ onUnlockSuccess }) => {
         setErrorMsg(null);
       } else if (e.key === 'Enter') {
         e.preventDefault();
-        if (pin.length === 6) {
+        if (pin.length === 8) {
           handleUnlock(pin);
         }
       }
@@ -141,8 +141,8 @@ export const Unlock: React.FC<UnlockProps> = ({ onUnlockSuccess }) => {
 
   const handleResetPin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (newPin.length !== 6 || !/^\d{6}$/.test(newPin)) {
-      toast.error('El nuevo PIN debe tener exactamente 6 dígitos numéricos');
+    if (newPin.length !== 8 || !/^\d{8}$/.test(newPin)) {
+      toast.error('El nuevo PIN debe tener exactamente 8 dígitos numéricos');
       return;
     }
     if (newPin !== confirmPin) {
@@ -178,7 +178,7 @@ export const Unlock: React.FC<UnlockProps> = ({ onUnlockSuccess }) => {
           Couvance Ops
         </h1>
         <p className="text-xs text-neutral-400 mb-8 text-center">
-          Ingresa el PIN maestro de 6 dígitos para acceder
+          Ingresa el PIN maestro de 8 dígitos para acceder
         </p>
 
         {/* Mensaje de error si falla el PIN */}
@@ -222,7 +222,7 @@ export const Unlock: React.FC<UnlockProps> = ({ onUnlockSuccess }) => {
             <DialogDescription>
               {!resetToken
                 ? 'Responde las 2 preguntas de seguridad secretas para desbloquear el restablecimiento de PIN.'
-                : 'Respuestas verificadas. Ingresa y confirma tu nuevo PIN de 6 dígitos.'}
+                : 'Respuestas verificadas. Ingresa y confirma tu nuevo PIN de 8 dígitos.'}
             </DialogDescription>
           </DialogHeader>
 
@@ -279,18 +279,18 @@ export const Unlock: React.FC<UnlockProps> = ({ onUnlockSuccess }) => {
             <form onSubmit={handleResetPin} className="space-y-4">
               <FormField
                 id="recovery-new-pin"
-                label="Nuevo PIN (6 dígitos numéricos)"
+                label="Nuevo PIN (8 dígitos numéricos)"
                 required
               >
                 <Input
                   type="password"
                   inputMode="numeric"
-                  maxLength={6}
-                  pattern="\d{6}"
+                  maxLength={8}
+                  pattern="\d{8}"
                   required
                   value={newPin}
                   onChange={(e) => setNewPin(e.target.value)}
-                  placeholder="••••••"
+                  placeholder="••••••••"
                   className="font-mono tracking-widest text-center text-lg"
                   autoFocus
                 />
@@ -304,12 +304,12 @@ export const Unlock: React.FC<UnlockProps> = ({ onUnlockSuccess }) => {
                 <Input
                   type="password"
                   inputMode="numeric"
-                  maxLength={6}
-                  pattern="\d{6}"
+                  maxLength={8}
+                  pattern="\d{8}"
                   required
                   value={confirmPin}
                   onChange={(e) => setConfirmPin(e.target.value)}
-                  placeholder="••••••"
+                  placeholder="••••••••"
                   className="font-mono tracking-widest text-center text-lg"
                 />
               </FormField>

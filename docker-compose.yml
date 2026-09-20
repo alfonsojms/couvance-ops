@@ -10,7 +10,7 @@ services:
       - NODE_ENV=production
       - PIN_SECRET=clave_secreta_super_segura_para_jwt
       - DATABASE_URL=file:/app/data/couvance-ops.db
-      - INITIAL_PIN=123456
+      - INITIAL_PIN=12345678
       - SECURITY_Q1=¿Cuál es el nombre de tu primera mascota?
       - SECURITY_A1=couvance
       - SECURITY_Q2=¿En qué ciudad se fundó la agencia?

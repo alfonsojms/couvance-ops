@@ -11,7 +11,7 @@
 * **Arquitectura:** Monolito modular fullstack en TypeScript con ejecución dual:
   1. **Edge Serverless (Producción $0):** Cloudflare Pages + Cloudflare Pages Functions + Cloudflare D1 (SQLite serverless).
   2. **Contenedor Autónomo (Local / Docker / VPS):** Node.js (@hono/node-server) + SQLite embebido local (`better-sqlite3` con modo WAL) en volumen persistente `/app/data/couvance-ops.db`.
-* **Filosofía de Producto:** Cero burocracia administrativa, agilidad operativa máxima, acceso mediante PIN de 6 dígitos recordado en dispositivo, cobro express vía WhatsApp con fallback al portapapeles, y diseño de autor ultraligero anti-"AI slop".
+* **Filosofía de Producto:** Cero burocracia administrativa, agilidad operativa máxima, acceso mediante PIN de 8 dígitos recordado en dispositivo, cobro express vía WhatsApp con fallback al portapapeles, y diseño de autor ultraligero anti-"AI slop".
 
 ---
 
@@ -74,7 +74,7 @@ couvance-ops/
 │       │   │   ├── Projects.tsx    # Gestión de proyectos y cotizaciones
 │       │   │   ├── Showcase.tsx    # Catálogo de ventas filtrable
 │       │   │   ├── Clients.tsx     # Directorio de clientes
-│       │   │   └── Unlock.tsx      # Teclado numérico PIN de 6 dígitos
+│       │   │   └── Unlock.tsx      # Teclado numérico PIN de 8 dígitos
 │       │   ├── lib/
 │       │   │   ├── utils.ts        # Enlaces wa.me y copy-to-clipboard
 │       │   │   └── api.ts          # Cliente HTTP tipado
@@ -246,7 +246,7 @@ Cualquier agente o desarrollador que modifique la lógica del sistema debe garan
 ## 📡 7. Especificación de Endpoints de la API
 
 ### Autenticación (`/api/auth`)
-* `POST /api/auth/unlock` — Valida PIN de 6 dígitos. Retorna sesión o `401 Unauthorized` / `429 Too Many Requests`.
+* `POST /api/auth/unlock` — Valida PIN de 8 dígitos. Retorna sesión o `401 Unauthorized` / `429 Too Many Requests`.
 * `GET /api/auth/questions` — Retorna `{ q1: string, q2: string }` público (sin hashes).
 * `POST /api/auth/recover` — Valida respuestas secretas. Retorna token temporal de recuperación (validez 10 min).
 * `POST /api/auth/reset-pin` — Valida token temporal y actualiza `pin_hash` atómicamente en D1/SQLite.

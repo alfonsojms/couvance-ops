@@ -27,7 +27,7 @@ export const unlockSchema = z.object({
   pin: z
     .string({ required_error: 'El PIN es obligatorio' })
     .transform(sanitizeString)
-    .refine((v) => /^\d{6}$/.test(v), 'El PIN debe tener exactamente 6 dígitos numéricos'),
+    .refine((v) => /^\d{8}$/.test(v), 'El PIN debe tener exactamente 8 dígitos numéricos'),
 });
 
 export const recoverSchema = z.object({
@@ -52,25 +52,25 @@ export const resetPinSchema = z.object({
   newPin: z
     .string({ required_error: 'El nuevo PIN es obligatorio' })
     .transform(sanitizeString)
-    .refine((v) => /^\d{6}$/.test(v), 'El nuevo PIN debe tener exactamente 6 dígitos numéricos'),
+    .refine((v) => /^\d{8}$/.test(v), 'El nuevo PIN debe tener exactamente 8 dígitos numéricos'),
 });
 
 export const changePinSchema = z.object({
   currentPin: z
     .string({ required_error: 'El PIN actual es obligatorio' })
     .transform(sanitizeString)
-    .refine((v) => /^\d{6}$/.test(v), 'El PIN actual debe tener exactamente 6 dígitos numéricos'),
+    .refine((v) => /^\d{8}$/.test(v), 'El PIN actual debe tener exactamente 8 dígitos numéricos'),
   newPin: z
     .string({ required_error: 'El nuevo PIN es obligatorio' })
     .transform(sanitizeString)
-    .refine((v) => /^\d{6}$/.test(v), 'El nuevo PIN debe tener exactamente 6 dígitos numéricos'),
+    .refine((v) => /^\d{8}$/.test(v), 'El nuevo PIN debe tener exactamente 8 dígitos numéricos'),
 });
 
 export const updateQuestionsSchema = z.object({
   currentPin: z
     .string({ required_error: 'El PIN actual es requerido para autorizar el cambio' })
     .transform(sanitizeString)
-    .refine((v) => /^\d{6}$/.test(v), 'El PIN actual debe tener exactamente 6 dígitos numéricos'),
+    .refine((v) => /^\d{8}$/.test(v), 'El PIN actual debe tener exactamente 8 dígitos numéricos'),
   q1: z
     .string({ required_error: 'La pregunta 1 es obligatoria' })
     .transform(sanitizeString)
@@ -99,14 +99,14 @@ export type ResetPinInput = z.infer<typeof resetPinSchema>;
 export type ChangePinInput = z.infer<typeof changePinSchema>;
 export type UpdateQuestionsInput = z.infer<typeof updateQuestionsSchema>;
 
-// 1. POST /api/auth/unlock — Valida el PIN de 6 dígitos
+// 1. POST /api/auth/unlock — Valida el PIN de 8 dígitos
 authApp.post('/unlock', rateLimitMiddleware, async (c) => {
   const ip = getClientIp(c);
   const body = await c.req.json().catch(() => null);
   const parsed = unlockSchema.safeParse(body);
 
   if (!parsed.success) {
-    return c.json({ error: parsed.error.issues[0]?.message || 'El PIN debe tener 6 dígitos numéricos.' }, 400);
+    return c.json({ error: parsed.error.issues[0]?.message || 'El PIN debe tener 8 dígitos numéricos.' }, 400);
   }
 
   const db = getDb(c);

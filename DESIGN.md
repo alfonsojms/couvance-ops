@@ -121,7 +121,7 @@ Couvance Ops adopta una filosofía de diseño utilitaria, de autor y estrictamen
 
 ## Components
 
-1. **NumericKeypad:** Teclado numérico 3x4 de alta respuesta, con teclas grandes $\ge$ 48px, indicador de 6 dígitos mediante puntos luminosos y feedback visual instantáneo.
+1. **NumericKeypad:** Teclado numérico 3x4 de alta respuesta, con teclas grandes $\ge$ 48px, indicador de 8 dígitos mediante puntos luminosos y feedback visual instantáneo.
 2. **WhatsAppButton:** Botón verde esmeralda con icono de WhatsApp; genera `wa.me` si existe teléfono, o copia automáticamente el mensaje cordial al portapapeles con toast Sonner si no hay teléfono.
 3. **StatusBadge:** Pastillas compactas con fondo al 10% de opacidad y borde fino correspondiente al estado (`PROSPECT`, `IN_PROGRESS`, `COMPLETED`, `CANCELLED`).
 4. **Cotizador con Presets:** Interfaz de cálculo instantáneo con botones rápidos `[50 / 50]` y `[40 / 30 / 30]`, validación de 100% en tiempo real y botón de copiar resumen para el cliente.

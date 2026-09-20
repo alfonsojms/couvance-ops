@@ -67,13 +67,13 @@ export const SecuritySettingsModal: React.FC<SecuritySettingsModalProps> = ({
   const handleChangePin = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (currentPinForPin.length !== 6 || !/^\d{6}$/.test(currentPinForPin)) {
-      toast.error('El PIN actual debe tener exactamente 6 dígitos numéricos');
+    if (currentPinForPin.length !== 8 || !/^\d{8}$/.test(currentPinForPin)) {
+      toast.error('El PIN actual debe tener exactamente 8 dígitos numéricos');
       return;
     }
 
-    if (newPin.length !== 6 || !/^\d{6}$/.test(newPin)) {
-      toast.error('El nuevo PIN debe tener exactamente 6 dígitos numéricos');
+    if (newPin.length !== 8 || !/^\d{8}$/.test(newPin)) {
+      toast.error('El nuevo PIN debe tener exactamente 8 dígitos numéricos');
       return;
     }
 
@@ -105,8 +105,8 @@ export const SecuritySettingsModal: React.FC<SecuritySettingsModalProps> = ({
   const handleUpdateQuestions = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (currentPinForQuestions.length !== 6 || !/^\d{6}$/.test(currentPinForQuestions)) {
-      toast.error('Debe ingresar el PIN actual de 6 dígitos para autorizar el cambio');
+    if (currentPinForQuestions.length !== 8 || !/^\d{8}$/.test(currentPinForQuestions)) {
+      toast.error('Debe ingresar el PIN actual de 8 dígitos para autorizar el cambio');
       return;
     }
 
@@ -189,22 +189,22 @@ export const SecuritySettingsModal: React.FC<SecuritySettingsModalProps> = ({
             <CardPanel className="text-xs text-neutral-400 p-3 space-y-1">
               <div className="flex items-center gap-1.5 text-neutral-200 font-medium">
                 <Lock className="w-3.5 h-3.5 text-neutral-400" />
-                <span>PIN Maestro de 6 Dígitos</span>
+                <span>PIN Maestro de 8 Dígitos</span>
               </div>
               <p>
                 Al cambiar el PIN, la sesión actual se mantendrá activa y se renovará en este dispositivo.
               </p>
             </CardPanel>
 
-            <FormField label="PIN Actual (6 dígitos)" required>
+            <FormField label="PIN Actual (8 dígitos)" required>
               <Input
                 type="password"
                 inputMode="numeric"
                 pattern="[0-9]*"
-                maxLength={6}
+                maxLength={8}
                 value={currentPinForPin}
-                onChange={(e) => setCurrentPinForPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                placeholder="••••••"
+                onChange={(e) => setCurrentPinForPin(e.target.value.replace(/\D/g, '').slice(0, 8))}
+                placeholder="••••••••"
                 className="font-mono text-center tracking-widest text-lg"
                 autoComplete="current-password"
                 required
@@ -217,10 +217,10 @@ export const SecuritySettingsModal: React.FC<SecuritySettingsModalProps> = ({
                   type="password"
                   inputMode="numeric"
                   pattern="[0-9]*"
-                  maxLength={6}
+                  maxLength={8}
                   value={newPin}
-                  onChange={(e) => setNewPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  placeholder="••••••"
+                  onChange={(e) => setNewPin(e.target.value.replace(/\D/g, '').slice(0, 8))}
+                  placeholder="••••••••"
                   className="font-mono text-center tracking-widest text-lg"
                   autoComplete="new-password"
                   required
@@ -232,10 +232,10 @@ export const SecuritySettingsModal: React.FC<SecuritySettingsModalProps> = ({
                   type="password"
                   inputMode="numeric"
                   pattern="[0-9]*"
-                  maxLength={6}
+                  maxLength={8}
                   value={confirmPin}
-                  onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  placeholder="••••••"
+                  onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, '').slice(0, 8))}
+                  placeholder="••••••••"
                   className="font-mono text-center tracking-widest text-lg"
                   autoComplete="new-password"
                   required
@@ -251,7 +251,7 @@ export const SecuritySettingsModal: React.FC<SecuritySettingsModalProps> = ({
                 type="submit"
                 variant="primary"
                 isLoading={loading}
-                disabled={loading || newPin.length !== 6 || confirmPin.length !== 6}
+                disabled={loading || newPin.length !== 8 || confirmPin.length !== 8}
               >
                 <CheckCircle2 className="w-4 h-4 mr-1.5" />
                 Actualizar PIN
@@ -325,10 +325,10 @@ export const SecuritySettingsModal: React.FC<SecuritySettingsModalProps> = ({
                   type="password"
                   inputMode="numeric"
                   pattern="[0-9]*"
-                  maxLength={6}
+                  maxLength={8}
                   value={currentPinForQuestions}
-                  onChange={(e) => setCurrentPinForQuestions(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  placeholder="••••••"
+                  onChange={(e) => setCurrentPinForQuestions(e.target.value.replace(/\D/g, '').slice(0, 8))}
+                  placeholder="••••••••"
                   className="font-mono text-center tracking-widest text-base"
                   required
                 />
@@ -343,7 +343,7 @@ export const SecuritySettingsModal: React.FC<SecuritySettingsModalProps> = ({
                 type="submit"
                 variant="primary"
                 isLoading={loading}
-                disabled={loading || currentPinForQuestions.length !== 6 || !a1.trim() || !a2.trim()}
+                disabled={loading || currentPinForQuestions.length !== 8 || !a1.trim() || !a2.trim()}
               >
                 <CheckCircle2 className="w-4 h-4 mr-1.5" />
                 Guardar Preguntas

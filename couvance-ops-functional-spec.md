@@ -17,7 +17,7 @@ Tener en un solo lugar y en tiempo real la respuesta a 4 necesidades fundamental
 4. **Repositorio de Proyectos (Showcase de Ventas):** Catálogo centralizado de webs terminadas para filtrar por tipo y enviar muestras a prospectos comerciales al instante.
 
 ### 1.3 Filosofía del MVP: Máxima Agilidad y Cero Fricción
-* **Acceso Ágil mediante PIN de 6 dígitos:** Sin registro de usuarios, correos ni contraseñas complejas. Se ingresa el PIN una sola vez en el dispositivo y queda recordado.
+* **Acceso Ágil mediante PIN de 8 dígitos:** Sin registro de usuarios, correos ni contraseñas complejas. Se ingresa el PIN una sola vez en el dispositivo y queda recordado.
 * **Sin validaciones fiscales ni datos obligatorios innecesarios:** Un cliente se registra rápidamente solo con su nombre o empresa, sin exigir identificación tributaria ni correos únicos.
 * **Cobranza directa:** La comunicación con el cliente se realiza aprovechando enlaces directos de WhatsApp (`wa.me`) y resúmenes copiables con un clic, sin complejas integraciones de pasarelas ni servidores externos.
 
@@ -81,8 +81,8 @@ Definidos bajo la realidad operativa de los 2 socios:
 * **RNF-02 (Concurrencia Pragmática — Last Write Wins):** Si ambos socios editan un mismo proyecto o cliente simultáneamente, el último guardado prevalece (*Last Write Wins*). No se requieren bloqueos complejos de registros.
 * **RNF-03 (Integridad y Respaldo Exportable):** Debe existir un botón directo de **"Exportar / Descargar Respaldo"** que permita a los socios descargar en 1 clic un archivo con toda la información (clientes, proyectos, cobros, enlaces) para guardarlo localmente o en la nube de forma semanal.
 * **RNF-04 (Rendimiento Instantáneo):** Al ser una herramienta de uso interno con volumen controlado de datos, las transiciones entre pantallas, filtros y cálculos de saldos deben responder de manera prácticamente instantánea (tiempo de respuesta inferior a 1 segundo).
-* **RNF-05 (Seguridad sin Cuentas — PIN de 6 Dígitos):** 
-  * Acceso protegido mediante una URL privada y un teclado numérico para ingresar un **PIN maestro de 6 dígitos**.
+* **RNF-05 (Seguridad sin Cuentas — PIN de 8 Dígitos):** 
+  * Acceso protegido mediante una URL privada y un teclado numérico para ingresar un **PIN maestro de 8 dígitos**.
   * Al introducirse correctamente, el navegador recuerda el dispositivo para no solicitarlo en cada recarga.
   * En caso de olvido o fallo del PIN, el sistema ofrece un mecanismo de recuperación mediante **2 preguntas de seguridad secretas** predefinidas exclusivamente por los dos socios.
 
@@ -94,9 +94,9 @@ Definidos bajo la realidad operativa de los 2 socios:
 * **Actor:** Cualquiera de los 2 socios.
 * **Flujo Principal:**
   1. El usuario abre la URL de Couvance Ops.
-  2. Si el dispositivo no está recordado, se presenta la pantalla con teclado numérico para ingresar el PIN de 6 dígitos.
+  2. Si el dispositivo no está recordado, se presenta la pantalla con teclado numérico para ingresar el PIN de 8 dígitos.
   3. Al validar el PIN, entra de inmediato al panel principal y el dispositivo queda recordado.
-* **Flujo Alterno (Recuperación):** Si no recuerda el PIN, pulsa "¿Olvidaste el PIN?", responde correctamente las 2 preguntas de seguridad y el sistema le permite configurar un nuevo PIN de 6 dígitos.
+* **Flujo Alterno (Recuperación):** Si no recuerda el PIN, pulsa "¿Olvidaste el PIN?", responde correctamente las 2 preguntas de seguridad y el sistema le permite configurar un nuevo PIN de 8 dígitos.
 
 ### CU-02: Alta Rápida de Cliente y Proyecto
 * **Actor:** Socio gestor.
@@ -168,7 +168,7 @@ Definidos bajo la realidad operativa de los 2 socios:
 | **Cliente paga la totalidad del proyecto de golpe** | El usuario no necesita hacer 3 clics individuales. | Se habilita la opción **"Cobrar Todo"** que liquida simultáneamente todos los hitos pendientes con la fecha del día. |
 | **Cancelación prematura tras cobrar anticipo** | El cliente cancela el proyecto a medio camino. | El proyecto pasa a `Cancelado` (aparece tachado). El dinero del anticipo cobrado se mantiene en el histórico contable y los hitos futuros se anulan. |
 | **Web terminada que el cliente da de baja al año** | El enlace público deja de funcionar (error 404 / dominio vencido). | El socio marca el enlace como `Web Inactiva`. El sistema la excluye de las sugerencias rápidas del Showcase de ventas. |
-| **Olvido del PIN de 6 dígitos en un nuevo equipo** | El socio no recuerda el PIN en su teléfono nuevo. | Se pulsa "¿Olvidaste el PIN?" y se validan **2 preguntas de seguridad secretas**. Al responderlas bien, define un nuevo PIN al instante. |
+| **Olvido del PIN de 8 dígitos en un nuevo equipo** | El socio no recuerda el PIN en su teléfono nuevo. | Se pulsa "¿Olvidaste el PIN?" y se validan **2 preguntas de seguridad secretas**. Al responderlas bien, define un nuevo PIN al instante. |
 | **Edición simultánea entre ambos socios** | Ambos socios modifican un proyecto al mismo tiempo. | Aplica política *Last Write Wins* (el último guardado sobreescribe), evitando bloqueos o caídas de pantalla. |
 | **Riesgo de pérdida de datos por fallo del servidor** | El servidor sufre una contingencia inesperada. | Se mitiga con el botón **"Exportar Respaldo"**, permitiendo a los socios descargar una copia completa de datos en formato portátil con 1 solo clic. |
 
@@ -177,7 +177,7 @@ Definidos bajo la realidad operativa de los 2 socios:
 ## 📑 7. Requisitos Funcionales Detallados
 
 ### Módulo 1: Acceso Rápido y Seguridad Ligera
-* **RF-1.1 (Validación de PIN):** Pantalla de bienvenida con teclado numérico para ingresar el PIN maestro de 6 dígitos.
+* **RF-1.1 (Validación de PIN):** Pantalla de bienvenida con teclado numérico para ingresar el PIN maestro de 8 dígitos.
 * **RF-1.2 (Recordación de Dispositivo):** Persistencia en el navegador para no exigir el PIN en cada sesión.
 * **RF-1.3 (Recuperación por Preguntas de Seguridad):** Desbloqueo y cambio de PIN mediante respuesta a 2 preguntas secretas.
 
@@ -210,7 +210,7 @@ Definidos bajo la realidad operativa de los 2 socios:
 ## 🎯 8. Alcance del MVP (In-Scope vs. Out-of-Scope)
 
 ### 8.1 DENTRO DEL ALCANCE (In-Scope)
-* ✅ Acceso por PIN de 6 dígitos con recordación en navegador y recuperación por 2 preguntas secretas.
+* ✅ Acceso por PIN de 8 dígitos con recordación en navegador y recuperación por 2 preguntas secretas.
 * ✅ Directorio ágil de clientes sin validaciones burocráticas.
 * ✅ Proyectos categorizados con Trilogía de Enlaces (Producción, Repositorio, Recursos).
 * ✅ Selector de Web Activa/Inactiva.

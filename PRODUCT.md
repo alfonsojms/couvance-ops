@@ -20,7 +20,7 @@ Reemplazar notas dispersas, chats de mensajería y hojas de cálculo desactualiz
 
 ## Positioning
 
-Micro-ERP de alta velocidad y cero burocracia diseñado específicamente para la operativa de 2 socios, con costo de infraestructura $0 (Cloudflare Edge Serverless / SQLite WAL local), sin login engorroso de usuario/contraseña (PIN maestro de 6 dígitos recordado en dispositivo) y optimizado para la cobranza móvil con una sola mano.
+Micro-ERP de alta velocidad y cero burocracia diseñado específicamente para la operativa de 2 socios, con costo de infraestructura $0 (Cloudflare Edge Serverless / SQLite WAL local), sin login engorroso de usuario/contraseña (PIN maestro de 8 dígitos recordado en dispositivo) y optimizado para la cobranza móvil con una sola mano.
 
 ## Operating Context
 
@@ -30,7 +30,7 @@ Micro-ERP de alta velocidad y cero burocracia diseñado específicamente para la
 
 ## Capabilities and Constraints
 
-- **Acceso por PIN:** PIN numérico de 6 dígitos con teclado virtual y soporte de teclado físico; recuperación segura mediante 2 preguntas secretas. Sesión duradera (30 días, `SameSite=Lax`).
+- **Acceso por PIN:** PIN numérico de 8 dígitos con teclado virtual y soporte de teclado físico; recuperación segura mediante 2 preguntas secretas. Sesión duradera (30 días, `SameSite=Lax`).
 - **Reglas de Oro Contables:**
   - Presupuestos e hitos estrictamente enteros sin decimales; el último hito absorbe cualquier residuo fraccionario.
   - Suma de porcentajes de hitos exactamente 100%.
