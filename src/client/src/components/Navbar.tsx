@@ -50,11 +50,15 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onTabChange, onLock 
     <header className="sticky top-0 z-40 bg-neutral-950/90 backdrop-blur-md border-b border-neutral-800/80">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 sm:h-14 flex items-center justify-between">
         {/* Marca / Título */}
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded bg-neutral-900 border border-neutral-700 flex items-center justify-center font-mono font-bold text-xs text-neutral-100 select-none">
-            CO
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg overflow-hidden border border-[#004BFF]/50 bg-[#004BFF] flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(0,75,255,0.3)]">
+            <img
+              src="/logo-couvance.png"
+              alt="Couvance Logo"
+              className="w-full h-full object-cover select-none pointer-events-none"
+            />
           </div>
-          <span className="font-semibold text-sm tracking-tight text-neutral-100 hidden sm:inline select-none">
+          <span className="font-semibold text-sm tracking-tight text-white hidden sm:inline select-none">
             Couvance <span className="text-neutral-400 font-mono text-xs">Ops</span>
           </span>
         </div>
@@ -70,13 +74,13 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onTabChange, onLock 
                 type="button"
                 onClick={() => onTabChange(item.id)}
                 aria-current={isActive ? 'page' : undefined}
-                className={`inline-flex items-center justify-center gap-1.5 min-h-[44px] sm:min-h-[34px] px-2.5 sm:px-3 rounded-md text-xs font-medium transition-all duration-150 ease-out select-none touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 ${
+                className={`inline-flex items-center justify-center gap-1.5 min-h-[44px] sm:min-h-[34px] px-2.5 sm:px-3 rounded-md text-xs font-medium transition-all duration-150 ease-out select-none touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004BFF] ${
                   isActive
-                    ? 'bg-neutral-800 text-neutral-100 border border-neutral-700'
+                    ? 'bg-neutral-900 text-white border border-[#004BFF]/60 shadow-[0_0_12px_rgba(0,75,255,0.2)]'
                     : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-900 border border-transparent'
                 }`}
               >
-                <Icon className="w-4 h-4 sm:w-3.5 sm:h-3.5 shrink-0" />
+                <Icon className={`w-4 h-4 sm:w-3.5 sm:h-3.5 shrink-0 ${isActive ? 'text-[#004BFF]' : ''}`} />
                 <span>{item.label}</span>
               </button>
             );

@@ -229,9 +229,15 @@ export const Dashboard: React.FC = () => {
       {/* Cabecera */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-neutral-800 pb-4">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-neutral-100">
-            Radar de Cobranzas y Flujo de Caja
-          </h1>
+          <div className="flex items-center gap-2 mb-1">
+            <h1 className="text-xl font-bold tracking-tight text-white">
+              Radar de Cobranzas y Flujo de Caja
+            </h1>
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-mono font-medium bg-[#BDEF00]/10 text-[#d4ff33] border border-[#BDEF00]/30 select-none">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#BDEF00] animate-pulse" />
+              EN VIVO
+            </span>
+          </div>
           <p className="text-xs text-neutral-400">
             Control de cuentas por cobrar, renovaciones preventivas y cobro express por WhatsApp
           </p>
@@ -267,16 +273,26 @@ export const Dashboard: React.FC = () => {
 
         <MetricCard
           title="Total Cobrado (Histórico)"
-          value={formatCurrency(metrics?.totalCollected || 0)}
+          value={
+            <span className="text-3xl sm:text-4xl text-[#d4ff33] font-extrabold tracking-tight">
+              {formatCurrency(metrics?.totalCollected || 0)}
+            </span>
+          }
           subtitle="Ingresos efectivos registrados"
-          icon={<DollarSign className="w-5 h-5 text-emerald-400" />}
+          icon={<DollarSign className="w-5 h-5 text-[#BDEF00]" />}
+          className="border-[#BDEF00]/25 bg-[#BDEF00]/5 ring-1 ring-[#BDEF00]/15"
         />
 
         <MetricCard
           title="Proyectos en Progreso"
-          value={metrics?.activeProjectsCount ?? 0}
+          value={
+            <span className="text-3xl sm:text-4xl text-white font-extrabold tracking-tight">
+              {metrics?.activeProjectsCount ?? 0}
+            </span>
+          }
           subtitle={`de ${metrics?.totalProjectsCount ?? 0} proyectos registrados`}
-          icon={<TrendingUp className="w-5 h-5 text-blue-400" />}
+          icon={<TrendingUp className="w-5 h-5 text-[#004BFF]" />}
+          className="border-[#004BFF]/25 bg-[#004BFF]/5 ring-1 ring-[#004BFF]/15"
         />
       </div>
 
@@ -355,7 +371,7 @@ export const Dashboard: React.FC = () => {
                       title={`Cobrar y renovar servicio (+1 ${renewalPeriodLabel})`}
                       className="shrink-0"
                     >
-                      <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <Check className="w-4 h-4 text-[#BDEF00] shrink-0" />
                       <span>Cobrar y Renovar (+1 {renewalPeriodLabel})</span>
                     </Button>
                   </div>
@@ -382,7 +398,7 @@ export const Dashboard: React.FC = () => {
 
         {pendingMilestones.length === 0 ? (
           <Card className="p-8 text-center bg-neutral-900/30 border-neutral-800/80">
-            <CheckCircle2 className="w-8 h-8 text-emerald-500/60 mx-auto mb-2" />
+            <CheckCircle2 className="w-8 h-8 text-[#BDEF00]/80 mx-auto mb-2" />
             <p className="text-sm text-neutral-300 font-medium">¡Cero cuentas pendientes!</p>
             <p className="text-xs text-neutral-500 mt-1">
               Todos los hitos aprobados han sido cobrados con éxito.
@@ -455,7 +471,7 @@ export const Dashboard: React.FC = () => {
                         title="Marcar hito como cobrado"
                         className="shrink-0"
                       >
-                        <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                        <Check className="w-4 h-4 text-[#BDEF00] shrink-0" />
                         <span>Cobrado</span>
                       </Button>
 
@@ -514,7 +530,7 @@ export const Dashboard: React.FC = () => {
               </div>
               <div className="flex justify-between items-center text-xs sm:text-sm pt-2 border-t border-neutral-800">
                 <span className="text-neutral-300 font-medium">Monto Total a Cobrar:</span>
-                <span className="font-mono font-bold text-base text-emerald-400">
+                <span className="font-mono font-bold text-base text-[#BDEF00]">
                   {formatCurrency(payAllTarget.totalAmount, payAllTarget.currency)}
                 </span>
               </div>

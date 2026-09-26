@@ -37,3 +37,22 @@
 .animate-shake {
   animation: shake 0.35s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
+
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Couvance Brand Accents */
+.couvance-glow-blue {
+  box-shadow: 0 0 16px rgba(0, 75, 255, 0.3);
+}
+
+.couvance-glow-lime {
+  box-shadow: 0 0 16px rgba(189, 239, 0, 0.3);
+}
+

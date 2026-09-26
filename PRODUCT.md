@@ -42,10 +42,10 @@ Micro-ERP de alta velocidad y cero burocracia diseñado específicamente para la
 
 ## Brand Commitments
 
-- **Estética de Autor Anti-"AI Slop":** Interfaz sobria, utilitaria y de alto contraste inspirada en herramientas de ingeniería y diseño contemporáneo.
-- **Paleta Neutra y Bordes Finos:** Fondos oscuros (`neutral-950`), superficies elevadas (`neutral-900`/`neutral-850`), texto de alto contraste (`neutral-100`/`neutral-400`) y bordes nítidos de 1px (`border-neutral-800`).
-- **Tipografía Limpia:** Sans-serif moderna y fuentes monospace para montos, porcentajes, fechas y códigos.
-- **Feedback Minimalista:** Notificaciones discretas con Sonner y modales accesibles sin estilos prefabricados mediante Radix UI Primitives.
+- **Identidad Couvance y Estética Anti-"AI Slop":** Logotipo oficial de Couvance con cruz geométrica en verde lima sobre campo azul eléctrico (`/logo-couvance.png`).
+- **Base Monocromática con Acentos Quirúrgicos:** Cimiento en blanco y negro (fondos oscuros OLED `neutral-950`, superficies `neutral-900`, tipografía en blanco puro y bordes nítidos de 1px `border-neutral-800`), utilizando **Azul Eléctrico (`#004BFF`)** para navegación activa, foco e hitos en progreso, y **Lima Eléctrico (`#BDEF00`)** para cobros efectivos, radar en vivo e indicadores de éxito.
+- **Tipografía Limpia:** Sans-serif moderna (Inter) y fuentes monospace (JetBrains Mono) para montos, porcentajes, fechas y códigos.
+- **Feedback Minimalista:** Notificaciones discretas con Sonner y modales accesibles mediante Radix UI Primitives sin librerías pesadas.
 
 ## Evidence on Hand
 

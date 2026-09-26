@@ -130,7 +130,7 @@ export const NotFound: React.FC<NotFoundProps> = ({
                 title="Copiar ruta"
                 className="h-8 px-2.5 text-xs text-neutral-300 hover:text-neutral-100"
               >
-                {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                {copied ? <Check className="w-3.5 h-3.5 text-[#BDEF00]" /> : <Copy className="w-3.5 h-3.5" />}
                 <span className="ml-1">{copied ? 'Copiado' : 'Copiar'}</span>
               </Button>
               <Button

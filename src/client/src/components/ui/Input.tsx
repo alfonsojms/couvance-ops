@@ -15,7 +15,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           'w-full px-3 py-2 text-xs sm:text-sm bg-neutral-950 border rounded-md text-neutral-100 placeholder:text-neutral-500 transition-colors focus:outline-none focus:ring-1 disabled:opacity-50 disabled:cursor-not-allowed',
           hasError
             ? 'border-rose-500/80 focus:border-rose-500 focus:ring-rose-500/30'
-            : 'border-neutral-800 focus:border-neutral-600 focus:ring-neutral-400',
+            : 'border-neutral-800 focus:border-[#004BFF] focus:ring-[#004BFF]/40',
           className
         )}
         {...props}
@@ -38,7 +38,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
           'w-full px-3 py-2 text-xs sm:text-sm bg-neutral-950 border rounded-md text-neutral-100 transition-colors focus:outline-none focus:ring-1 disabled:opacity-50 disabled:cursor-not-allowed',
           hasError
             ? 'border-rose-500/80 focus:border-rose-500 focus:ring-rose-500/30'
-            : 'border-neutral-800 focus:border-neutral-600 focus:ring-neutral-400',
+            : 'border-neutral-800 focus:border-[#004BFF] focus:ring-[#004BFF]/40',
           className
         )}
         {...props}
@@ -63,7 +63,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           'w-full px-3 py-2 text-xs sm:text-sm bg-neutral-950 border rounded-md text-neutral-100 placeholder:text-neutral-500 transition-colors focus:outline-none focus:ring-1 disabled:opacity-50 disabled:cursor-not-allowed resize-y',
           hasError
             ? 'border-rose-500/80 focus:border-rose-500 focus:ring-rose-500/30'
-            : 'border-neutral-800 focus:border-neutral-600 focus:ring-neutral-400',
+            : 'border-neutral-800 focus:border-[#004BFF] focus:ring-[#004BFF]/40',
           className
         )}
         {...props}

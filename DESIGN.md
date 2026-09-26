@@ -1,24 +1,26 @@
 ---
 name: Couvance Ops Design System
-description: Utilitarian high-contrast dark design system with 1px hairline borders and zero AI slop
+description: Utilitarian high-contrast dark monochrome design system with Couvance Electric Blue (#004BFF) and Electric Lime (#BDEF00) surgical brand highlights
 colors:
   background: "#09090b"
-  surface: "#121215"
-  surface-hover: "#18181b"
-  surface-elevated: "#27272a"
+  surface: "#111115"
+  surface-hover: "#18181d"
+  surface-elevated: "#222228"
   border: "#27272a"
   border-subtle: "#1f1f23"
-  text-primary: "#f4f4f5"
+  text-primary: "#ffffff"
   text-secondary: "#a1a1aa"
   text-muted: "#71717a"
-  accent-emerald: "#10b981"
-  accent-emerald-subtle: "#064e3b"
+  couvance-blue: "#004BFF"
+  couvance-blue-subtle: "rgba(0, 75, 255, 0.15)"
+  couvance-blue-border: "rgba(0, 75, 255, 0.35)"
+  couvance-lime: "#BDEF00"
+  couvance-lime-subtle: "rgba(189, 239, 0, 0.15)"
+  couvance-lime-border: "rgba(189, 239, 0, 0.35)"
   accent-amber: "#f59e0b"
   accent-amber-subtle: "#78350f"
   accent-rose: "#f43f5e"
   accent-rose-subtle: "#881337"
-  accent-blue: "#3b82f6"
-  accent-blue-subtle: "#1e3a8a"
 typography:
   display:
     fontFamily: "Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif"
@@ -44,6 +46,7 @@ rounded:
   sm: "4px"
   md: "6px"
   lg: "8px"
+  xl: "12px"
   full: "9999px"
 spacing:
   xs: "4px"
@@ -57,86 +60,79 @@ components:
     textColor: "{colors.background}"
     rounded: "{rounded.md}"
     padding: "8px 16px"
-  button-primary-hover:
-    backgroundColor: "{colors.text-secondary}"
+  button-couvance:
+    backgroundColor: "{colors.couvance-blue}"
+    textColor: "#ffffff"
+    rounded: "{rounded.md}"
+    padding: "8px 16px"
+  button-lime:
+    backgroundColor: "{colors.couvance-lime}"
+    textColor: "#000000"
+    rounded: "{rounded.md}"
+    padding: "8px 16px"
   button-secondary:
     backgroundColor: "{colors.surface}"
     textColor: "{colors.text-primary}"
     rounded: "{rounded.md}"
     padding: "8px 16px"
   button-whatsapp:
-    backgroundColor: "{colors.accent-emerald}"
-    textColor: "{colors.background}"
+    backgroundColor: "#25D366"
+    textColor: "#000000"
     rounded: "{rounded.md}"
     padding: "8px 16px"
 ---
 
-# Design System — Couvance Ops
+# Design System — Couvance Ops (Redesign)
 
 ## Overview
 
-Couvance Ops adopta una filosofía de diseño utilitaria, de autor y estrictamente anti-"AI slop". La herramienta está concebida para la velocidad operativa de 2 socios que gestionan cotizaciones y cobranzas desde escritorio y smartphones. El diseño rechaza sombras difusas excesivas, gradientes llamativos y radios gigantes, favoreciendo la precisión de bordes finos de 1px (`border-neutral-800`), contraste tipográfico alto y feedback táctil inmediato.
+Couvance Ops implementa un rediseño de autor sobrio, utilitario y de altísima fidelidad visual. Ante el desafío de incorporar los colores vibrantes de marca de Couvance —**Azul Eléctrico Real (`#004BFF`)** y **Lima Eléctrico (`#BDEF00`)**— la arquitectura visual establece un lienzo base **monocromático en blanco y negro** (negro profundo OLED, superficies de carbón templado, bordes nítidos de 1px y tipografía en blanco puro). Sobre este cimiento sobrio y elegante, los dos colores de marca intervienen de forma quirúrgica para destacar estados operativos, jerarquía financiera y presencia de marca sin generar fatiga visual ni saturación tipo "arcoíris".
+
+## Identity & Brand Assets
+
+- **Logotipo Oficial (`/logo-couvance.png`):** Emblema geométrico de 800x800px compuesto por un campo azul eléctrico `#004BFF` y una cruz central de 4 ángulos dinámicos en `#BDEF00`.
+- **Favicon & Web App Icon:** Integrado en la cabecera HTML y visible en pestañas de navegador y accesos directos en smartphones.
+- **Navbar & Unlock Badge:** Presentado en contenedor con radio curvado de 12px, borde eléctrico de 1px y sutil halo ambiental azul (`shadow-[0_0_15px_rgba(0,75,255,0.3)]`).
 
 ## Colors
 
-- **Fondo Base (`background`):** `#09090b` (`bg-neutral-950`). Negro profundo para máxima legibilidad y ahorro de batería en pantallas OLED móviles.
-- **Superficies (`surface` / `surface-elevated`):** `#121215` (`bg-neutral-900`) y `#27272a` (`bg-neutral-800`). Empleadas en tarjetas, modales y filas interactivas.
-- **Bordes (`border` / `border-subtle`):** `#27272a` (`border-neutral-800`). Bordes geométricos de 1px que articulan la cuadrícula visual.
-- **Tipografía Primaria (`text-primary`):** `#f4f4f5` (`text-neutral-100`).
+- **Fondo Base (`background`):** `#09090b` (`bg-neutral-950`). Negro profundo para máxima legibilidad y eficiencia en pantallas OLED móviles.
+- **Superficies (`surface` / `surface-elevated`):** `#111115` y `#18181d`. Empleadas en tarjetas, modales y filas interactivas.
+- **Bordes Hairline (`border`):** `#27272a` (`border-neutral-800`). Cuadrícula visual nítida de 1px sin difuminados pesados.
+- **Tipografía Primaria (`text-primary`):** `#ffffff` (`text-white`).
 - **Tipografía Secundaria (`text-secondary`):** `#a1a1aa` (`text-neutral-400`).
-- **Acentos Semánticos:**
-  - **Cobro / Aprobado / Éxito:** Esmeralda (`#10b981`, `bg-emerald-500/10 text-emerald-400 border-emerald-500/20`).
-  - **Pendiente / Advertencia:** Ámbar (`#f59e0b`, `bg-amber-500/10 text-amber-400 border-amber-500/20`).
-  - **Urgente / Vencido / Error:** Rosa/Rojo (`#f43f5e`, `bg-rose-500/10 text-rose-400 border-rose-500/20`).
-  - **Informativo / Enlace:** Azul (`#3b82f6`, `text-blue-400`).
+- **Acentos de Marca Quirúrgicos:**
+  - **Couvance Electric Blue (`#004BFF`):**
+    - Pestaña de navegación activa en el Navbar (borde y resplandor sutil).
+    - Proyectos en estado `IN_PROGRESS` (badge e indicador).
+    - Anillos de foco accesible (`focus-visible:ring-[#004BFF]`).
+    - Enlaces de producción y repositorios en el catálogo de Showcase.
+  - **Couvance Electric Lime (`#BDEF00`):**
+    - Indicador "EN VIVO" con punto pulsante en el Radar de Tesorería.
+    - Indicadores luminosos del teclado numérico PIN de 8 dígitos al ingresar números.
+    - Cifra y métrica de "Total Cobrado (Histórico)".
+    - Estados `COMPLETED`, `PAID` y `ACTIVE`.
+    - Botones de aprobación inmediata de presupuestos y confirmación de cobros.
+  - **Tesorería / Alertas:**
+    - **Total en la Calle / Pendiente:** Ámbar (`#f59e0b`, `bg-amber-500/10 text-amber-300 border-amber-500/20`).
+    - **Urgente / Vencido / Error:** Rosa/Rojo (`#f43f5e`, `bg-rose-500/10 text-rose-300 border-rose-500/20`).
+  - **WhatsApp Oficial:** `#25D366` para el botón de cobro express y apertura de `wa.me`.
 
 ## Typography
 
 - **Fuente Sans:** `Inter, -apple-system, sans-serif`. Usada para navegación, títulos, etiquetas de formularios y descripciones.
-- **Fuente Mono:** `JetBrains Mono, Menlo, monospace`. Empleada en montos monetarios, porcentajes, fechas numéricas (YYYY-MM-DD), código y contraseñas numéricas (PIN).
-- **Escala:**
-  - `Display`: `1.875rem` (`text-3xl`), font-semibold, tracking-tight.
-  - `Title`: `1.25rem` (`text-xl`), font-semibold.
-  - `Body`: `0.875rem` (`text-sm`), font-normal.
-  - `Caption / Mono`: `0.8125rem` (`text-xs`), font-medium.
+- **Fuente Mono:** `JetBrains Mono, Menlo, monospace`. Empleada en cifras monetarias, porcentajes, fechas numéricas (YYYY-MM-DD), código y contraseñas numéricas (PIN).
 
-## Layout
+## Layout & Ergonomía Móvil
 
-- **Estructura:** Layout denso de una sola columna fluida con ancho máximo `max-w-7xl` centrado, padding responsivo `p-4 sm:p-6`.
-- **Navegación:** Barra fija superior `h-14` con borde inferior `border-neutral-800`, pestañas de acceso rápido (`Dashboard`, `Proyectos`, `Showcase`, `Clientes`) y botón de bloqueo.
-- **Móvil Primero en Radar:** En pantallas menores a `640px`, las tarjetas del radar se transforman en bloques táctiles verticales donde el botón de cobro de WhatsApp abarca el ancho completo o se ancla al pulgar.
-
-## Elevation & Depth
-
-- **Sin sombras pesadas:** No se utilizan sombras difusas (`shadow-2xl`).
-- **Separación Tonal:** La profundidad se logra exclusivamente mediante alternancia de fondo (`#09090b` &rarr; `#121215`), bordes de 1px (`#27272a`) y ligeros overlays traslúcidos en modales (`bg-black/80 backdrop-blur-sm`).
-
-## Shapes
-
-- **Radios:**
-  - Botones y campos de entrada: `rounded-md` (`6px`).
-  - Tarjetas y paneles: `rounded-lg` (`8px`).
-  - Indicadores de estado (pills / badges): `rounded-full` (`9999px`).
-  - Teclas del PIN: `rounded-xl` (`12px`) con altura mínima de `56px` para ergonomía táctil.
+- **Estructura:** Layout denso con ancho máximo `max-w-7xl` centrado, padding responsivo `p-4 sm:p-6`.
+- **Navegación Fija:** Barra superior `h-14` con borde inferior `border-neutral-800`, pestañas de acceso rápido (`Radar`, `Proyectos`, `Showcase`, `Clientes`), botón de descarga de respaldo JSON y bloqueo rápido.
+- **Móvil Primero en Radar:** En pantallas menores a `640px`, las tarjetas del radar se transforman en bloques táctiles verticales donde el botón de cobro de WhatsApp abarca el ancho completo o se ancla al pulgar ($\ge 44\text{px}$).
 
 ## Components
 
-1. **NumericKeypad:** Teclado numérico 3x4 de alta respuesta, con teclas grandes $\ge$ 48px, indicador de 8 dígitos mediante puntos luminosos y feedback visual instantáneo.
-2. **WhatsAppButton:** Botón verde esmeralda con icono de WhatsApp; genera `wa.me` si existe teléfono, o copia automáticamente el mensaje cordial al portapapeles con toast Sonner si no hay teléfono.
-3. **StatusBadge:** Pastillas compactas con fondo al 10% de opacidad y borde fino correspondiente al estado (`PROSPECT`, `IN_PROGRESS`, `COMPLETED`, `CANCELLED`).
-4. **Cotizador con Presets:** Interfaz de cálculo instantáneo con botones rápidos `[50 / 50]` y `[40 / 30 / 30]`, validación de 100% en tiempo real y botón de copiar resumen para el cliente.
-5. **Radix Dialogs:** Modales accesibles con foco atrapado, escape para cerrar y transiciones nativas aceleradas por hardware.
-
-## Do's and Don'ts
-
-### Do's
-- Mantener siempre bordes finos de 1px (`border-neutral-800`).
-- Usar siempre `font-mono` para cifras monetarias, porcentajes e hitos de pago.
-- Garantizar que cualquier botón interactivo en móvil tenga al menos `44x44px` de área de toque.
-- Usar notificaciones minimalistas de Sonner para confirmar copias al portapapeles o cobros.
-
-### Don'ts
-- **PROHIBIDO usar Framer Motion** ni librerías pesadas de animación que degraden la agilidad móvil.
-- No usar degradados multicolores ni sombras flotantes difusas.
-- No omitir el fallback de copia al portapapeles cuando un cliente no tiene número de teléfono.
-- No mostrar decimales en presupuestos ni en hitos de cobro (excepto recurrente).
+1. **Brand Navbar:** Logo oficial Couvance en alta resolución con borde eléctrico `#004BFF`, tipografía en blanco de alto contraste y pestañas activas destacadas con precisión geométrica.
+2. **PIN Unlock Screen:** Emblema Couvance de 64x64px con indicador de candado en lima eléctrico `#BDEF00`.
+3. **NumericKeypad:** Teclado táctil 3x4 donde los 8 dígitos iluminan pastillas en verde lima eléctrico `#BDEF00` con resplandor neón sutil, brindando retroalimentación táctil de grado militar.
+4. **Treasury Radar:** Tarjeta reina de "Total en la Calle", panel de "Total Cobrado" en verde lima y "Proyectos Activos" en azul eléctrico, con botón de WhatsApp y fallback al portapapeles.
+5. **Cotizador con Presets:** Interfaz de cálculo instantáneo con botones rápidos `[50 / 50]`, `[40 / 30 / 30]` y `[100%]`, validación de 100% en tiempo real y aprobación en 1 clic.

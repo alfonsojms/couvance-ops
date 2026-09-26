@@ -358,9 +358,9 @@ export const Projects: React.FC = () => {
             key={st.id}
             type="button"
             onClick={() => setStatusFilter(st.id)}
-            className={`min-h-[44px] sm:min-h-[32px] px-3 py-1.5 rounded-md text-xs font-medium transition-all select-none touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 ${
+            className={`min-h-[44px] sm:min-h-[32px] px-3 py-1.5 rounded-md text-xs font-medium transition-all select-none touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004BFF] ${
               statusFilter === st.id
-                ? 'bg-neutral-800 text-neutral-100 border border-neutral-700'
+                ? 'bg-neutral-900 text-white border border-[#004BFF]/60 shadow-[0_0_10px_rgba(0,75,255,0.15)]'
                 : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-900 border border-transparent'
             }`}
           >
@@ -421,7 +421,7 @@ export const Projects: React.FC = () => {
                   <CardPanel className="space-y-1">
                     <div className="flex justify-between text-neutral-400">
                       <span>Cobrado:</span>
-                      <span className="text-emerald-400 font-semibold">
+                      <span className="text-[#BDEF00] font-semibold">
                         {formatCurrency(p.totalPaid)}
                       </span>
                     </div>
@@ -707,7 +707,7 @@ export const Projects: React.FC = () => {
                           size="sm"
                           isLoading={approvingBudgetId === b.id}
                           onClick={() => handleApproveBudget(b.id)}
-                          className="bg-emerald-600 hover:bg-emerald-500 text-neutral-950 font-semibold"
+                          className="bg-[#BDEF00] hover:bg-[#cbff00] text-neutral-950 font-semibold shadow-[0_0_12px_rgba(189,239,0,0.25)] border-[#BDEF00]/40"
                         >
                           <CheckCircle className="w-3.5 h-3.5 mr-1" />
                           <span>Aprobar Presupuesto</span>
@@ -761,9 +761,9 @@ export const Projects: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setPreset('50-50')}
-                    className={`p-3 rounded-lg border text-xs font-medium transition-all text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 ${
+                    className={`p-3 rounded-lg border text-xs font-medium transition-all text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004BFF] ${
                       preset === '50-50'
-                        ? 'bg-neutral-800 text-neutral-100 border-neutral-500 shadow-sm'
+                        ? 'bg-neutral-900 text-white border-[#004BFF]/60 shadow-[0_0_12px_rgba(0,75,255,0.2)]'
                         : 'bg-neutral-950 text-neutral-400 border-neutral-800 hover:border-neutral-700'
                     }`}
                   >
@@ -774,9 +774,9 @@ export const Projects: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setPreset('40-30-30')}
-                    className={`p-3 rounded-lg border text-xs font-medium transition-all text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 ${
+                    className={`p-3 rounded-lg border text-xs font-medium transition-all text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004BFF] ${
                       preset === '40-30-30'
-                        ? 'bg-neutral-800 text-neutral-100 border-neutral-500 shadow-sm'
+                        ? 'bg-neutral-900 text-white border-[#004BFF]/60 shadow-[0_0_12px_rgba(0,75,255,0.2)]'
                         : 'bg-neutral-950 text-neutral-400 border-neutral-800 hover:border-neutral-700'
                     }`}
                   >
@@ -787,9 +787,9 @@ export const Projects: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setPreset('100')}
-                    className={`p-3 rounded-lg border text-xs font-medium transition-all text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 ${
+                    className={`p-3 rounded-lg border text-xs font-medium transition-all text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004BFF] ${
                       preset === '100'
-                        ? 'bg-neutral-800 text-neutral-100 border-neutral-500 shadow-sm'
+                        ? 'bg-neutral-900 text-white border-[#004BFF]/60 shadow-[0_0_12px_rgba(0,75,255,0.2)]'
                         : 'bg-neutral-950 text-neutral-400 border-neutral-800 hover:border-neutral-700'
                     }`}
                   >
@@ -817,7 +817,7 @@ export const Projects: React.FC = () => {
                       <span className="text-neutral-300">
                         {m.title} ({m.percentage}%)
                       </span>
-                      <span className="text-emerald-400 font-semibold">
+                      <span className="text-[#BDEF00] font-semibold">
                         {formatCurrency(m.amount)}
                       </span>
                     </div>

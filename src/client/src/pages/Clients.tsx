@@ -146,8 +146,8 @@ export const Clients: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-800 pb-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <Users className="w-5 h-5 text-neutral-300" />
-            <h1 className="text-xl font-bold tracking-tight text-neutral-100">
+            <Users className="w-5 h-5 text-[#004BFF]" />
+            <h1 className="text-xl font-bold tracking-tight text-white">
               Directorio de Clientes
             </h1>
           </div>

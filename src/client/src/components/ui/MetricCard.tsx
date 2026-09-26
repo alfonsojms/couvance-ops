@@ -39,7 +39,7 @@ export const MetricCard = React.forwardRef<HTMLDivElement, MetricCardProps>(
               <span
                 className={cn(
                   'font-medium font-mono',
-                  trend.positive ? 'text-emerald-400' : 'text-amber-400'
+                  trend.positive ? 'text-[#BDEF00]' : 'text-amber-400'
                 )}
               >
                 {trend.label}

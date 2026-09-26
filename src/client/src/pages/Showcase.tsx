@@ -64,8 +64,8 @@ export const Showcase: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-800 pb-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <Sparkles className="w-5 h-5 text-amber-400" />
-            <h1 className="text-xl font-bold tracking-tight text-neutral-100">
+            <Sparkles className="w-5 h-5 text-[#BDEF00]" />
+            <h1 className="text-xl font-bold tracking-tight text-white">
               Showcase de Ventas
             </h1>
           </div>
@@ -101,7 +101,7 @@ export const Showcase: React.FC = () => {
           <Button
             key={cat.id}
             type="button"
-            variant={categoryFilter === cat.id ? 'primary' : 'secondary'}
+            variant={categoryFilter === cat.id ? 'couvance' : 'secondary'}
             size="sm"
             touchFriendly
             onClick={() => setCategoryFilter(cat.id)}
@@ -147,7 +147,7 @@ export const Showcase: React.FC = () => {
 
                 {/* Previsualización de URL */}
                 <CardPanel className="flex items-center gap-2 text-xs text-neutral-300 truncate">
-                  <Globe className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                  <Globe className="w-3.5 h-3.5 text-[#004BFF] shrink-0" />
                   <span className="truncate font-mono">{p.productionUrl}</span>
                 </CardPanel>
               </div>
@@ -188,7 +188,7 @@ export const Showcase: React.FC = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                   title="Visitar web en nueva pestaña"
-                  className="inline-flex items-center justify-center rounded-md font-medium select-none border transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950 bg-neutral-800 text-neutral-100 border-neutral-700 hover:bg-neutral-700 hover:border-neutral-600 px-3 py-1.5 text-xs gap-1.5 min-h-[44px] min-w-[44px] shrink-0 active:scale-[0.98]"
+                  className="inline-flex items-center justify-center rounded-md font-medium select-none border transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004BFF] focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950 bg-neutral-900 text-neutral-200 border-neutral-800 hover:bg-neutral-850 hover:border-[#004BFF]/50 hover:text-white px-3 py-1.5 text-xs gap-1.5 min-h-[44px] min-w-[44px] shrink-0 active:scale-[0.98]"
                 >
                   <ExternalLink className="w-4 h-4 text-neutral-400 shrink-0" />
                   <span className="hidden sm:inline">Visitar</span>

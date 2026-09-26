@@ -37,7 +37,7 @@ export const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        'fixed left-1/2 top-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-xl border border-neutral-800 bg-neutral-900 p-6 shadow-2xl duration-150 focus:outline-none max-h-[90vh] overflow-y-auto',
+        'fixed left-1/2 top-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-xl border border-neutral-800 bg-[#111115] p-6 shadow-2xl duration-150 focus:outline-none max-h-[90vh] overflow-y-auto',
         className
       )}
       {...props}
@@ -46,7 +46,7 @@ export const DialogContent = React.forwardRef<
       {showCloseButton && (
         <DialogPrimitive.Close
           aria-label="Cerrar modal"
-          className="absolute right-4 top-4 rounded-md p-1.5 text-neutral-400 hover:text-neutral-100 hover:bg-neutral-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400"
+          className="absolute right-4 top-4 rounded-md p-1.5 text-neutral-400 hover:text-neutral-100 hover:bg-neutral-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004BFF]"
         >
           <X className="w-4 h-4" />
         </DialogPrimitive.Close>

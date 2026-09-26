@@ -1,6 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
+    './index.html',
     './src/client/index.html',
     './src/client/src/**/*.{js,ts,jsx,tsx}',
   ],
@@ -14,6 +15,22 @@ export default {
           DEFAULT: '#121215',
           foreground: '#f4f4f5',
           border: '#27272a',
+        },
+        couvance: {
+          blue: {
+            DEFAULT: '#004BFF',
+            hover: '#1a5eff',
+            subtle: 'rgba(0, 75, 255, 0.12)',
+            border: 'rgba(0, 75, 255, 0.35)',
+            glow: 'rgba(0, 75, 255, 0.25)',
+          },
+          lime: {
+            DEFAULT: '#BDEF00',
+            hover: '#cbff00',
+            subtle: 'rgba(189, 239, 0, 0.12)',
+            border: 'rgba(189, 239, 0, 0.35)',
+            glow: 'rgba(189, 239, 0, 0.25)',
+          },
         },
       },
       fontFamily: {

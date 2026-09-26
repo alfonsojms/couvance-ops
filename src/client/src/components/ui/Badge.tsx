@@ -28,13 +28,13 @@ const statusStyles: Record<
     defaultLabel: 'Prospecto',
   },
   IN_PROGRESS: {
-    container: 'bg-blue-500/10 text-blue-300 border-blue-500/20',
-    dot: 'bg-blue-400',
+    container: 'bg-[#004BFF]/15 text-[#6ba0ff] border-[#004BFF]/35',
+    dot: 'bg-[#004BFF] shadow-[0_0_6px_rgba(0,75,255,0.8)]',
     defaultLabel: 'En Progreso',
   },
   COMPLETED: {
-    container: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20',
-    dot: 'bg-emerald-400',
+    container: 'bg-[#BDEF00]/12 text-[#d2ff33] border-[#BDEF00]/35',
+    dot: 'bg-[#BDEF00] shadow-[0_0_6px_rgba(189,239,0,0.8)]',
     defaultLabel: 'Completado',
   },
   CANCELLED: {
@@ -53,13 +53,13 @@ const statusStyles: Record<
     defaultLabel: 'Pendiente',
   },
   PAID: {
-    container: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20',
-    dot: 'bg-emerald-400',
+    container: 'bg-[#BDEF00]/12 text-[#d2ff33] border-[#BDEF00]/35',
+    dot: 'bg-[#BDEF00] shadow-[0_0_6px_rgba(189,239,0,0.8)]',
     defaultLabel: 'Cobrado',
   },
   ACTIVE: {
-    container: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20',
-    dot: 'bg-emerald-400',
+    container: 'bg-[#BDEF00]/12 text-[#d2ff33] border-[#BDEF00]/35',
+    dot: 'bg-[#BDEF00] shadow-[0_0_6px_rgba(189,239,0,0.8)]',
     defaultLabel: 'Activa',
   },
   INACTIVE: {
@@ -71,10 +71,10 @@ const statusStyles: Record<
 
 const variantStyles = {
   neutral: 'bg-neutral-800/80 text-neutral-300 border-neutral-700',
-  success: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20',
+  success: 'bg-[#BDEF00]/12 text-[#d2ff33] border-[#BDEF00]/35',
   warning: 'bg-amber-500/10 text-amber-300 border-amber-500/20',
   danger: 'bg-rose-500/10 text-rose-300 border-rose-500/20',
-  info: 'bg-blue-500/10 text-blue-300 border-blue-500/20',
+  info: 'bg-[#004BFF]/15 text-[#6ba0ff] border-[#004BFF]/35',
 };
 
 export const Badge: React.FC<BadgeProps> = ({

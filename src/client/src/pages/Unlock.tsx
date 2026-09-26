@@ -169,12 +169,21 @@ export const Unlock: React.FC<UnlockProps> = ({ onUnlockSuccess }) => {
   return (
     <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-sm flex flex-col items-center">
-        {/* Cabecera / Ícono */}
-        <div className="w-12 h-12 rounded-xl bg-neutral-900 border border-neutral-800 flex items-center justify-center mb-6 shadow-sm">
-          <Lock className="w-6 h-6 text-neutral-300" />
+        {/* Cabecera / Logo Couvance */}
+        <div className="relative mb-6">
+          <div className="w-16 h-16 rounded-2xl overflow-hidden border border-[#004BFF]/50 bg-[#004BFF] shadow-[0_0_24px_rgba(0,75,255,0.35)] flex items-center justify-center">
+            <img
+              src="/logo-couvance.png"
+              alt="Couvance Logo"
+              className="w-full h-full object-cover select-none pointer-events-none"
+            />
+          </div>
+          <div className="absolute -bottom-1.5 -right-1.5 w-6 h-6 rounded-full bg-neutral-950 border border-neutral-800 flex items-center justify-center shadow-md">
+            <Lock className="w-3 h-3 text-[#BDEF00]" />
+          </div>
         </div>
 
-        <h1 className="text-xl font-bold tracking-tight text-neutral-100 mb-1 text-center">
+        <h1 className="text-xl font-bold tracking-tight text-white mb-1 text-center">
           Couvance Ops
         </h1>
         <p className="text-xs text-neutral-400 mb-8 text-center">

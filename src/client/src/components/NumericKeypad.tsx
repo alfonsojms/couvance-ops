@@ -54,8 +54,8 @@ export const NumericKeypad: React.FC<NumericKeypadProps> = ({
               className={cn(
                 'w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full border transition-all duration-150 ease-out',
                 filled
-                  ? 'bg-neutral-100 border-neutral-100 scale-110 shadow-sm'
-                  : 'bg-transparent border-neutral-700'
+                  ? 'bg-[#BDEF00] border-[#BDEF00] scale-110 shadow-[0_0_12px_rgba(189,239,0,0.6)]'
+                  : 'bg-neutral-900/80 border-neutral-800'
               )}
             />
           );
@@ -71,7 +71,7 @@ export const NumericKeypad: React.FC<NumericKeypadProps> = ({
             disabled={disabled}
             onClick={() => handleDigit(digit)}
             aria-label={`Dígito ${digit}`}
-            className="h-14 rounded-lg bg-neutral-900 border border-neutral-800 hover:border-neutral-700 hover:bg-neutral-850 active:scale-95 text-xl font-mono text-neutral-100 font-medium transition-all duration-150 ease-out disabled:opacity-50 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950 touch-manipulation"
+            className="h-14 rounded-xl bg-neutral-900/80 border border-neutral-800 hover:border-[#004BFF]/50 hover:bg-neutral-850 active:scale-95 text-xl font-mono text-white font-medium transition-all duration-150 ease-out disabled:opacity-50 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004BFF] focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950 touch-manipulation shadow-sm"
           >
             {digit}
           </button>
@@ -84,7 +84,7 @@ export const NumericKeypad: React.FC<NumericKeypadProps> = ({
           onClick={handleClear}
           aria-label="Borrar todo el PIN"
           title="Borrar todo"
-          className="h-14 rounded-lg bg-neutral-950 border border-neutral-900 hover:border-neutral-800 hover:bg-neutral-900 active:scale-95 text-neutral-400 hover:text-neutral-200 flex items-center justify-center transition-all duration-150 ease-out disabled:opacity-30 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950 touch-manipulation"
+          className="h-14 rounded-xl bg-neutral-950 border border-neutral-900 hover:border-neutral-800 hover:bg-neutral-900 active:scale-95 text-neutral-400 hover:text-white flex items-center justify-center transition-all duration-150 ease-out disabled:opacity-30 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004BFF] focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950 touch-manipulation"
         >
           <X className="w-5 h-5" />
         </button>
@@ -95,7 +95,7 @@ export const NumericKeypad: React.FC<NumericKeypadProps> = ({
           disabled={disabled}
           onClick={() => handleDigit('0')}
           aria-label="Dígito 0"
-          className="h-14 rounded-lg bg-neutral-900 border border-neutral-800 hover:border-neutral-700 hover:bg-neutral-850 active:scale-95 text-xl font-mono text-neutral-100 font-medium transition-all duration-150 ease-out disabled:opacity-50 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950 touch-manipulation"
+          className="h-14 rounded-xl bg-neutral-900/80 border border-neutral-800 hover:border-[#004BFF]/50 hover:bg-neutral-850 active:scale-95 text-xl font-mono text-white font-medium transition-all duration-150 ease-out disabled:opacity-50 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004BFF] focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950 touch-manipulation shadow-sm"
         >
           0
         </button>
@@ -107,7 +107,7 @@ export const NumericKeypad: React.FC<NumericKeypadProps> = ({
           onClick={handleDelete}
           aria-label="Retroceso / Borrar último dígito"
           title="Retroceso"
-          className="h-14 rounded-lg bg-neutral-950 border border-neutral-900 hover:border-neutral-800 hover:bg-neutral-900 active:scale-95 text-neutral-400 hover:text-neutral-200 flex items-center justify-center transition-all duration-150 ease-out disabled:opacity-30 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950 touch-manipulation"
+          className="h-14 rounded-xl bg-neutral-950 border border-neutral-900 hover:border-neutral-800 hover:bg-neutral-900 active:scale-95 text-neutral-400 hover:text-white flex items-center justify-center transition-all duration-150 ease-out disabled:opacity-30 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004BFF] focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950 touch-manipulation"
         >
           <Delete className="w-5 h-5" />
         </button>
