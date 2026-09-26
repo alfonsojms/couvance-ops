@@ -7,7 +7,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import app from './app';
 import * as schema from './db/schema';
-import { seedInitialAuthIfNeeded } from './db';
+import { seedInitialAuthIfNeeded, setGlobalDb } from './db';
 
 // 1. Inicialización y conexión de SQLite local (better-sqlite3)
 const dbPath = process.env.DATABASE_URL?.replace('file:', '') || './data/couvance-ops.db';
@@ -21,11 +21,8 @@ sqlite.pragma('journal_mode = WAL');
 sqlite.pragma('foreign_keys = ON');
 const db = drizzle(sqlite, { schema });
 
-// Inyección de la base de datos en el contexto de Hono
-app.use('*', async (c, next) => {
-  c.set('db', db);
-  await next();
-});
+// Inyección de la base de datos en el contexto global de Node
+setGlobalDb(db);
 
 // 2. Ejecución automática de migraciones Drizzle y sembrado en el arranque
 try {

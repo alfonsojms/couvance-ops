@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Toaster } from 'sonner';
 import { useAuth } from './hooks/useAuth';
 import { Navbar, NavTab } from './components/Navbar';
@@ -7,10 +7,62 @@ import { Projects } from './pages/Projects';
 import { Showcase } from './pages/Showcase';
 import { Clients } from './pages/Clients';
 import { Unlock } from './pages/Unlock';
+import { NotFound } from './pages/NotFound';
+
+const resolveTabFromPath = (path: string): NavTab | '404' => {
+  const cleanPath = path.toLowerCase().replace(/\/+$/, '') || '/';
+  if (cleanPath === '/' || cleanPath === '/dashboard' || cleanPath === '/radar') {
+    return 'dashboard';
+  }
+  if (cleanPath === '/projects' || cleanPath === '/proyectos') {
+    return 'projects';
+  }
+  if (cleanPath === '/showcase') {
+    return 'showcase';
+  }
+  if (cleanPath === '/clients' || cleanPath === '/clientes') {
+    return 'clients';
+  }
+  return '404';
+};
 
 export const App: React.FC = () => {
-  const { isAuthenticated, loading, unlock, lock, checkAuth } = useAuth();
-  const [currentTab, setCurrentTab] = useState<NavTab>('dashboard');
+  const { isAuthenticated, loading, lock, checkAuth } = useAuth();
+  const [currentTab, setCurrentTab] = useState<NavTab | '404'>(() => {
+    if (typeof window !== 'undefined') {
+      return resolveTabFromPath(window.location.pathname);
+    }
+    return 'dashboard';
+  });
+
+  // Escuchar eventos de navegación del navegador (adelante / atrás)
+  useEffect(() => {
+    const handlePopState = () => {
+      if (typeof window !== 'undefined') {
+        setCurrentTab(resolveTabFromPath(window.location.pathname));
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const handleTabChange = useCallback((tab: NavTab) => {
+    setCurrentTab(tab);
+    if (typeof window !== 'undefined') {
+      const targetPath = tab === 'dashboard' ? '/' : `/${tab}`;
+      if (window.location.pathname !== targetPath) {
+        window.history.pushState(null, '', targetPath);
+      }
+    }
+  }, []);
+
+  const handleGoToUnlock = useCallback(() => {
+    setCurrentTab('dashboard');
+    if (typeof window !== 'undefined') {
+      window.history.pushState(null, '', '/');
+    }
+  }, []);
 
   if (loading) {
     return (
@@ -20,7 +72,21 @@ export const App: React.FC = () => {
     );
   }
 
+  // Si no está autenticado
   if (!isAuthenticated) {
+    if (currentTab === '404') {
+      return (
+        <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col justify-center">
+          <NotFound
+            isStandalone
+            onGoToUnlock={handleGoToUnlock}
+            requestedPath={typeof window !== 'undefined' ? window.location.pathname : undefined}
+          />
+          <Toaster position="bottom-right" theme="dark" richColors />
+        </div>
+      );
+    }
+
     return (
       <>
         <Unlock onUnlockSuccess={checkAuth} />
@@ -29,15 +95,22 @@ export const App: React.FC = () => {
     );
   }
 
+  // Usuario autenticado
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col">
-      <Navbar currentTab={currentTab} onTabChange={setCurrentTab} onLock={lock} />
+      <Navbar currentTab={currentTab} onTabChange={handleTabChange} onLock={lock} />
 
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6">
         {currentTab === 'dashboard' && <Dashboard />}
         {currentTab === 'projects' && <Projects />}
         {currentTab === 'showcase' && <Showcase />}
         {currentTab === 'clients' && <Clients />}
+        {currentTab === '404' && (
+          <NotFound
+            onNavigate={handleTabChange}
+            requestedPath={typeof window !== 'undefined' ? window.location.pathname : undefined}
+          />
+        )}
       </main>
 
       <Toaster position="bottom-right" theme="dark" richColors />

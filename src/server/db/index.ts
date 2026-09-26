@@ -12,6 +12,16 @@ export { createD1Db, type D1Db } from './d1';
 
 export type AppDatabase = D1Db | SqliteDb;
 
+let globalDb: AppDatabase | null = null;
+
+export function setGlobalDb(db: AppDatabase): void {
+  globalDb = db;
+}
+
+export function getGlobalDb(): AppDatabase | null {
+  return globalDb;
+}
+
 export function getDb(c: Context): AppDatabase {
   // 1. Cloudflare Pages Functions (c.env.DB)
   if (c.env && (c.env as { DB?: D1Database }).DB) {
@@ -26,6 +36,11 @@ export function getDb(c: Context): AppDatabase {
   const contextDb = c.get('db') as AppDatabase | undefined;
   if (contextDb) {
     return contextDb;
+  }
+
+  // 3. Fallback a la instancia global de Node.js (inicializada en node-entry.ts)
+  if (globalDb) {
+    return globalDb;
   }
 
   throw new Error('Database connection not available in context. Ensure c.env.DB or c.get("db") is configured.');

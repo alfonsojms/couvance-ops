@@ -10,6 +10,8 @@ import budgetsApp from './modules/budgets';
 import financeApp from './modules/finance';
 import backupApp from './modules/backup';
 
+import { getGlobalDb } from './db';
+
 export type AppEnv = {
   Bindings: {
     DB?: D1Database;
@@ -21,6 +23,15 @@ export type AppEnv = {
 };
 
 const app = new Hono<AppEnv>();
+
+// Inyección de la instancia de base de datos en Node.js si está inicializada
+app.use('*', async (c, next) => {
+  const gDb = getGlobalDb();
+  if (gDb && !c.get('db')) {
+    c.set('db', gDb);
+  }
+  await next();
+});
 
 // Middleware global de sanitización contra inyecciones SQL y bytes nulos
 app.use('*', sanitizeMiddleware);
@@ -55,6 +66,34 @@ app.get('/api/health', (c) => {
     uptime: typeof process !== 'undefined' ? process.uptime() : 0,
     timestamp: new Date().toISOString(),
   });
+});
+
+// Manejador central de rutas no encontradas (404 Not Found)
+app.notFound((c) => {
+  if (c.req.path.startsWith('/api')) {
+    return c.json(
+      {
+        error: 'Not Found',
+        message: `El endpoint '${c.req.method} ${c.req.path}' no existe en la API de Couvance Ops.`,
+        statusCode: 404,
+        timestamp: new Date().toISOString(),
+      },
+      404
+    );
+  }
+  return c.text('404 Not Found', 404);
+});
+
+// Manejador central de errores para diagnóstico y observabilidad
+app.onError((err, c) => {
+  console.error(`🔥 [API Error] ${c.req.method} ${c.req.url}:`, err);
+  return c.json(
+    {
+      error: err.message || 'Internal Server Error',
+      stack: typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production' ? err.stack : undefined,
+    },
+    500
+  );
 });
 
 export default app;

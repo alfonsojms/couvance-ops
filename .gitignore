@@ -11,3 +11,7 @@ data/
 .wrangler/
 .DS_Store
 Thumbs.db
+# Playwright CLI output (may contain credentials)
+.playwright-cli/
+test-results/
+playwright-report/

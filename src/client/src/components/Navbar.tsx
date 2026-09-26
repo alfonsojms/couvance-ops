@@ -6,7 +6,7 @@ import { SecuritySettingsModal } from './SecuritySettingsModal';
 export type NavTab = 'dashboard' | 'projects' | 'showcase' | 'clients';
 
 interface NavbarProps {
-  currentTab: NavTab;
+  currentTab: NavTab | '404';
   onTabChange: (tab: NavTab) => void;
   onLock: () => void;
 }
