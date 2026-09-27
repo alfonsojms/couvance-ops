@@ -140,10 +140,10 @@ export const SecuritySettingsModal: React.FC<SecuritySettingsModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-md w-full">
+      <DialogContent className="w-[calc(100%-1.5rem)] max-w-md p-4 sm:p-6">
         <DialogHeader>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-neutral-800 border border-neutral-700 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-neutral-800 border border-neutral-700 flex items-center justify-center shrink-0">
               <Shield className="w-4 h-4 text-emerald-400" />
             </div>
             <div>
@@ -155,12 +155,12 @@ export const SecuritySettingsModal: React.FC<SecuritySettingsModalProps> = ({
           </div>
         </DialogHeader>
 
-        {/* Selector de Pestañas */}
+        {/* Selector de Pestañas con touch targets */}
         <div className="flex items-center gap-1.5 p-1 bg-neutral-950 rounded-lg border border-neutral-800 my-1">
           <button
             type="button"
             onClick={() => setActiveTab('pin')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-xs font-medium transition-all select-none touch-manipulation ${
+            className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 min-h-[40px] rounded-md text-xs font-medium transition-all select-none touch-manipulation ${
               activeTab === 'pin'
                 ? 'bg-neutral-800 text-neutral-100 shadow-sm border border-neutral-700'
                 : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-900/50'
@@ -172,7 +172,7 @@ export const SecuritySettingsModal: React.FC<SecuritySettingsModalProps> = ({
           <button
             type="button"
             onClick={() => setActiveTab('questions')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-xs font-medium transition-all select-none touch-manipulation ${
+            className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 min-h-[40px] rounded-md text-xs font-medium transition-all select-none touch-manipulation ${
               activeTab === 'questions'
                 ? 'bg-neutral-800 text-neutral-100 shadow-sm border border-neutral-700'
                 : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-900/50'
@@ -184,7 +184,7 @@ export const SecuritySettingsModal: React.FC<SecuritySettingsModalProps> = ({
         </div>
 
         {/* Tab 1: Cambiar PIN */}
-        {activeTab === 'pin' && (
+        {activeTab === 'pin' ? (
           <form onSubmit={handleChangePin} className="space-y-4 pt-2">
             <CardPanel className="text-xs text-neutral-400 p-3 space-y-1">
               <div className="flex items-center gap-1.5 text-neutral-200 font-medium">
@@ -243,25 +243,27 @@ export const SecuritySettingsModal: React.FC<SecuritySettingsModalProps> = ({
               </FormField>
             </div>
 
-            <DialogFooter className="pt-2">
-              <Button type="button" variant="secondary" onClick={onClose} disabled={loading}>
+            <DialogFooter className="flex-col-reverse xs:flex-row gap-2 xs:gap-0 pt-2">
+              <Button type="button" variant="secondary" onClick={onClose} disabled={loading} className="w-full xs:w-auto" touchFriendly>
                 Cancelar
               </Button>
               <Button
                 type="submit"
                 variant="primary"
+                touchFriendly
                 isLoading={loading}
                 disabled={loading || newPin.length !== 8 || confirmPin.length !== 8}
+                className="w-full xs:w-auto"
               >
                 <CheckCircle2 className="w-4 h-4 mr-1.5" />
                 Actualizar PIN
               </Button>
             </DialogFooter>
           </form>
-        )}
+        ) : null}
 
         {/* Tab 2: Preguntas de Seguridad */}
-        {activeTab === 'questions' && (
+        {activeTab === 'questions' ? (
           <form onSubmit={handleUpdateQuestions} className="space-y-4 pt-2">
             <CardPanel className="text-xs text-neutral-400 p-3 space-y-1">
               <div className="flex items-center gap-1.5 text-neutral-200 font-medium">
@@ -335,22 +337,24 @@ export const SecuritySettingsModal: React.FC<SecuritySettingsModalProps> = ({
               </FormField>
             </div>
 
-            <DialogFooter className="pt-2">
-              <Button type="button" variant="secondary" onClick={onClose} disabled={loading}>
+            <DialogFooter className="flex-col-reverse xs:flex-row gap-2 xs:gap-0 pt-2">
+              <Button type="button" variant="secondary" onClick={onClose} disabled={loading} className="w-full xs:w-auto" touchFriendly>
                 Cancelar
               </Button>
               <Button
                 type="submit"
                 variant="primary"
+                touchFriendly
                 isLoading={loading}
                 disabled={loading || currentPinForQuestions.length !== 8 || !a1.trim() || !a2.trim()}
+                className="w-full xs:w-auto"
               >
                 <CheckCircle2 className="w-4 h-4 mr-1.5" />
                 Guardar Preguntas
               </Button>
             </DialogFooter>
           </form>
-        )}
+        ) : null}
       </DialogContent>
     </Dialog>
   );

@@ -111,14 +111,14 @@ export const Badge: React.FC<BadgeProps> = ({
       )}
       {...props}
     >
-      {showDot && (
+      {showDot ? (
         <span
           className={cn(
             'w-1.5 h-1.5 rounded-full shrink-0',
             dotClass || 'bg-current'
           )}
         />
-      )}
+      ) : null}
       <span>{content}</span>
     </span>
   );

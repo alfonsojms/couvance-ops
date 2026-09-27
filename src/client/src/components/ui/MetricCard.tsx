@@ -25,17 +25,17 @@ export const MetricCard = React.forwardRef<HTMLDivElement, MetricCardProps>(
       >
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-medium text-neutral-400">{title}</span>
-          {icon && <div className="shrink-0 text-neutral-400">{icon}</div>}
+          {icon ? <div className="shrink-0 text-neutral-400">{icon}</div> : null}
         </div>
 
-        <div className="text-2xl sm:text-3xl font-mono font-bold text-neutral-100 tracking-tight my-0.5">
+        <div className="text-2xl xs:text-3xl sm:text-4xl font-mono font-bold text-neutral-100 tracking-tight my-0.5">
           {value}
         </div>
 
-        {(subtitle || trend) && (
+        {(subtitle || trend) ? (
           <div className="flex items-center justify-between text-[11px] text-neutral-500 pt-1 mt-1 border-t border-neutral-800/40">
-            {subtitle && <span>{subtitle}</span>}
-            {trend && (
+            {subtitle ? <span>{subtitle}</span> : null}
+            {trend ? (
               <span
                 className={cn(
                   'font-medium font-mono',
@@ -44,9 +44,9 @@ export const MetricCard = React.forwardRef<HTMLDivElement, MetricCardProps>(
               >
                 {trend.label}
               </span>
-            )}
+            ) : null}
           </div>
-        )}
+        ) : null}
       </div>
     );
   }

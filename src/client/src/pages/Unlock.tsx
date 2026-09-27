@@ -167,11 +167,11 @@ export const Unlock: React.FC<UnlockProps> = ({ onUnlockSuccess }) => {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-sm flex flex-col items-center">
+    <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center p-4 py-8 overflow-y-auto">
+      <div className="w-full max-w-sm flex flex-col items-center my-auto">
         {/* Cabecera / Logo Couvance */}
-        <div className="relative mb-6">
-          <div className="w-16 h-16 rounded-2xl overflow-hidden border border-[#004BFF]/50 bg-[#004BFF] shadow-[0_0_24px_rgba(0,75,255,0.35)] flex items-center justify-center">
+        <div className="relative mb-5 sm:mb-6">
+          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden border border-[#004BFF]/50 bg-[#004BFF] shadow-[0_0_24px_rgba(0,75,255,0.35)] flex items-center justify-center">
             <img
               src="/logo-couvance.png"
               alt="Couvance Logo"
@@ -186,17 +186,17 @@ export const Unlock: React.FC<UnlockProps> = ({ onUnlockSuccess }) => {
         <h1 className="text-xl font-bold tracking-tight text-white mb-1 text-center">
           Couvance Ops
         </h1>
-        <p className="text-xs text-neutral-400 mb-8 text-center">
+        <p className="text-xs text-neutral-400 mb-6 sm:mb-8 text-center">
           Ingresa el PIN maestro de 8 dígitos para acceder
         </p>
 
         {/* Mensaje de error si falla el PIN */}
-        {errorMsg && (
+        {errorMsg ? (
           <div className="w-full mb-6 p-3 rounded-lg bg-rose-950/40 border border-rose-900/60 text-rose-300 text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
             <span>{errorMsg}</span>
           </div>
-        )}
+        ) : null}
 
         {/* Teclado Numérico con animación shake */}
         <NumericKeypad
@@ -220,9 +220,9 @@ export const Unlock: React.FC<UnlockProps> = ({ onUnlockSuccess }) => {
         </button>
       </div>
 
-      {/* Modal de Recuperación con Preguntas Secretas (Nuevo Dialog UI & FormField) */}
+      {/* Modal de Recuperación con Preguntas Secretas */}
       <Dialog open={recoveryOpen} onOpenChange={setRecoveryOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="w-[calc(100%-1.5rem)] max-w-md p-4 sm:p-6">
           <DialogHeader>
             <div className="flex items-center gap-2 mb-1">
               <KeyRound className="w-4 h-4 text-neutral-300" />
@@ -264,12 +264,14 @@ export const Unlock: React.FC<UnlockProps> = ({ onUnlockSuccess }) => {
                 />
               </FormField>
 
-              <DialogFooter>
+              <DialogFooter className="flex-col-reverse xs:flex-row gap-2 xs:gap-0">
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
+                  touchFriendly
                   onClick={() => setRecoveryOpen(false)}
+                  className="w-full xs:w-auto"
                 >
                   Cancelar
                 </Button>
@@ -277,7 +279,9 @@ export const Unlock: React.FC<UnlockProps> = ({ onUnlockSuccess }) => {
                   type="submit"
                   variant="primary"
                   size="sm"
+                  touchFriendly
                   isLoading={recoveryLoading}
+                  className="w-full xs:w-auto"
                 >
                   <span>Validar respuestas</span>
                   <ArrowRight className="w-3.5 h-3.5 ml-1" />
@@ -323,12 +327,14 @@ export const Unlock: React.FC<UnlockProps> = ({ onUnlockSuccess }) => {
                 />
               </FormField>
 
-              <DialogFooter>
+              <DialogFooter className="flex-col-reverse xs:flex-row gap-2 xs:gap-0">
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
+                  touchFriendly
                   onClick={() => setRecoveryOpen(false)}
+                  className="w-full xs:w-auto"
                 >
                   Cancelar
                 </Button>
@@ -336,7 +342,9 @@ export const Unlock: React.FC<UnlockProps> = ({ onUnlockSuccess }) => {
                   type="submit"
                   variant="primary"
                   size="sm"
+                  touchFriendly
                   isLoading={recoveryLoading}
+                  className="w-full xs:w-auto"
                 >
                   <span>Guardar y Entrar</span>
                   <ArrowRight className="w-3.5 h-3.5 ml-1" />

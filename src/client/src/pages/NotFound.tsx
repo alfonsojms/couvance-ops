@@ -267,7 +267,7 @@ export const NotFound: React.FC<NotFoundProps> = ({
             )}
           </button>
 
-          {showTechnicalDetails && (
+          {showTechnicalDetails ? (
             <div className="mt-2.5 p-3 rounded-lg bg-neutral-950 border border-neutral-850 font-mono text-xs text-neutral-400 space-y-1.5">
               <div>
                 <span className="text-neutral-500">Status: </span>
@@ -292,7 +292,7 @@ export const NotFound: React.FC<NotFoundProps> = ({
                 <span className="text-neutral-300">{new Date().toISOString()}</span>
               </div>
             </div>
-          )}
+          ) : null}
         </div>
 
       </div>

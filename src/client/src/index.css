@@ -56,3 +56,26 @@
   box-shadow: 0 0 16px rgba(189, 239, 0, 0.3);
 }
 
+/* Vercel React Best Practice: High performance scrolling with content-visibility */
+.content-visibility-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 100px;
+}
+
+/* Mobile Safe Area Inset Helpers */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Hide scrollbar for clean horizontal swipe on mobile */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+

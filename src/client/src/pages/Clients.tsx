@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, memo } from 'react';
 import {
   Users,
   UserPlus,
@@ -41,6 +41,99 @@ interface ClientItem {
   totalPending: number;
 }
 
+interface ClientCardProps {
+  c: ClientItem;
+  onOpenDelete: (client: ClientItem) => void;
+}
+
+// Vercel React Best Practice: Memoized card component to avoid full directory re-renders
+const ClientCardItem = memo<ClientCardProps>(({ c, onOpenDelete }) => {
+  const contactMsg = `Hola ${c.name}, te escribimos de Couvance. ¿Cómo estás?`;
+
+  return (
+    <Card
+      className="p-4 sm:p-5 flex flex-col justify-between hover:border-neutral-700 transition-colors space-y-4 content-visibility-auto"
+    >
+      <div className="space-y-3">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <h3 className="font-semibold text-sm text-neutral-100 truncate">{c.name}</h3>
+            {c.contactName ? (
+              <span className="text-xs text-neutral-400 block truncate">
+                Contacto: {c.contactName}
+              </span>
+            ) : null}
+          </div>
+
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            touchFriendly
+            onClick={() => onOpenDelete(c)}
+            aria-label={`Eliminar cliente ${c.name}`}
+            title="Eliminar cliente"
+            className="text-neutral-500 hover:text-rose-400 hover:bg-neutral-800/80 p-2 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 shrink-0"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </Button>
+        </div>
+
+        {/* Info de contacto */}
+        <div className="space-y-1 text-xs text-neutral-400">
+          {c.phone ? (
+            <div className="flex items-center gap-2">
+              <Phone className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
+              <span className="font-mono">{c.phone}</span>
+            </div>
+          ) : null}
+
+          {c.email ? (
+            <div className="flex items-center gap-2">
+              <Mail className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
+              <span className="truncate">{c.email}</span>
+            </div>
+          ) : null}
+
+          {c.notes ? (
+            <div className="flex items-start gap-2 pt-1 text-[11px] text-neutral-500">
+              <FileText className="w-3.5 h-3.5 text-neutral-600 shrink-0 mt-0.5" />
+              <span className="italic line-clamp-2">{c.notes}</span>
+            </div>
+          ) : null}
+        </div>
+
+        {/* Métricas del Cliente */}
+        <CardPanel className="grid grid-cols-2 gap-2">
+          <div>
+            <span className="text-neutral-500 text-[10px] block">Proyectos</span>
+            <span className="text-neutral-200 font-semibold">{c.projectsCount}</span>
+          </div>
+          <div>
+            <span className="text-neutral-500 text-[10px] block">Pendiente</span>
+            <span className="text-amber-400 font-semibold">
+              {formatCurrency(c.totalPending)}
+            </span>
+          </div>
+        </CardPanel>
+      </div>
+
+      {/* Botón WhatsApp con touch target cómodo en móvil */}
+      <div className="pt-2 border-t border-neutral-800">
+        <WhatsAppButton
+          phone={c.phone}
+          message={contactMsg}
+          label="Abrir WhatsApp"
+          size="sm"
+          touchFriendly
+          className="w-full justify-center min-h-[44px]"
+        />
+      </div>
+    </Card>
+  );
+});
+ClientCardItem.displayName = 'ClientCardItem';
+
 export const Clients: React.FC = () => {
   const [clients, setClients] = useState<ClientItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,7 +147,7 @@ export const Clients: React.FC = () => {
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  // Modal de confirmación de eliminación accesible (sin window.confirm)
+  // Modal de confirmación de eliminación accesible
   const [clientToDelete, setClientToDelete] = useState<ClientItem | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [conflictMessage, setConflictMessage] = useState<string | null>(null);
@@ -106,10 +199,10 @@ export const Clients: React.FC = () => {
     }
   };
 
-  const openDeleteConfirmation = (client: ClientItem) => {
+  const openDeleteConfirmation = useCallback((client: ClientItem) => {
     setClientToDelete(client);
     setConflictMessage(null);
-  };
+  }, []);
 
   const handleConfirmDelete = async () => {
     if (!clientToDelete) return;
@@ -141,13 +234,13 @@ export const Clients: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12">
-      {/* Cabecera */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-800 pb-4">
+    <div className="space-y-5 sm:space-y-6 max-w-7xl mx-auto">
+      {/* Cabecera Responsiva */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-neutral-800 pb-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Users className="w-5 h-5 text-[#004BFF]" />
-            <h1 className="text-xl font-bold tracking-tight text-white">
+            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-white">
               Directorio de Clientes
             </h1>
           </div>
@@ -156,11 +249,12 @@ export const Clients: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 self-start sm:self-auto">
           <Button
             type="button"
             variant="secondary"
             size="sm"
+            touchFriendly
             onClick={loadClients}
             disabled={loading}
             aria-label="Actualizar lista de clientes"
@@ -184,105 +278,28 @@ export const Clients: React.FC = () => {
 
       {/* Grid de Clientes */}
       {clients.length === 0 && !loading ? (
-        <div className="bg-neutral-900/30 border border-neutral-800/80 rounded-xl p-12 text-center">
+        <div className="bg-neutral-900/30 border border-neutral-800/80 rounded-xl p-10 sm:p-12 text-center">
           <Users className="w-8 h-8 text-neutral-600 mx-auto mb-2" />
           <p className="text-sm text-neutral-300 font-medium">No hay clientes registrados aún</p>
-          <p className="text-xs text-neutral-500 mt-1">
+          <p className="text-xs text-neutral-500 mt-1 max-w-sm mx-auto">
             Comienza agregando el primer cliente con el botón "Nuevo Cliente".
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {clients.map((c) => {
-            const contactMsg = `Hola ${c.name}, te escribimos de Couvance. ¿Cómo estás?`;
-
-            return (
-              <Card
-                key={c.id}
-                className="p-5 flex flex-col justify-between hover:border-neutral-700 transition-colors space-y-4"
-              >
-                <div className="space-y-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <h3 className="font-semibold text-sm text-neutral-100">{c.name}</h3>
-                      {c.contactName && (
-                        <span className="text-xs text-neutral-400 block">
-                          Contacto: {c.contactName}
-                        </span>
-                      )}
-                    </div>
-
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => openDeleteConfirmation(c)}
-                      aria-label={`Eliminar cliente ${c.name}`}
-                      title="Eliminar cliente"
-                      className="text-neutral-500 hover:text-rose-400 hover:bg-neutral-800/80 p-1.5 h-8 w-8"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
-                  </div>
-
-                  {/* Info de contacto */}
-                  <div className="space-y-1 text-xs text-neutral-400">
-                    {c.phone && (
-                      <div className="flex items-center gap-2">
-                        <Phone className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
-                        <span className="font-mono">{c.phone}</span>
-                      </div>
-                    )}
-
-                    {c.email && (
-                      <div className="flex items-center gap-2">
-                        <Mail className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
-                        <span className="truncate">{c.email}</span>
-                      </div>
-                    )}
-
-                    {c.notes && (
-                      <div className="flex items-start gap-2 pt-1 text-[11px] text-neutral-500">
-                        <FileText className="w-3.5 h-3.5 text-neutral-600 shrink-0 mt-0.5" />
-                        <span className="italic line-clamp-2">{c.notes}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Métricas del Cliente */}
-                  <CardPanel className="grid grid-cols-2 gap-2">
-                    <div>
-                      <span className="text-neutral-500 text-[10px] block">Proyectos</span>
-                      <span className="text-neutral-200 font-semibold">{c.projectsCount}</span>
-                    </div>
-                    <div>
-                      <span className="text-neutral-500 text-[10px] block">Pendiente</span>
-                      <span className="text-amber-400 font-semibold">
-                        {formatCurrency(c.totalPending)}
-                      </span>
-                    </div>
-                  </CardPanel>
-                </div>
-
-                {/* Botón WhatsApp con touch target */}
-                <div className="pt-2 border-t border-neutral-800">
-                  <WhatsAppButton
-                    phone={c.phone}
-                    message={contactMsg}
-                    label="Abrir WhatsApp"
-                    size="sm"
-                    className="w-full justify-center min-h-[44px] sm:min-h-[34px]"
-                  />
-                </div>
-              </Card>
-            );
-          })}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
+          {clients.map((c) => (
+            <ClientCardItem
+              key={c.id}
+              c={c}
+              onOpenDelete={openDeleteConfirmation}
+            />
+          ))}
         </div>
       )}
 
-      {/* Modal Alta Rápida de Cliente con Dialog y FormField */}
+      {/* Modal Alta Rápida de Cliente */}
       <Dialog open={openModal} onOpenChange={setOpenModal}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="w-[calc(100%-1.5rem)] max-w-md p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle>Alta Rápida de Cliente</DialogTitle>
             <DialogDescription>
@@ -337,12 +354,14 @@ export const Clients: React.FC = () => {
               />
             </FormField>
 
-            <DialogFooter>
+            <DialogFooter className="flex-col-reverse xs:flex-row gap-2 xs:gap-0">
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
+                touchFriendly
                 onClick={() => setOpenModal(false)}
+                className="w-full xs:w-auto"
               >
                 Cancelar
               </Button>
@@ -350,7 +369,9 @@ export const Clients: React.FC = () => {
                 type="submit"
                 variant="primary"
                 size="sm"
+                touchFriendly
                 isLoading={submitting}
+                className="w-full xs:w-auto"
               >
                 Guardar Cliente
               </Button>
@@ -359,7 +380,7 @@ export const Clients: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Modal de Confirmación de Eliminación Accesible (Reemplazo window.confirm & Manejo 409) */}
+      {/* Modal de Confirmación de Eliminación */}
       <Dialog
         open={Boolean(clientToDelete)}
         onOpenChange={(open) => {
@@ -369,19 +390,19 @@ export const Clients: React.FC = () => {
           }
         }}
       >
-        <DialogContent className="max-w-md">
+        <DialogContent className="w-[calc(100%-1.5rem)] max-w-md p-4 sm:p-6">
           <DialogHeader>
             <div className="flex items-center gap-2 text-rose-400 mb-1">
               <AlertTriangle className="w-5 h-5 shrink-0" />
               <DialogTitle>Eliminar Cliente</DialogTitle>
             </div>
             <DialogDescription>
-              {clientToDelete && (
+              {clientToDelete ? (
                 <span>
                   ¿Estás seguro de que deseas eliminar permanentemente a{' '}
                   <strong className="text-neutral-100">{clientToDelete.name}</strong>?
                 </span>
-              )}
+              ) : null}
             </DialogDescription>
           </DialogHeader>
 
@@ -409,29 +430,33 @@ export const Clients: React.FC = () => {
             </p>
           )}
 
-          <DialogFooter>
+          <DialogFooter className="flex-col-reverse xs:flex-row gap-2 xs:gap-0">
             <Button
               type="button"
               variant="secondary"
               size="sm"
+              touchFriendly
               onClick={() => {
                 setClientToDelete(null);
                 setConflictMessage(null);
               }}
+              className="w-full xs:w-auto"
             >
               Cerrar
             </Button>
-            {clientToDelete && clientToDelete.projectsCount === 0 && (
+            {clientToDelete && clientToDelete.projectsCount === 0 ? (
               <Button
                 type="button"
                 variant="danger"
                 size="sm"
+                touchFriendly
                 isLoading={deleting}
                 onClick={handleConfirmDelete}
+                className="w-full xs:w-auto"
               >
                 Eliminar Cliente
               </Button>
-            )}
+            ) : null}
           </DialogFooter>
         </DialogContent>
       </Dialog>

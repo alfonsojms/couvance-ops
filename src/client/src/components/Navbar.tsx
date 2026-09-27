@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import { LayoutDashboard, FolderKanban, Sparkles, Users, Download, Lock, Shield } from 'lucide-react';
 import { toast } from 'sonner';
-import { SecuritySettingsModal } from './SecuritySettingsModal';
+
+// Vercel React Best Practice: Dynamic import for heavy modal component
+const SecuritySettingsModal = React.lazy(() =>
+  import('./SecuritySettingsModal').then((m) => ({ default: m.SecuritySettingsModal }))
+);
 
 export type NavTab = 'dashboard' | 'projects' | 'showcase' | 'clients';
 
@@ -10,6 +14,23 @@ interface NavbarProps {
   onTabChange: (tab: NavTab) => void;
   onLock: () => void;
 }
+
+// Vercel React Best Practice: bundle-preload on user intent (hover/touch)
+const preloadTab = (tab: NavTab) => {
+  if (typeof window !== 'undefined') {
+    if (tab === 'dashboard') void import('../pages/Dashboard');
+    if (tab === 'projects') void import('../pages/Projects');
+    if (tab === 'showcase') void import('../pages/Showcase');
+    if (tab === 'clients') void import('../pages/Clients');
+  }
+};
+
+const navItems = [
+  { id: 'dashboard' as NavTab, label: 'Radar', icon: LayoutDashboard },
+  { id: 'projects' as NavTab, label: 'Proyectos', icon: FolderKanban },
+  { id: 'showcase' as NavTab, label: 'Showcase', icon: Sparkles },
+  { id: 'clients' as NavTab, label: 'Clientes', icon: Users },
+];
 
 export const Navbar: React.FC<NavbarProps> = ({ currentTab, onTabChange, onLock }) => {
   const [downloading, setDownloading] = useState(false);
@@ -39,32 +60,95 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onTabChange, onLock 
     }
   };
 
-  const navItems = [
-    { id: 'dashboard' as NavTab, label: 'Radar', icon: LayoutDashboard },
-    { id: 'projects' as NavTab, label: 'Proyectos', icon: FolderKanban },
-    { id: 'showcase' as NavTab, label: 'Showcase', icon: Sparkles },
-    { id: 'clients' as NavTab, label: 'Clientes', icon: Users },
-  ];
-
   return (
-    <header className="sticky top-0 z-40 bg-neutral-950/90 backdrop-blur-md border-b border-neutral-800/80">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 sm:h-14 flex items-center justify-between">
-        {/* Marca / Título */}
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg overflow-hidden border border-[#004BFF]/50 bg-[#004BFF] flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(0,75,255,0.3)]">
-            <img
-              src="/logo-couvance.png"
-              alt="Couvance Logo"
-              className="w-full h-full object-cover select-none pointer-events-none"
-            />
+    <>
+      {/* Top Header Bar */}
+      <header className="sticky top-0 z-40 bg-neutral-950/90 backdrop-blur-md border-b border-neutral-800/80">
+        <div className="max-w-7xl mx-auto px-3.5 sm:px-6 h-14 flex items-center justify-between">
+          {/* Marca / Título */}
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg overflow-hidden border border-[#004BFF]/50 bg-[#004BFF] flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(0,75,255,0.3)]">
+              <img
+                src="/logo-couvance.png"
+                alt="Couvance Logo"
+                className="w-full h-full object-cover select-none pointer-events-none"
+              />
+            </div>
+            <span className="font-semibold text-sm tracking-tight text-white select-none">
+              Couvance <span className="text-neutral-400 font-mono text-xs">Ops</span>
+            </span>
           </div>
-          <span className="font-semibold text-sm tracking-tight text-white hidden sm:inline select-none">
-            Couvance <span className="text-neutral-400 font-mono text-xs">Ops</span>
-          </span>
-        </div>
 
-        {/* Pestañas Centrales con touch target >= 44px en móvil */}
-        <nav className="flex items-center gap-1 sm:gap-1.5" aria-label="Navegación principal">
+          {/* Pestañas de Navegación en Desktop / Tablet (sm en adelante) */}
+          <nav className="hidden sm:flex items-center gap-1 sm:gap-1.5" aria-label="Navegación principal">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = currentTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => onTabChange(item.id)}
+                  onMouseEnter={() => preloadTab(item.id)}
+                  onFocus={() => preloadTab(item.id)}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={`inline-flex items-center justify-center gap-1.5 min-h-[34px] px-3 rounded-md text-xs font-medium transition-all duration-150 ease-out select-none touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004BFF] ${
+                    isActive
+                      ? 'bg-neutral-900 text-white border border-[#004BFF]/60 shadow-[0_0_12px_rgba(0,75,255,0.2)]'
+                      : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-900 border border-transparent'
+                  }`}
+                >
+                  <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-[#004BFF]' : ''}`} />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+
+          {/* Acciones Rápidas (Exportar Respaldo + Seguridad + Bloquear) */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <button
+              type="button"
+              onClick={handleExportBackup}
+              disabled={downloading}
+              aria-label="Descargar respaldo JSON"
+              title="Descargar respaldo JSON"
+              className="inline-flex items-center justify-center gap-1.5 min-h-[44px] min-w-[44px] sm:min-h-[34px] sm:min-w-0 px-2.5 sm:px-3 rounded-md text-xs font-medium text-neutral-300 bg-neutral-900 border border-neutral-800 hover:border-neutral-700 hover:text-neutral-100 active:scale-95 transition-all duration-150 ease-out select-none disabled:opacity-50 touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400"
+            >
+              <Download className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-neutral-400 shrink-0" />
+              <span className="hidden md:inline">Descargar respaldo JSON</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSecurityModalOpen(true)}
+              aria-label="Seguridad y PIN maestro"
+              title="Cambiar PIN o preguntas de seguridad"
+              className="inline-flex items-center justify-center gap-1.5 min-h-[44px] min-w-[44px] sm:min-h-[34px] sm:min-w-0 px-2.5 sm:px-3 rounded-md text-xs font-medium text-neutral-300 bg-neutral-900 border border-neutral-800 hover:border-neutral-700 hover:text-neutral-100 active:scale-95 transition-all duration-150 ease-out select-none touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400"
+            >
+              <Shield className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-emerald-400 shrink-0" />
+              <span className="hidden sm:inline">Seguridad</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={onLock}
+              aria-label="Bloquear sesión"
+              title="Bloquear sesión"
+              className="inline-flex items-center justify-center min-h-[44px] min-w-[44px] sm:min-h-[34px] sm:min-w-[34px] p-2 rounded-md text-neutral-400 hover:text-neutral-200 bg-neutral-900 border border-neutral-800 hover:border-neutral-700 active:scale-95 transition-all duration-150 ease-out select-none touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400"
+            >
+              <Lock className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Barra de Navegación Inferior Móvil (Thumb-friendly & One-hand street operation) */}
+      <nav
+        aria-label="Navegación móvil"
+        className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-neutral-950/95 backdrop-blur-md border-t border-neutral-800/90 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.5)]"
+      >
+        <div className="grid grid-cols-4 h-14">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentTab === item.id;
@@ -73,61 +157,44 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onTabChange, onLock 
                 key={item.id}
                 type="button"
                 onClick={() => onTabChange(item.id)}
+                onMouseEnter={() => preloadTab(item.id)}
+                onTouchStart={() => preloadTab(item.id)}
                 aria-current={isActive ? 'page' : undefined}
-                className={`inline-flex items-center justify-center gap-1.5 min-h-[44px] sm:min-h-[34px] px-2.5 sm:px-3 rounded-md text-xs font-medium transition-all duration-150 ease-out select-none touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004BFF] ${
+                className={`flex flex-col items-center justify-center gap-1 min-h-[48px] py-1 transition-all duration-150 select-none touch-manipulation focus-visible:outline-none ${
                   isActive
-                    ? 'bg-neutral-900 text-white border border-[#004BFF]/60 shadow-[0_0_12px_rgba(0,75,255,0.2)]'
-                    : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-900 border border-transparent'
+                    ? 'text-white'
+                    : 'text-neutral-400 hover:text-neutral-200 active:text-white'
                 }`}
               >
-                <Icon className={`w-4 h-4 sm:w-3.5 sm:h-3.5 shrink-0 ${isActive ? 'text-[#004BFF]' : ''}`} />
-                <span>{item.label}</span>
+                <div
+                  className={`p-1 rounded-md transition-colors ${
+                    isActive ? 'bg-[#004BFF]/20 text-[#004BFF]' : 'text-neutral-400'
+                  }`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                </div>
+                <span
+                  className={`text-[10px] font-medium leading-none ${
+                    isActive ? 'text-white font-semibold' : 'text-neutral-400'
+                  }`}
+                >
+                  {item.label}
+                </span>
               </button>
             );
           })}
-        </nav>
-
-        {/* Acciones Rápidas (Exportar Respaldo + Seguridad + Bloquear) */}
-        <div className="flex items-center gap-1.5 sm:gap-2">
-          <button
-            type="button"
-            onClick={handleExportBackup}
-            disabled={downloading}
-            aria-label="Descargar respaldo JSON"
-            title="Descargar respaldo JSON"
-            className="inline-flex items-center justify-center gap-1.5 min-h-[44px] sm:min-h-[34px] px-2.5 sm:px-3 rounded-md text-xs font-medium text-neutral-300 bg-neutral-900 border border-neutral-800 hover:border-neutral-700 hover:text-neutral-100 active:scale-95 transition-all duration-150 ease-out select-none disabled:opacity-50 touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400"
-          >
-            <Download className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-neutral-400 shrink-0" />
-            <span className="hidden md:inline">Descargar respaldo JSON</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setSecurityModalOpen(true)}
-            aria-label="Seguridad y PIN maestro"
-            title="Cambiar PIN o preguntas de seguridad"
-            className="inline-flex items-center justify-center gap-1.5 min-h-[44px] sm:min-h-[34px] px-2.5 sm:px-3 rounded-md text-xs font-medium text-neutral-300 bg-neutral-900 border border-neutral-800 hover:border-neutral-700 hover:text-neutral-100 active:scale-95 transition-all duration-150 ease-out select-none touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400"
-          >
-            <Shield className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-emerald-400 shrink-0" />
-            <span className="hidden sm:inline">Seguridad</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={onLock}
-            aria-label="Bloquear sesión"
-            title="Bloquear sesión"
-            className="inline-flex items-center justify-center min-h-[44px] min-w-[44px] sm:min-h-[34px] sm:min-w-[34px] p-2 rounded-md text-neutral-400 hover:text-neutral-200 bg-neutral-900 border border-neutral-800 hover:border-neutral-700 active:scale-95 transition-all duration-150 ease-out select-none touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400"
-          >
-            <Lock className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
-          </button>
         </div>
-      </div>
+      </nav>
 
-      <SecuritySettingsModal
-        isOpen={securityModalOpen}
-        onClose={() => setSecurityModalOpen(false)}
-      />
-    </header>
+      {/* Modal de Seguridad cargado dinámicamente */}
+      {securityModalOpen ? (
+        <React.Suspense fallback={null}>
+          <SecuritySettingsModal
+            isOpen={securityModalOpen}
+            onClose={() => setSecurityModalOpen(false)}
+          />
+        </React.Suspense>
+      ) : null}
+    </>
   );
 };
