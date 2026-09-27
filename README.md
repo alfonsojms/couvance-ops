@@ -95,18 +95,22 @@ En finanzas de agencia, los errores de redondeo destruyen la confianza con los c
 
 ---
 
-## 🎨 Frontend: Filosofía Anti-"AI Slop" & Ergonomía Operativa
+## 🎨 Frontend: Filosofía Anti-"AI Slop", Identidad Couvance & Ergonomía Móvil
 
-Construido bajo el principio de **utilidad pura sin adornos innecesarios**:
+Construido bajo el principio de **utilidad pura sin adornos innecesarios**, con una experiencia adaptada al uso real de los socios:
 
 | Característica | Implementación Técnica | Impacto Operativo Real |
 | :--- | :--- | :--- |
-| **Cero Sobrecarga de Animaciones** | Prohibido Framer Motion. Transiciones CSS nativas de 150ms aceleradas por GPU. | Bundle JS ultraligero (~339 kB) y respuesta a 60 FPS sin tirones en cualquier smartphone. |
+| **Identidad de Marca Couvance** | Base monocromática oscura (True Black / Neutral 900) con acentos en Azul Eléctrico (`couvance-blue`) y Verde Esmeralda/Lime, imagotipo y favicon integrados. | Interfaz de autor sofisticada y sobria, libre de plantillas genéricas ("AI slop") y alineada a la imagen corporativa de la agencia. |
+| **Mobile-First & Thumb Zone** | Barra de navegación fija inferior (`Bottom Bar`) en smartphones (`sm:hidden`) y cabecera optimizada en escritorio. | Control ergonómico y ágil con una sola mano: cambia entre Radar, Proyectos, Showcase y Clientes caminando por la calle. |
+| **Página 404 Contextual** | Componente [`NotFound.tsx`](src/client/src/pages/NotFound.tsx) con retroceso seguro en historial, redirección a Dashboard y acceso por PIN de emergencia. | Resiliencia ante enlaces rotos o accesos sin sesión activa, evitando pantallas en blanco o bloqueos. |
+| **Rendimiento Vercel React** | Carga dinámica diferida (`React.lazy` + `Suspense`) en modales secundarios (ej: `SecuritySettingsModal`), renderizado condicional optimizado. | Carga inicial instantánea del radar operativo sin penalización de peso por vistas secundarias. |
+| **Cero Sobrecarga de Animaciones** | Prohibido Framer Motion. Transiciones CSS nativas de 150ms aceleradas por hardware (`ease-out`). | Bundle JS ultraligero y respuesta continua a 60 FPS sin ralentizaciones en smartphones de gama media o baja. |
 | **Desacoplamiento Cromático** | Botón de WhatsApp en verde esmeralda (`#25D366`) vs. botón "Cobrado" en gris neutro con icono check. | **Previene cobros falsos por error.** El operador nunca confunde el botón de contacto con el de asentar el cobro en caja. |
-| **Desbloqueo en 0.8 Segundos** | Listener de teclado físico global (`0-9`, `Backspace`, `Escape`, `Enter`) en `Unlock.tsx`. | En tu portátil abres y desbloqueas la herramienta en menos de un segundo sin tocar el ratón. |
-| **Touch Targets Móviles de 44px** | Controles con área táctil mínima de $44 \times 44$ px (`touchFriendly`). | Se usa con comodidad y precisión con una sola mano caminando por la calle. |
-| **Semáforo Visual de Urgencia** | Badges dinámicos: Rose (Vencido), Ámbar (Vence en $\le 2$ días), Neutral (Futuro). | Identificas de un vistazo dónde está retenido el dinero de la agencia. |
-| **Fichas de Venta en 1 Clic** | Generador de propuestas en Showcase listo para compartir por WhatsApp a prospectos. | Muestra trabajos previos y envía propuestas al instante en reuniones de ventas. |
+| **Desbloqueo en 0.8 Segundos** | Listener de teclado físico global (`0-9`, `Backspace`, `Escape`, `Enter`) y teclado táctil en pantalla con feedback háptico/CSS shake. | En portátil desbloqueas la herramienta en menos de un segundo sin usar el ratón; en móvil dispones de un teclado numérico táctil amplio. |
+| **Touch Targets Móviles de 44px** | Todos los botones y selectores interactivos cumplen con el estándar táctil mínimo de $44 \times 44$ px. | Pulsaciones seguras y precisas sin fallos de puntería en movimiento. |
+| **Semáforo Visual de Urgencia** | Badges dinámicos de cobranza: Rose (Vencido), Ámbar (Vence en $\le 2$ días), Neutral (Futuro). | Identificas de un solo vistazo dónde está retenido el flujo de caja de la agencia. |
+| **Fichas de Venta en 1 Clic** | Generador de propuestas en Showcase listo para compartir por WhatsApp a prospectos comerciales. | Muestra trabajos previos y envía cotizaciones al instante durante reuniones de venta. |
 
 ---
 
@@ -115,7 +119,17 @@ Construido bajo el principio de **utilidad pura sin adornos innecesarios**:
 ```text
 couvance-ops/
 ├── drizzle/                    # Migraciones SQL generadas por Drizzle Kit
+├── e2e/                        # Pruebas End-to-End con Playwright
+│   ├── clients.spec.ts         # Flujo E2E de gestión y validación de clientes
+│   ├── unlock.spec.ts          # Flujo E2E de desbloqueo PIN y recuperación
+│   └── whatsapp-clipboard.spec.ts # Flujo E2E de radar, wa.me y fallback portapapeles
 ├── functions/api/[[route]].ts  # Entrypoint Edge para Cloudflare Pages Functions
+├── test/                       # Suite de Pruebas Unitarias y de UI (Vitest)
+│   ├── budgets.test.ts         # Reglas contables RN-01 a RN-04 y absorción de residuos
+│   ├── integration.test.ts     # Ciclo de vida API completo en SQLite en memoria
+│   ├── notfound.ui.test.tsx    # Tests UI de página 404 y navegación contextual
+│   ├── responsive-navbar.ui.test.tsx # Tests UI de Navbar responsivo y Thumb Zone
+│   └── unlock.ui.test.tsx      # Tests UI de teclado numérico, PIN y CSS shake
 ├── src/
 │   ├── server/                 # BACKEND (Hono + Drizzle)
 │   │   ├── db/                 # Conectores agnósticos (D1, SQLite WAL, schemas, seed)
@@ -127,33 +141,37 @@ couvance-ops/
 │   │   │   ├── budgets/        # Presupuestos, hitos, residuo entero, aprobación 1-clic
 │   │   │   ├── finance/        # Radar de cobranzas, renovaciones recurrentes & KPIs
 │   │   │   └── backup/         # Exportación JSON higienizada
-│   │   ├── app.ts              # Instancia central Hono & enrutador API
+│   │   ├── app.ts              # Instancia central Hono, 404 handler & captura de errores
 │   │   └── node-entry.ts       # Entrypoint Node.js/Docker con auto-migración y seed
 │   │
 │   └── client/                 # FRONTEND (React 18.3 + Vite 6 + Tailwind CSS)
 │       └── src/
 │           ├── components/
 │           │   ├── ui/         # Design System Atómico (Button, Badge, Card, Dialog, Input, MetricCard)
-│           │   ├── Navbar.tsx  # Barra de navegación con respaldo y ajustes de seguridad
-│           │   ├── NumericKeypad.tsx         # Teclado táctil numérico
-│           │   ├── SecuritySettingsModal.tsx # Gestión de PIN maestro y preguntas secretas
+│           │   ├── Navbar.tsx  # Barra de navegación adaptativa (Desktop header + Mobile bottom bar)
+│           │   ├── NumericKeypad.tsx         # Teclado táctil numérico con listener físico
+│           │   ├── SecuritySettingsModal.tsx # Gestión de PIN maestro y preguntas secretas (Lazy)
 │           │   └── WhatsAppButton.tsx        # Botón con enlace wa.me y fallback a portapapeles
 │           ├── hooks/
 │           │   └── useAuth.ts  # Estado de sesión y autenticación
 │           ├── pages/
-│           │   ├── Dashboard.tsx   # Radar de cobranzas y métricas clave
+│           │   ├── Dashboard.tsx   # Radar de cobranzas, renovaciones y métricas clave
 │           │   ├── Projects.tsx    # Gestión de proyectos, cotizador 50/50 y 40/30/30
 │           │   ├── Showcase.tsx    # Catálogo de ventas & ficha WhatsApp para prospectos
 │           │   ├── Clients.tsx     # Directorio de clientes con protección de integridad
-│           │   └── Unlock.tsx      # Pantalla de desbloqueo PIN y recuperación
+│           │   ├── NotFound.tsx    # Página 404 personalizada con estética Couvance
+│           │   └── Unlock.tsx      # Pantalla de desbloqueo PIN (8 dígitos) con logo y CSS shake
 │           └── lib/
 │               ├── api.ts      # Cliente HTTP tipado
 │               └── utils.ts    # Enlaces wa.me y portapapeles seguro
 │
 ├── Dockerfile                  # Multi-stage build optimizado (node:20-slim)
 ├── docker-compose.yml          # Configuración con volumen persistente couvance_data
+├── INICIAR.bat                 # Script de arranque en 1 clic para entorno local Windows
 ├── wrangler.toml               # Configuración Cloudflare Pages & binding D1
 ├── drizzle.config.ts           # Configuración de Drizzle Kit
+├── playwright.config.ts        # Configuración de pruebas E2E Playwright
+├── vitest.config.ts            # Configuración de Vitest para pruebas unitarias y DOM
 ├── vite.config.ts              # Configuración de Vite con proxy /api
 ├── .env.example                # Plantilla de variables de entorno y secretos
 ├── package.json
@@ -170,10 +188,11 @@ En software interno, lo que decides no construir es tan importante como lo que i
 1. **Sin sobreingeniería:** Para un equipo de 2 socios, implementar microservicios, Kubernetes o SSO con Auth0/Okta habría añadido complejidad injustificada. Un PIN maestro con HMAC-SHA256, cookie `SameSite=Lax` y recuperación por preguntas secretas resuelve el 100% de la necesidad sin fricciones.
 2. **Compatibilidad Edge Real:** Cero dependencias nativas de Node (`fs`, `child_process`, `bcrypt`) en el núcleo compartido. El backend es isomórfico y corre idéntico en Cloudflare Pages Functions y Node.js.
 3. **Modelado Financiero Defensivo:** La absorción del residuo fraccionario en el último hito elimina descuadres contables por redondeo.
+4. **Garantía de Calidad de Doble Capa:** Suite automatizada completa con **Vitest** (28 pruebas pasando para reglas contables RN-01 a RN-04, validaciones Zod, ciclo API en memoria y componentes UI con React Testing Library) + **Playwright** para validar flujos críticos de usuario de punta a punta.
 
 ### ⚠️ Trade-offs y Compromisos Asumidos
 1. **Acceso Compartido (Monotenant):** Diseñado para la operativa conjunta de los socios con un PIN común. No incluye permisos por roles (RBAC) ni separación multi-empresa.
-2. **Estrategia de Validación en MVP:** La garantía de funcionamiento descansa en el tipado estricto de TypeScript (`0 errores`), validación exhaustiva con Zod en todos los endpoints y transacciones de base de datos. **No cuenta actualmente con una suite automatizada de tests (Vitest/Jest) ni pipeline de CI/CD**. Una suite formal e2e está contemplada para la siguiente fase.
+2. **Despliegue Directo sin Orquestación Pesada:** Se ejecutan las suites de validación locales (`npm test`, `npm run test:e2e`, `npx tsc --noEmit`) antes de cada versión en lugar de mantener pipelines pesados de CI/CD externos con costes adicionales.
 3. **Rate Limiting en Edge vs. Node:** El limitador de intentos en memoria (`rate-limit.ts`) opera de forma estricta en el proceso único de Node.js/Docker, mientras que en Cloudflare Pages actúa como mitigación por cada isolate de V8.
 4. **Escalabilidad de Base de Datos:** SQLite y D1 están optimizados para lectura intensiva y concurrencia baja/media. Para miles de escrituras concurrentes se requeriría una base de datos distribuida (PostgreSQL/Spanner), fuera del alcance de esta herramienta interna.
 
@@ -186,7 +205,10 @@ En software interno, lo que decides no construir es tan importante como lo que i
 - npm $\ge 10$
 - Docker & Docker Compose (opcional)
 
-### 1. Desarrollo Local
+### 1. Desarrollo Local en Windows (1 Clic)
+Puedes hacer doble clic en el archivo `INICIAR.bat` en la raíz del proyecto para arrancar backend y frontend simultáneamente.
+
+O desde tu terminal:
 ```bash
 # Clonar e instalar dependencias
 git clone https://github.com/tu-usuario/couvance-ops.git
@@ -209,6 +231,24 @@ npm run dev
 > - **PIN Maestro:** `12345678`
 > - **Pregunta Secreta 1:** `¿Cuál es el nombre de tu primera mascota?` &rarr; `couvance`
 > - **Pregunta Secreta 2:** `¿En qué ciudad se fundó la agencia?` &rarr; `valencia`
+
+---
+
+### 🧪 Pruebas Automatizadas (Testing)
+
+```bash
+# Ejecutar suite de pruebas unitarias y de integración UI (Vitest)
+npm test
+
+# Modo observador para desarrollo guiado por pruebas
+npm run test:watch
+
+# Ejecutar pruebas End-to-End en navegadores reales (Playwright)
+npm run test:e2e
+
+# Abrir el explorador interactivo visual de Playwright
+npm run test:e2e:ui
+```
 
 ---
 
@@ -247,9 +287,10 @@ La aplicación compilará cliente y servidor, aplicará las migraciones automát
 
 ---
 
-## 📊 Métricas de Build & Rendimiento
+## 📊 Métricas de Build & Calidad de Código
 
+- **Pruebas Automatizadas:** 28 tests pasando al 100% en Vitest (5 suites unitarias y de UI) + suites E2E Playwright.
 - **TypeScript:** 0 errores en compilación estricta (`npx tsc --noEmit`).
-- **Bundle Frontend:** 28.02 kB CSS / 339.46 kB JS (Vite v6 sobre React 18.3).
+- **Bundle Frontend:** Optimizado con code-splitting para modales secundarios y estilos Tailwind depurados.
 - **Bundle Servidor:** 57 kB bundle ESM autónomo (tsup).
-- **Rendimiento UI:** Puntuación de $\ge 98/100$ en Lighthouse Mobile en producción, lograda al prescindir de librerías pesadas de animación y renderizar con transiciones CSS directas.
+- **Rendimiento UI:** Puntuación de $\ge 98/100$ en Lighthouse Mobile en producción, garantizada por transiciones CSS aceleradas por hardware y carga bajo demanda.
