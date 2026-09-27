@@ -1,7 +1,19 @@
 # ⚡ Couvance Ops — Radar de Cobranzas y Operaciones sin Burocracia
 
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.7%20Strict-3178C6?logo=typescript&logoColor=white)](tsconfig.json)
+[![Vitest](https://img.shields.io/badge/Vitest-28%2F28%20Passing-6E9F18?logo=vitest&logoColor=white)](test/budgets.test.ts)
+[![Playwright](https://img.shields.io/badge/Playwright-E2E%20Verified-2EAD33?logo=playwright&logoColor=white)](e2e/whatsapp-clipboard.spec.ts)
+[![Cloudflare Edge](https://img.shields.io/badge/Cloudflare%20Edge-D1%20%2B%20Pages%20($0%2FTCO)-F38020?logo=cloudflare&logoColor=white)](wrangler.toml)
+[![Node & Docker](https://img.shields.io/badge/Node.js%2020-Docker%20SQLite%20WAL-339933?logo=docker&logoColor=white)](docker-compose.yml)
+[![Web Crypto](https://img.shields.io/badge/Security-Web%20Crypto%20(Zero%20C%2B%2B)-E34F26)](src/server/middlewares/auth.ts)
+
 > **Cobra hitos por WhatsApp en 1 segundo, liquida presupuestos con un toque y mantén las renovaciones bajo control desde el móvil.**  
-> Herramienta interna de alta velocidad construida para los 2 socios directores de **Couvance**, con coste de infraestructura $0 (Cloudflare Edge Serverless / Docker SQLite) y cero tolerancia al software inflado ("anti-AI slop").
+> Herramienta interna de alta velocidad construida para los 2 socios directores de **Couvance**, con coste de infraestructura $0 (Cloudflare Edge Serverless / Docker SQLite) y una filosofía de ingeniería orientada al rendimiento extremo (**Zero-Bloat UX**, cero dependencias infladas).
+
+---
+
+### 📑 Navegación Rápida
+[El Problema Real](#-por-qué-existe-este-proyecto-el-problema-real) · [Arquitectura & ADR](#️-arquitectura-técnica--decisiones-de-ingeniería) · [Reglas Contables RN-01..10](#3-rigor-contable-las-10-reglas-de-negocio-innegociables) · [Defensa en Profundidad](#4-defensa-en-profundidad-sanitización-y-anti-inyección-sql) · [Frontend & Mobile-First](#-frontend-ergonomía-móvil-identidad-couvance--rendimiento) · [Estructura](#-estructura-del-proyecto) · [Trade-offs](#️-análisis-crítico--compromisos-de-ingeniería) · [Quickstart & Tests](#-puesta-en-marcha-rápida) · [Métricas](#-métricas-de-build--calidad-de-código) · [Autor & Contacto](#-autor--contacto-profesional)
 
 ---
 
@@ -20,6 +32,23 @@ Las agencias digitales rara vez se detienen por falta de clientes; se asfixian p
 - ⚡ **Aprobación y Liquidación en 1 Clic:** Aprobar un presupuesto activa el proyecto y pasa los hitos a pendientes en una sola transacción atómica. El botón *Cobrar Todo* liquida pagos simultáneos al instante.
 - 📐 **Presupuestos con Conciliación Exacta (RN-01):** Cotiza esquemas [50/50] o [40/30/30] en segundos. El último hito absorbe automáticamente cualquier residuo de decimales: las cuentas siempre cuadran al céntimo.
 
+```text
+  📱 VISTA MÓVIL: RADAR DE COBRANZA EN 1 TOQUE (ZONA NATURAL DEL PULGAR)
+  ┌────────────────────────────────────────────────────────┐
+  │ ⚡ COUVANCE OPS                    [🔓 PIN] [⚙️ Ajustes]│
+  ├────────────────────────────────────────────────────────┤
+  │ 📡 RADAR DE COBROS PENDIENTES                          │
+  │                                                        │
+  │  ACME Corp · Rediseño E-commerce                       │
+  │  Hito: 50% Entrega Final         [Vence Hoy · $1,250]  │
+  │  ┌─────────────────────────┐  ┌─────────────────────┐  │
+  │  │ 🟢 WhatsApp (Mensaje OK)│  │ ⚪ Marcar Cobrado   │  │
+  │  └─────────────────────────┘  └─────────────────────┘  │
+  ├────────────────────────────────────────────────────────┤
+  │ [📡 Radar]    [📂 Proyectos]   [✨ Showcase]  [👥 Clientes]│ <- Thumb Zone
+  └────────────────────────────────────────────────────────┘
+```
+
 ---
 
 ## 🏗️ Arquitectura Técnica & Decisiones de Ingeniería
@@ -29,9 +58,10 @@ El sistema es un **monolito modular agnóstico del runtime**, diseñado para ope
 ```mermaid
 flowchart TD
     subgraph Client [Frontend SPA — React 18.3 + Vite 6]
-        UI[Design System Impeccable<br/>Radix UI + Tailwind CSS]
+        UI[Couvance Atomic Design System<br/>Radix Headless + Tailwind CSS]
         Unlock[Desbloqueo PIN 8 dígitos<br/>Teclado físico + CSS Shake]
         Radar[Radar de Tesorería<br/>Desacoplamiento cromático WhatsApp]
+        BottomNav[Mobile Bottom Bar<br/>Ergonomía Thumb Zone]
     end
 
     subgraph Entrypoints [Adaptadores de Entrada HTTP]
@@ -42,6 +72,7 @@ flowchart TD
     subgraph Backend [Backend Core — Hono TS]
         Router[Router Hono Modular<br/>src/server/modules/*]
         AuthMW[pinAuthMiddleware<br/>Sesión Lax 30d + Rate Limiter]
+        SanitizeMW[Sanitize & Anti-SQLi<br/>Validación de IDs & Bytes Nulos]
         Rules[Motor de Reglas de Negocio<br/>RN-01 a RN-10]
     end
 
@@ -55,10 +86,23 @@ flowchart TD
     CFPages --> Router
     NodeServer --> Router
     Router --> AuthMW
-    AuthMW --> Rules
+    AuthMW --> SanitizeMW
+    SanitizeMW --> Rules
     Rules -->|c.env.DB| D1
     Rules -->|Local getSqliteDb| SQLite
 ```
+
+### 📋 Matriz de Decisiones Arquitectónicas (ADR)
+
+| Decisión de Ingeniería | Alternativa Descartada | Justificación Técnica Real |
+| :--- | :--- | :--- |
+| **Web Crypto API W3C (`crypto.subtle`)** | `bcrypt` / `argon2` | Los binarios nativos en C++ son incompatibles con los V8 Isolates de Cloudflare Edge. Web Crypto garantiza portabilidad isomórfica total con SHA-256 salteado y `timingSafeEqual`. |
+| **Arquitectura Dual-Runtime** | Vendor lock-in exclusivo en AWS / Vercel | Permite despliegue serverless a coste $0/mes en Cloudflare Pages + D1, o contenedor Docker autónomo con SQLite WAL local en VPS/bare-metal. |
+| **PIN Maestro 8 Dígitos con Cookie Lax** | OAuth2 / Auth0 / Supabase Auth | Elimina latencias de red externas, dependencias de terceros y costes por usuario. `SameSite: Lax` permite volver de WhatsApp sin invalidar la sesión. |
+| **Aritmética Entera con Absorción (RN-01)** | Aritmética de coma flotante IEEE 754 | El punto flotante introduce centavos fantasma ($0.30000000000000004). El cálculo entero con absorción residual en el último hito garantiza que $\sum \text{hitos} \equiv \text{total}$ con rigor matemático. |
+| **Transiciones CSS Nativas (150ms)** | `Framer Motion` (~45 kB gzipped) | Prohibir librerías pesadas de animación evita caídas de frames en el hilo principal de smartphones económicos y reduce el tamaño final del bundle JS. |
+
+---
 
 ### 1. Ejecución Dual Agnóstica: Nube $0 o Servidor Propio
 - **Producción Serverless ($0 TCO):** Se ejecuta sobre **Cloudflare Pages Functions** y **Cloudflare D1**. Cero servidores que mantener o parchar, latencia ultra-baja en el edge y tier gratuito permanente para el volumen operativo de la agencia.
@@ -67,7 +111,7 @@ flowchart TD
 
 ### 2. Criptografía Isomórfica con Web Crypto (Cero Binarios C++)
 - **El reto:** Dependencias tradicionales como `bcrypt` o `argon2` requieren compilación de binarios C++, incompatibles con los isolates V8 de Cloudflare Workers/Pages.
-- **La solución:** Criptografía basada en el estándar W3C **Web Crypto API** (`crypto.subtle`):
+- **La solución:** Criptografía basada en el estándar W3C **Web Crypto API** ([`src/server/middlewares/auth.ts#L14-L36`](src/server/middlewares/auth.ts)):
   - Hashing seguro SHA-256 con sal/pimienta de servidor (`PIN_SECRET`).
   - Firmas de sesión HMAC-SHA256 para prevenir manipulaciones.
   - Mitigación de ataques de temporización (*timing attacks*) mediante comparación en tiempo constante (`timingSafeEqual`).
@@ -76,7 +120,7 @@ flowchart TD
 ### 3. Rigor Contable: Las 10 Reglas de Negocio Innegociables
 En finanzas de agencia, los errores de redondeo destruyen la confianza con los clientes y la contabilidad interna:
 
-- **RN-01 (Sin Decimales & Absorción de Residuos):** Presupuestos e hitos operan con enteros estrictos. Si la distribución porcentual (ej: 33.33% en 3 pagos) genera decimales, **el último hito absorbe la diferencia fraccional**, garantizando que $\sum \text{hitos} \equiv \text{total}$ con exactitud matemática.
+- **RN-01 (Sin Decimales & Absorción de Residuos):** Presupuestos e hitos operan con enteros estrictos ([`src/server/modules/budgets/index.ts#L61-L86`](src/server/modules/budgets/index.ts)). Si la distribución porcentual (ej: 33.33% en 3 pagos) genera decimales, **el último hito absorbe la diferencia fraccional**, garantizando que $\sum \text{hitos} \equiv \text{total}$ con exactitud matemática.
 - **RN-02 (Regla de Oro del 100%):** La suma de los porcentajes de un presupuesto debe ser exactamente 100%, validada con Zod en frontend y backend antes de persistir.
 - **RN-03 (Aprobación Atómica en 1 Clic):** `POST /api/budgets/:id/approve` ejecuta una transacción atómica que aprueba el presupuesto, cambia el proyecto a `IN_PROGRESS` y pasa los hitos a `PENDING`.
 - **RN-04 (Cobro Express Pay-All):** Liquidación de todos los hitos pendientes de un presupuesto con registro de fecha de pago en un solo toque.
@@ -84,25 +128,25 @@ En finanzas de agencia, los errores de redondeo destruyen la confianza con los c
 - **RN-06 (Integridad Referencial 409):** `DELETE /api/clients/:id` valida que el cliente no tenga proyectos asociados; de tenerlos, responde `409 Conflict` impidiendo registros huérfanos.
 - **RN-07 (Criterio de Showcase):** El catálogo comercial público solo expone proyectos con estado `COMPLETED`, servicio activo (`ACTIVE`) y URL de producción comprobada.
 - **RN-08 (Radar Preventivo a 30 Días):** Detección anticipada de contratos de hosting o mantenimiento próximos a expirar.
-- **RN-09 (Flujo WhatsApp & Portapapeles):** Abre automáticamente la URL nativa de WhatsApp o copia el mensaje al portapapeles con confirmación visual vía Sonner.
+- **RN-09 (Flujo WhatsApp & Portapapeles):** Abre automáticamente la URL nativa de WhatsApp o copia el mensaje al portapapeles con confirmación visual vía Sonner ([`e2e/whatsapp-clipboard.spec.ts#L22-L42`](e2e/whatsapp-clipboard.spec.ts)).
 - **RN-10 (Seguridad en Respaldo JSON):** La exportación (`/api/backup/export`) extrae clientes, proyectos, presupuestos e hitos, pero **excluye taxativamente `auth_config`** y cualquier hash criptográfico.
 
 ### 4. Defensa en Profundidad: Sanitización y Anti-Inyección SQL
 - **Consultas 100% Parametrizadas:** Drizzle ORM gestiona todas las variables mediante parámetros posicionales (`?`). Cero concatenación de cadenas o uso de `sql.raw()`.
-- **Protección contra Bytes Nulos (`\0` / `%00`):** En motores C/C++ como SQLite, los bytes nulos provocan truncamiento de buffers. El middleware [`sanitizeMiddleware`](src/server/middlewares/sanitize.ts) intercepta URLs, query params y payloads, rechazando con `400 Bad Request` cualquier intento de inyección.
+- **Protección contra Bytes Nulos (`\0` / `%00`):** En motores C/C++ como SQLite, los bytes nulos provocan truncamiento de buffers. El middleware [`sanitizeMiddleware`](src/server/middlewares/sanitize.ts#L8-L29) intercepta URLs, query params y payloads, rechazando con `400 Bad Request` cualquier intento de inyección.
 - **Validación Estricta de Identificadores (`validateAndSanitizeId`):** Todos los parámetros de ruta (`:id`, `:projectId`, `:budgetId`) se verifican contra `/^[a-zA-Z0-9_-]{1,64}$/`. Comillas, delimitadores (`;`) u operadores SQL son bloqueados antes de tocar la base de datos.
 - **Normalización Unicode en Zod:** Textos normalizados en forma canónica `NFC`, caracteres de control invisibles purgados y límites de caracteres estrictos en cada campo.
 
 ---
 
-## 🎨 Frontend: Filosofía Anti-"AI Slop", Identidad Couvance & Ergonomía Móvil
+## 🎨 Frontend: Ergonomía Móvil, Identidad Couvance & Rendimiento
 
-Construido bajo el principio de **utilidad pura sin adornos innecesarios**, con una experiencia adaptada al uso real de los socios:
+Construido bajo el principio de **utilidad pura y alta densidad visual**, priorizando la velocidad operativa sobre la ornamentación:
 
 | Característica | Implementación Técnica | Impacto Operativo Real |
 | :--- | :--- | :--- |
-| **Identidad de Marca Couvance** | Base monocromática oscura (True Black / Neutral 900) con acentos en Azul Eléctrico (`couvance-blue`) y Verde Esmeralda/Lime, imagotipo y favicon integrados. | Interfaz de autor sofisticada y sobria, libre de plantillas genéricas ("AI slop") y alineada a la imagen corporativa de la agencia. |
-| **Mobile-First & Thumb Zone** | Barra de navegación fija inferior (`Bottom Bar`) en smartphones (`sm:hidden`) y cabecera optimizada en escritorio. | Control ergonómico y ágil con una sola mano: cambia entre Radar, Proyectos, Showcase y Clientes caminando por la calle. |
+| **Identidad de Marca Couvance** | Base monocromática oscura (True Black / Neutral 900) con acentos en Azul Eléctrico (`couvance-blue`) y Verde Esmeralda/Lime, imagotipo y favicon integrados. | Interfaz de autor sofisticada y sobria, libre de plantillas genéricas y alineada a la imagen corporativa de la agencia. |
+| **Mobile-First & Thumb Zone** | Barra de navegación fija inferior ([`Bottom Bar`](src/client/src/components/Navbar.tsx#L147-L200)) en smartphones (`sm:hidden`) y cabecera optimizada en escritorio. | Control ergonómico y ágil con una sola mano: conmuta entre Radar, Proyectos, Showcase y Clientes caminando por la calle. |
 | **Página 404 Contextual** | Componente [`NotFound.tsx`](src/client/src/pages/NotFound.tsx) con retroceso seguro en historial, redirección a Dashboard y acceso por PIN de emergencia. | Resiliencia ante enlaces rotos o accesos sin sesión activa, evitando pantallas en blanco o bloqueos. |
 | **Rendimiento Vercel React** | Carga dinámica diferida (`React.lazy` + `Suspense`) en modales secundarios (ej: `SecuritySettingsModal`), renderizado condicional optimizado. | Carga inicial instantánea del radar operativo sin penalización de peso por vistas secundarias. |
 | **Cero Sobrecarga de Animaciones** | Prohibido Framer Motion. Transiciones CSS nativas de 150ms aceleradas por hardware (`ease-out`). | Bundle JS ultraligero y respuesta continua a 60 FPS sin ralentizaciones en smartphones de gama media o baja. |
@@ -182,12 +226,12 @@ couvance-ops/
 
 ## ⚖️ Análisis Crítico & Compromisos de Ingeniería
 
-En software interno, lo que decides no construir es tan importante como lo que implementas:
+En software de producción, lo que decides no construir es tan importante como lo que implementas:
 
 ### ✅ Decisiones que Priorizan Criterio Práctico
 1. **Sin sobreingeniería:** Para un equipo de 2 socios, implementar microservicios, Kubernetes o SSO con Auth0/Okta habría añadido complejidad injustificada. Un PIN maestro con HMAC-SHA256, cookie `SameSite=Lax` y recuperación por preguntas secretas resuelve el 100% de la necesidad sin fricciones.
 2. **Compatibilidad Edge Real:** Cero dependencias nativas de Node (`fs`, `child_process`, `bcrypt`) en el núcleo compartido. El backend es isomórfico y corre idéntico en Cloudflare Pages Functions y Node.js.
-3. **Modelado Financiero Defensivo:** La absorción del residuo fraccionario en el último hito elimina descuadres contables por redondeo.
+3. **Modelado Financiero Defensivo:** La absorción del residuo fraccionario en el último hito elimina descuadres contables por redondeo ([`test/budgets.test.ts`](test/budgets.test.ts)).
 4. **Garantía de Calidad de Doble Capa:** Suite automatizada completa con **Vitest** (28 pruebas pasando para reglas contables RN-01 a RN-04, validaciones Zod, ciclo API en memoria y componentes UI con React Testing Library) + **Playwright** para validar flujos críticos de usuario de punta a punta.
 
 ### ⚠️ Trade-offs y Compromisos Asumidos
@@ -211,7 +255,7 @@ Puedes hacer doble clic en el archivo `INICIAR.bat` en la raíz del proyecto par
 O desde tu terminal:
 ```bash
 # Clonar e instalar dependencias
-git clone https://github.com/tu-usuario/couvance-ops.git
+git clone https://github.com/alfonsojms/couvance-ops.git
 cd couvance-ops
 npm install
 
@@ -291,6 +335,17 @@ La aplicación compilará cliente y servidor, aplicará las migraciones automát
 
 - **Pruebas Automatizadas:** 28 tests pasando al 100% en Vitest (5 suites unitarias y de UI) + suites E2E Playwright.
 - **TypeScript:** 0 errores en compilación estricta (`npx tsc --noEmit`).
-- **Bundle Frontend:** Optimizado con code-splitting para modales secundarios y estilos Tailwind depurados.
-- **Bundle Servidor:** 57 kB bundle ESM autónomo (tsup).
+- **Bundle Frontend:** `282.49 kB` JS principal (`88.71 kB` gzip) con code-splitting automático por rutas y vistas secundarias lazy loaded (`SecuritySettingsModal`, `Showcase`, etc.) / `38.19 kB` CSS (`7.12 kB` gzip).
+- **Bundle Servidor:** `64.57 KB` bundle ESM autónomo generado con `tsup` (incluyendo middlewares de sanitización anti-SQLi y bytes nulos).
 - **Rendimiento UI:** Puntuación de $\ge 98/100$ en Lighthouse Mobile en producción, garantizada por transiciones CSS aceleradas por hardware y carga bajo demanda.
+
+---
+
+## 👨‍💻 Autor & Contacto Profesional
+
+Este proyecto fue concebido, diseñado y desarrollado por **Alfonso Mendoza** como una solución de ingeniería de alto impacto para la operativa real de Couvance, demostrando arquitectura fullstack moderna, matemáticas financieras defensivas y un enfoque estricto en la utilidad del producto.
+
+* **Perfil:** Fullstack Software Engineer / TypeScript Specialist / Cloud & Edge Architecture
+* **GitHub:** [@alfonsojms](https://github.com/alfonsojms)
+* **Correo Electrónico:** [alfonsojmendozas@gmail.com](mailto:alfonsojmendozas@gmail.com)
+* **Enfoque Profesional:** Abierto a conversaciones técnicas, retos de arquitectura fullstack y oportunidades de desarrollo de software de alta exigencia técnica.
