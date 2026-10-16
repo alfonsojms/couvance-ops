@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, memo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, memo } from 'react';
 import {
   DollarSign,
   TrendingUp,
@@ -9,10 +9,12 @@ import {
   Calendar,
   RefreshCw,
   Zap,
+  Receipt,
+  Search,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '../lib/api';
-import { formatCurrency, formatDate } from '../lib/utils';
+import { cn, formatCurrency, formatDate } from '../lib/utils';
 import { WhatsAppButton } from '../components/WhatsAppButton';
 import {
   Button,
@@ -20,6 +22,7 @@ import {
   Card,
   CardPanel,
   MetricCard,
+  Input,
   Dialog,
   DialogContent,
   DialogHeader,
@@ -41,6 +44,26 @@ interface PendingMilestoneDTO {
   clientName: string;
   clientPhone?: string | null;
   projectTitle: string;
+}
+
+export interface PaidMilestoneDTO {
+  id: string;
+  milestoneTitle: string;
+  amount: number;
+  percentage: number;
+  currency: string;
+  paidAt: string;
+  dueDate?: string | null;
+  projectId: string;
+  projectTitle: string;
+  projectCategory: string;
+  clientId: string;
+  clientName: string;
+}
+
+export interface DashboardProps {
+  initialSubTab?: 'pending' | 'history';
+  onSubTabChange?: (tab: 'pending' | 'history') => void;
 }
 
 interface RecurringAlertDTO {
@@ -312,31 +335,114 @@ const PendingMilestoneCard = memo<{
 });
 PendingMilestoneCard.displayName = 'PendingMilestoneCard';
 
-export const Dashboard: React.FC = () => {
+// Vercel React Best Practice: Memoized subcomponent to isolate paid milestone rendering
+const PaidMilestoneCard = memo<{
+  m: PaidMilestoneDTO;
+}>(({ m }) => {
+  return (
+    <Card className="p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-neutral-800/80 bg-neutral-900/40 hover:border-neutral-700/80 transition-colors content-visibility-auto">
+      {/* Info Proyecto y Cliente */}
+      <div className="space-y-1.5 min-w-0 flex-1">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="font-semibold text-sm text-neutral-100 truncate">
+            {m.projectTitle}
+          </span>
+          <Badge variant="neutral">
+            {m.projectCategory}
+          </Badge>
+          <Badge variant="neutral">
+            {m.percentage}%
+          </Badge>
+          <span className="text-[11px] font-mono text-neutral-400 flex items-center gap-1">
+            <Calendar className="w-3 h-3 text-neutral-500 inline-block" />
+            Cobrado: {formatDate(m.paidAt)}
+          </span>
+        </div>
+
+        <div className="text-xs text-neutral-400 flex items-center gap-2 truncate">
+          <span className="text-neutral-300 font-medium truncate">{m.clientName}</span>
+          <span>•</span>
+          <span className="text-neutral-400 truncate">{m.milestoneTitle}</span>
+        </div>
+      </div>
+
+      {/* Monto Cobrado en Electric Lime */}
+      <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-neutral-800/60 shrink-0">
+        <span className="sm:hidden text-xs text-neutral-500">Monto Cobrado:</span>
+        <div className="text-right">
+          <div className="font-mono text-lg sm:text-xl font-bold text-[#d4ff33] tracking-tight">
+            +{formatCurrency(m.amount, m.currency)}
+          </div>
+          <div className="text-[10px] font-mono text-neutral-500 uppercase tracking-wider">
+            Ingreso efectivo
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+});
+PaidMilestoneCard.displayName = 'PaidMilestoneCard';
+
+export const Dashboard: React.FC<DashboardProps> = ({ initialSubTab = 'pending', onSubTabChange }) => {
+  const [activeSubTab, setActiveSubTab] = useState<'pending' | 'history'>(initialSubTab);
   const [metrics, setMetrics] = useState<FinancialMetrics | null>(null);
   const [pendingMilestones, setPendingMilestones] = useState<PendingMilestoneDTO[]>([]);
+  const [paidMilestones, setPaidMilestones] = useState<PaidMilestoneDTO[]>([]);
   const [recurringAlerts, setRecurringAlerts] = useState<RecurringAlertDTO[]>([]);
+  const [historySearch, setHistorySearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [payAllTarget, setPayAllTarget] = useState<PayAllModalData | null>(null);
+
+  useEffect(() => {
+    if (initialSubTab) {
+      setActiveSubTab(initialSubTab);
+    }
+  }, [initialSubTab]);
+
+  const handleSwitchSubTab = useCallback(
+    (tab: 'pending' | 'history') => {
+      setActiveSubTab(tab);
+      onSubTabChange?.(tab);
+    },
+    [onSubTabChange]
+  );
 
   // Vercel React Best Practice: Eliminating waterfalls with Promise.all
   const loadDashboardData = useCallback(async () => {
     try {
       setLoading(true);
-      const [metricsData, radarData] = await Promise.all([
+      const [metricsData, radarData, historyData] = await Promise.all([
         api.get<FinancialMetrics>('/api/finance/metrics'),
         api.get<{ pendingMilestones: PendingMilestoneDTO[]; recurringAlerts: RecurringAlertDTO[] }>('/api/finance/radar'),
+        api.get<{ history: PaidMilestoneDTO[]; totalCollected: number; totalCount: number }>('/api/finance/history'),
       ]);
       setMetrics(metricsData);
       setPendingMilestones(radarData.pendingMilestones);
       setRecurringAlerts(radarData.recurringAlerts);
+      setPaidMilestones(historyData.history || []);
     } catch (err: any) {
       toast.error(err.message || 'Error al cargar el Radar de finanzas');
     } finally {
       setLoading(false);
     }
   }, []);
+
+  const filteredPaidMilestones = useMemo(() => {
+    if (!historySearch.trim()) return paidMilestones;
+    const q = historySearch.toLowerCase().trim();
+    return paidMilestones.filter(
+      (m) =>
+        m.clientName.toLowerCase().includes(q) ||
+        m.projectTitle.toLowerCase().includes(q) ||
+        m.milestoneTitle.toLowerCase().includes(q) ||
+        m.projectCategory.toLowerCase().includes(q)
+    );
+  }, [paidMilestones, historySearch]);
+
+  const filteredTotalCollected = useMemo(() => {
+    return filteredPaidMilestones.reduce((acc, curr) => acc + curr.amount, 0);
+  }, [filteredPaidMilestones]);
 
   useEffect(() => {
     loadDashboardData();
@@ -438,31 +544,63 @@ export const Dashboard: React.FC = () => {
         </Button>
       </div>
 
-      {/* Métricas Principales: Jerarquía de Tesorería */}
+      {/* Métricas Principales: Jerarquía de Tesorería interactiva */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-        <MetricCard
-          title="Total en la Calle (Pendiente)"
-          value={
-            <span className="text-2xl xs:text-3xl sm:text-4xl text-amber-400 font-extrabold tracking-tight">
-              {formatCurrency(metrics?.totalInTheStreet || 0)}
-            </span>
-          }
-          subtitle="Hitos activos pendientes de cobro"
-          icon={<Clock className="w-5 h-5 text-amber-400" />}
-          className="border-amber-500/30 bg-amber-500/5 relative overflow-hidden ring-1 ring-amber-500/20 shadow-sm"
-        />
+        <button
+          type="button"
+          aria-label="Ver hitos pendientes en la calle"
+          onClick={() => handleSwitchSubTab('pending')}
+          className="text-left w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50 rounded-xl transition-all"
+        >
+          <MetricCard
+            title="Total en la Calle (Pendiente)"
+            value={
+              <span className="text-2xl xs:text-3xl sm:text-4xl text-amber-400 font-extrabold tracking-tight">
+                {formatCurrency(metrics?.totalInTheStreet || 0)}
+              </span>
+            }
+            subtitle={
+              activeSubTab === 'pending'
+                ? '● Viendo pendientes ahora'
+                : 'Clic para ver pendientes →'
+            }
+            icon={<Clock className="w-5 h-5 text-amber-400" />}
+            className={cn(
+              'border-amber-500/30 bg-amber-500/5 relative overflow-hidden transition-all cursor-pointer h-full',
+              activeSubTab === 'pending'
+                ? 'ring-2 ring-amber-500/60 shadow-md shadow-amber-500/10'
+                : 'hover:border-amber-500/50 hover:bg-amber-500/10 ring-1 ring-amber-500/20 opacity-85 hover:opacity-100'
+            )}
+          />
+        </button>
 
-        <MetricCard
-          title="Total Cobrado (Histórico)"
-          value={
-            <span className="text-2xl xs:text-3xl sm:text-4xl text-[#d4ff33] font-extrabold tracking-tight">
-              {formatCurrency(metrics?.totalCollected || 0)}
-            </span>
-          }
-          subtitle="Ingresos efectivos registrados"
-          icon={<DollarSign className="w-5 h-5 text-[#BDEF00]" />}
-          className="border-[#BDEF00]/25 bg-[#BDEF00]/5 ring-1 ring-[#BDEF00]/15"
-        />
+        <button
+          type="button"
+          aria-label="Ver historial de cobros registrados"
+          onClick={() => handleSwitchSubTab('history')}
+          className="text-left w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[#BDEF00]/50 rounded-xl transition-all"
+        >
+          <MetricCard
+            title="Total Cobrado (Histórico)"
+            value={
+              <span className="text-2xl xs:text-3xl sm:text-4xl text-[#d4ff33] font-extrabold tracking-tight">
+                {formatCurrency(metrics?.totalCollected || 0)}
+              </span>
+            }
+            subtitle={
+              activeSubTab === 'history'
+                ? '● Viendo historial ahora'
+                : 'Clic para ver desglose →'
+            }
+            icon={<DollarSign className="w-5 h-5 text-[#BDEF00]" />}
+            className={cn(
+              'border-[#BDEF00]/25 bg-[#BDEF00]/5 relative overflow-hidden transition-all cursor-pointer h-full',
+              activeSubTab === 'history'
+                ? 'ring-2 ring-[#BDEF00]/60 shadow-md shadow-[#BDEF00]/10'
+                : 'hover:border-[#BDEF00]/50 hover:bg-[#BDEF00]/10 ring-1 ring-[#BDEF00]/15 opacity-85 hover:opacity-100'
+            )}
+          />
+        </button>
 
         <MetricCard
           title="Proyectos en Progreso"
@@ -477,65 +615,178 @@ export const Dashboard: React.FC = () => {
         />
       </div>
 
-      {/* Alertas Preventivas de Renovación Recurrente a 30 Días */}
-      {recurringAlerts.length > 0 ? (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-amber-400" />
-            <h2 className="text-sm font-semibold text-neutral-200">
-              Renovaciones de Hosting / Mantenimiento (&lt; 30 días)
-            </h2>
-          </div>
+      {/* Subtab Switcher: En la calle vs Historial de Cobros */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-neutral-800 pb-3">
+        <div
+          role="tablist"
+          aria-label="Vistas de radar y cobros"
+          className="inline-flex items-center gap-1.5 p-1 bg-neutral-900/90 border border-neutral-800 rounded-lg self-start"
+        >
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeSubTab === 'pending'}
+            aria-label={`Pestaña En la calle (${pendingMilestones.length} pendientes)`}
+            onClick={() => handleSwitchSubTab('pending')}
+            className={cn(
+              'flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all touch-manipulation',
+              activeSubTab === 'pending'
+                ? 'bg-neutral-800 text-amber-400 shadow-sm font-semibold border border-amber-500/30'
+                : 'text-neutral-400 hover:text-neutral-200'
+            )}
+          >
+            <Clock className="w-3.5 h-3.5 text-amber-400" />
+            <span>En la calle ({pendingMilestones.length})</span>
+          </button>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {recurringAlerts.map((rec) => (
-              <RecurringAlertCard
-                key={rec.projectId}
-                rec={rec}
-                processingId={processingId}
-                onRenew={handleRenewProject}
-              />
-            ))}
-          </div>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeSubTab === 'history'}
+            aria-label={`Pestaña Historial de Cobros (${paidMilestones.length} cobrados)`}
+            onClick={() => handleSwitchSubTab('history')}
+            className={cn(
+              'flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all touch-manipulation',
+              activeSubTab === 'history'
+                ? 'bg-neutral-800 text-[#d4ff33] shadow-sm font-semibold border border-[#BDEF00]/30'
+                : 'text-neutral-400 hover:text-neutral-200'
+            )}
+          >
+            <Receipt className="w-3.5 h-3.5 text-[#BDEF00]" />
+            <span>Historial de Cobros ({paidMilestones.length})</span>
+          </button>
         </div>
-      ) : null}
 
-      {/* Radar de Hitos Pendientes de Cobro */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-neutral-400" />
-            <h2 className="text-sm font-semibold text-neutral-200">
-              Hitos Pendientes de Cobro ({pendingMilestones.length})
-            </h2>
-          </div>
-          <span className="text-[11px] text-neutral-500 font-mono">
-            Ordenados por fecha de vencimiento
-          </span>
-        </div>
-
-        {pendingMilestones.length === 0 ? (
-          <Card className="p-8 text-center bg-neutral-900/30 border-neutral-800/80">
-            <CheckCircle2 className="w-8 h-8 text-[#BDEF00]/80 mx-auto mb-2" />
-            <p className="text-sm text-neutral-300 font-medium">¡Cero cuentas pendientes!</p>
-            <p className="text-xs text-neutral-500 mt-1">
-              Todos los hitos aprobados han sido cobrados con éxito.
-            </p>
-          </Card>
-        ) : (
-          <div className="space-y-2.5 sm:space-y-3">
-            {pendingMilestones.map((m) => (
-              <PendingMilestoneCard
-                key={m.id}
-                m={m}
-                processingId={processingId}
-                onPay={handlePayMilestone}
-                onOpenPayAll={handleOpenPayAllModal}
-              />
-            ))}
+        {activeSubTab === 'history' && paidMilestones.length > 0 && (
+          <div className="relative w-full sm:w-72">
+            <Search className="w-3.5 h-3.5 text-neutral-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
+            <Input
+              type="text"
+              placeholder="Buscar por cliente o proyecto..."
+              value={historySearch}
+              onChange={(e) => setHistorySearch(e.target.value)}
+              className="pl-8 text-xs h-8 bg-neutral-900/80 border-neutral-800 focus:border-neutral-700"
+            />
+            {historySearch ? (
+              <button
+                type="button"
+                onClick={() => setHistorySearch('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-neutral-500 hover:text-neutral-300 font-mono"
+              >
+                ✕
+              </button>
+            ) : null}
           </div>
         )}
       </div>
+
+      {/* Vista 1: Pendientes (En la calle) */}
+      {activeSubTab === 'pending' ? (
+        <>
+          {/* Alertas Preventivas de Renovación Recurrente a 30 Días */}
+          {recurringAlerts.length > 0 ? (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-400" />
+                <h2 className="text-sm font-semibold text-neutral-200">
+                  Renovaciones de Hosting / Mantenimiento (&lt; 30 días)
+                </h2>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {recurringAlerts.map((rec) => (
+                  <RecurringAlertCard
+                    key={rec.projectId}
+                    rec={rec}
+                    processingId={processingId}
+                    onRenew={handleRenewProject}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {/* Radar de Hitos Pendientes de Cobro */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-neutral-400" />
+                <h2 className="text-sm font-semibold text-neutral-200">
+                  Hitos Pendientes de Cobro ({pendingMilestones.length})
+                </h2>
+              </div>
+              <span className="text-[11px] text-neutral-500 font-mono">
+                Ordenados por fecha de vencimiento
+              </span>
+            </div>
+
+            {pendingMilestones.length === 0 ? (
+              <Card className="p-8 text-center bg-neutral-900/30 border-neutral-800/80">
+                <CheckCircle2 className="w-8 h-8 text-[#BDEF00]/80 mx-auto mb-2" />
+                <p className="text-sm text-neutral-300 font-medium">¡Cero cuentas pendientes!</p>
+                <p className="text-xs text-neutral-500 mt-1">
+                  Todos los hitos aprobados han sido cobrados con éxito.
+                </p>
+              </Card>
+            ) : (
+              <div className="space-y-2.5 sm:space-y-3">
+                {pendingMilestones.map((m) => (
+                  <PendingMilestoneCard
+                    key={m.id}
+                    m={m}
+                    processingId={processingId}
+                    onPay={handlePayMilestone}
+                    onOpenPayAll={handleOpenPayAllModal}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </>
+      ) : null}
+
+      {/* Vista 2: Historial de Cobros (Desglose de Ganancias) */}
+      {activeSubTab === 'history' ? (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-2">
+              <Receipt className="w-4 h-4 text-[#BDEF00]" />
+              <h2 className="text-sm font-semibold text-neutral-200">
+                Historial de Cobros Registrados ({filteredPaidMilestones.length})
+              </h2>
+            </div>
+            {historySearch ? (
+              <span className="text-[11px] text-neutral-400 font-mono">
+                Filtrado: {formatCurrency(filteredTotalCollected)} ({filteredPaidMilestones.length} hitos)
+              </span>
+            ) : (
+              <span className="text-[11px] text-neutral-500 font-mono">
+                Ordenados por fecha de cobro más reciente
+              </span>
+            )}
+          </div>
+
+          {filteredPaidMilestones.length === 0 ? (
+            <Card className="p-8 text-center bg-neutral-900/30 border-neutral-800/80">
+              <Receipt className="w-8 h-8 text-neutral-600 mx-auto mb-2" />
+              <p className="text-sm text-neutral-300 font-medium">
+                {historySearch ? 'No se encontraron cobros con ese filtro' : 'Aún no hay cobros registrados'}
+              </p>
+              <p className="text-xs text-neutral-500 mt-1">
+                {historySearch
+                  ? 'Probá buscando con otro nombre de cliente o proyecto.'
+                  : 'Cuando marques un hito como cobrado aparecerá detallado acá con su fecha e importe.'}
+              </p>
+            </Card>
+          ) : (
+            <div className="space-y-2.5 sm:space-y-3">
+              {filteredPaidMilestones.map((m) => (
+                <PaidMilestoneCard key={m.id} m={m} />
+              ))}
+            </div>
+          )}
+        </div>
+      ) : null}
 
       {/* Modal de Confirmación para "Cobrar Todo" */}
       <Dialog

@@ -115,7 +115,69 @@ financeApp.get('/radar', async (c) => {
   }
 });
 
-// 2. POST /api/finance/projects/:id/renew y POST /api/finance/:id/renew — Suma un período (+1 mes o +1 año)
+// 2. GET /api/finance/history — Historial de cobros y trazabilidad de ingresos (RN-08)
+financeApp.get('/history', async (c) => {
+  try {
+    const db = getDb(c);
+
+    const allClients = (await db.select().from(clients).all()) || [];
+    const clientsMap = new Map(allClients.map((cl) => [cl.id, cl]));
+
+    const allProjects = (await db.select().from(projects).all()) || [];
+    const projectsMap = new Map(allProjects.map((p) => [p.id, p]));
+
+    const allBudgets = (await db.select().from(budgets).all()) || [];
+    const budgetsMap = new Map(allBudgets.map((b) => [b.id, b]));
+
+    const paidMilestones = (await db
+      .select()
+      .from(milestones)
+      .where(eq(milestones.status, 'PAID'))
+      .all()) || [];
+
+    paidMilestones.sort((a, b) => {
+      const dateA = a.paidAt || a.updatedAt || a.createdAt || '';
+      const dateB = b.paidAt || b.updatedAt || b.createdAt || '';
+      return String(dateB).localeCompare(String(dateA));
+    });
+
+    const historyDTO = paidMilestones.map((m) => {
+      const budget = budgetsMap.get(m.budgetId);
+      const project = budget ? projectsMap.get(budget.projectId) : undefined;
+      const client = project ? clientsMap.get(project.clientId) : undefined;
+
+      return {
+        id: m.id,
+        budgetId: m.budgetId,
+        projectId: project?.id || '',
+        projectTitle: project?.title || 'Proyecto sin título',
+        projectCategory: project?.category || 'CORPORATE',
+        clientId: client?.id || '',
+        clientName: client?.name || 'Cliente sin nombre',
+        clientPhone: client?.phone || null,
+        milestoneTitle: m.title,
+        amount: m.amount,
+        percentage: m.percentage,
+        currency: budget?.currency || 'USD',
+        paidAt: m.paidAt || m.updatedAt || m.createdAt,
+        dueDate: m.dueDate || null,
+      };
+    });
+
+    const totalCollected = historyDTO.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
+
+    return c.json({
+      history: historyDTO,
+      totalCollected,
+      totalCount: historyDTO.length,
+    });
+  } catch (error: any) {
+    console.error('🔥 [Finance History Error]:', error);
+    return c.json({ error: error.message || 'Error al obtener historial de cobros' }, 500);
+  }
+});
+
+// 3. POST /api/finance/projects/:id/renew y POST /api/finance/:id/renew — Suma un período (+1 mes o +1 año)
 financeApp.post('/projects/:id/renew', async (c) => {
   const id = c.req.param('id');
   return handleProjectRenewal(c, id);

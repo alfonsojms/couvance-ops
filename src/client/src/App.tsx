@@ -22,6 +22,9 @@ const resolveTabFromPath = (path: string): NavTab | '404' => {
   if (cleanPath === '/' || cleanPath === '/dashboard' || cleanPath === '/radar') {
     return 'dashboard';
   }
+  if (cleanPath === '/history' || cleanPath === '/historial' || cleanPath === '/cobros') {
+    return 'history';
+  }
   if (cleanPath === '/projects' || cleanPath === '/proyectos') {
     return 'projects';
   }
@@ -58,7 +61,7 @@ export const App: React.FC = () => {
   const handleTabChange = useCallback((tab: NavTab) => {
     setCurrentTab(tab);
     if (typeof window !== 'undefined') {
-      const targetPath = tab === 'dashboard' ? '/' : `/${tab}`;
+      const targetPath = tab === 'dashboard' ? '/' : tab === 'history' ? '/cobros' : `/${tab}`;
       if (window.location.pathname !== targetPath) {
         window.history.pushState(null, '', targetPath);
       }
@@ -113,7 +116,24 @@ export const App: React.FC = () => {
       {/* Main Container: pb-20 on mobile allows room for the bottom navigation bar */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-3.5 sm:p-6 pb-24 sm:pb-8">
         <Suspense fallback={<PageFallback />}>
-          {currentTab === 'dashboard' ? <Dashboard /> : null}
+          {currentTab === 'dashboard' ? (
+            <Dashboard
+              key="dashboard-radar"
+              initialSubTab="pending"
+              onSubTabChange={(subTab) => {
+                if (subTab === 'history') handleTabChange('history');
+              }}
+            />
+          ) : null}
+          {currentTab === 'history' ? (
+            <Dashboard
+              key="dashboard-history"
+              initialSubTab="history"
+              onSubTabChange={(subTab) => {
+                if (subTab === 'pending') handleTabChange('dashboard');
+              }}
+            />
+          ) : null}
           {currentTab === 'projects' ? <Projects /> : null}
           {currentTab === 'showcase' ? <Showcase /> : null}
           {currentTab === 'clients' ? <Clients /> : null}

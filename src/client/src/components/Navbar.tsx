@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, FolderKanban, Sparkles, Users, Download, Lock, Shield } from 'lucide-react';
+import { LayoutDashboard, FolderKanban, Sparkles, Users, Download, Lock, Shield, History } from 'lucide-react';
 import { toast } from 'sonner';
 
 // Vercel React Best Practice: Dynamic import for heavy modal component
@@ -7,7 +7,7 @@ const SecuritySettingsModal = React.lazy(() =>
   import('./SecuritySettingsModal').then((m) => ({ default: m.SecuritySettingsModal }))
 );
 
-export type NavTab = 'dashboard' | 'projects' | 'showcase' | 'clients';
+export type NavTab = 'dashboard' | 'history' | 'projects' | 'showcase' | 'clients';
 
 interface NavbarProps {
   currentTab: NavTab | '404';
@@ -18,7 +18,7 @@ interface NavbarProps {
 // Vercel React Best Practice: bundle-preload on user intent (hover/touch)
 const preloadTab = (tab: NavTab) => {
   if (typeof window !== 'undefined') {
-    if (tab === 'dashboard') void import('../pages/Dashboard');
+    if (tab === 'dashboard' || tab === 'history') void import('../pages/Dashboard');
     if (tab === 'projects') void import('../pages/Projects');
     if (tab === 'showcase') void import('../pages/Showcase');
     if (tab === 'clients') void import('../pages/Clients');
@@ -27,6 +27,7 @@ const preloadTab = (tab: NavTab) => {
 
 const navItems = [
   { id: 'dashboard' as NavTab, label: 'Radar', icon: LayoutDashboard },
+  { id: 'history' as NavTab, label: 'Cobros', icon: History },
   { id: 'projects' as NavTab, label: 'Proyectos', icon: FolderKanban },
   { id: 'showcase' as NavTab, label: 'Showcase', icon: Sparkles },
   { id: 'clients' as NavTab, label: 'Clientes', icon: Users },
@@ -148,7 +149,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onTabChange, onLock 
         aria-label="Navegación móvil"
         className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-neutral-950/95 backdrop-blur-md border-t border-neutral-800/90 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.5)]"
       >
-        <div className="grid grid-cols-4 h-14">
+        <div className="grid grid-cols-5 h-14">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentTab === item.id;

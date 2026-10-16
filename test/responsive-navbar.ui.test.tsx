@@ -28,9 +28,12 @@ describe('UI & Responsive Testing - Navbar & Mobile Navigation', () => {
     expect(mainNav).toBeInTheDocument();
     expect(mobileNav).toBeInTheDocument();
 
-    // 3. Verificamos que contengan los 4 accesos: Radar, Proyectos, Showcase, Clientes
+    // 3. Verificamos que contengan los accesos: Radar, Cobros, Proyectos, Showcase, Clientes
     const radarButtons = screen.getAllByRole('button', { name: /Radar/i });
     expect(radarButtons.length).toBeGreaterThanOrEqual(2); // desktop + mobile
+
+    const cobrosButtons = screen.getAllByRole('button', { name: /Cobros/i });
+    expect(cobrosButtons.length).toBeGreaterThanOrEqual(2);
 
     const projectsButtons = screen.getAllByRole('button', { name: /Proyectos/i });
     expect(projectsButtons.length).toBeGreaterThanOrEqual(2);
@@ -47,14 +50,13 @@ describe('UI & Responsive Testing - Navbar & Mobile Navigation', () => {
       <Navbar currentTab="dashboard" onTabChange={mockOnTabChange} onLock={mockOnLock} />
     );
 
-    const mobileNav = screen.getByRole('navigation', { name: /Navegación móvil/i });
-    const proyectosBtn = mobileNav.querySelector('button:nth-child(2)');
-    expect(proyectosBtn).not.toBeNull();
+    const cobrosBtn = screen.getAllByRole('button', { name: /Cobros/i })[1];
+    fireEvent.click(cobrosBtn);
+    expect(mockOnTabChange).toHaveBeenCalledWith('history');
 
-    if (proyectosBtn) {
-      fireEvent.click(proyectosBtn);
-      expect(mockOnTabChange).toHaveBeenCalledWith('projects');
-    }
+    const proyectosBtn = screen.getAllByRole('button', { name: /Proyectos/i })[1];
+    fireEvent.click(proyectosBtn);
+    expect(mockOnTabChange).toHaveBeenCalledWith('projects');
   });
 
   it('TC-RESP-03: Botones de acción rápida poseen accesibilidad y touch targets', () => {

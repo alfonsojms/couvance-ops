@@ -277,6 +277,7 @@ Cualquier agente o desarrollador que modifique la lógica del sistema debe garan
 
 ### Finanzas & Radar (`/api/finance`)
 * `GET /api/finance/radar` — Retorna hitos `PENDING` ordenados por fecha y proyectos con recurrente a vencer en <30 días.
+* `GET /api/finance/history` — Retorna historial de hitos `PAID` ordenados por fecha con detalle de cliente, proyecto y monto.
 * `POST /api/projects/:id/renew` — Avanza `recurring_renewal_date` según `recurring_period` tras registrar cobro.
 * `GET /api/finance/metrics` — Métricas globales: Total en la calle, Total cobrado, Saldo pendiente.
 

@@ -419,4 +419,31 @@ describe('QA - Nivel 2 y 3: Pruebas de Integración (API + Base de Datos en Memo
       expect(item.productionStatus).toBe('ACTIVE');
     });
   });
+
+  describe('7. Historial de Cobros y Trazabilidad de Ganancias (GET /api/finance/history)', () => {
+    it('debe listar los hitos cobrados con detalle de cliente, proyecto y fecha de pago', async () => {
+      const res = await app.request('/api/finance/history', {
+        headers: { Cookie: sessionCookie },
+      });
+
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data).toHaveProperty('history');
+      expect(data).toHaveProperty('totalCollected');
+      expect(data).toHaveProperty('totalCount');
+      expect(Array.isArray(data.history)).toBe(true);
+      expect(data.history.length).toBeGreaterThanOrEqual(1);
+
+      // Verificamos que los elementos contengan la información necesaria para saber de dónde salió cada dólar
+      const primerCobro = data.history[0];
+      expect(primerCobro).toHaveProperty('id');
+      expect(primerCobro).toHaveProperty('milestoneTitle');
+      expect(primerCobro).toHaveProperty('amount');
+      expect(primerCobro).toHaveProperty('projectTitle');
+      expect(primerCobro).toHaveProperty('clientName');
+      expect(primerCobro).toHaveProperty('paidAt');
+      expect(primerCobro.amount).toBeGreaterThan(0);
+    });
+  });
 });
+
