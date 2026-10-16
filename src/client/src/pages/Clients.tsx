@@ -9,11 +9,13 @@ import {
   RefreshCw,
   AlertTriangle,
   FolderKanban,
+  Pencil,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '../lib/api';
 import { formatCurrency } from '../lib/utils';
 import { WhatsAppButton } from '../components/WhatsAppButton';
+import { ClientFormDialog } from '../components/ClientFormDialog';
 import {
   Button,
   Card,
@@ -43,11 +45,12 @@ interface ClientItem {
 
 interface ClientCardProps {
   c: ClientItem;
+  onOpenEdit: (client: ClientItem) => void;
   onOpenDelete: (client: ClientItem) => void;
 }
 
 // Vercel React Best Practice: Memoized card component to avoid full directory re-renders
-const ClientCardItem = memo<ClientCardProps>(({ c, onOpenDelete }) => {
+const ClientCardItem = memo<ClientCardProps>(({ c, onOpenEdit, onOpenDelete }) => {
   const contactMsg = `Hola ${c.name}, te escribimos de Couvance. ¿Cómo estás?`;
 
   return (
@@ -65,18 +68,33 @@ const ClientCardItem = memo<ClientCardProps>(({ c, onOpenDelete }) => {
             ) : null}
           </div>
 
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            touchFriendly
-            onClick={() => onOpenDelete(c)}
-            aria-label={`Eliminar cliente ${c.name}`}
-            title="Eliminar cliente"
-            className="text-neutral-500 hover:text-rose-400 hover:bg-neutral-800/80 p-2 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 shrink-0"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </Button>
+          <div className="flex items-center gap-1 shrink-0">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              touchFriendly
+              onClick={() => onOpenEdit(c)}
+              aria-label={`Editar cliente ${c.name}`}
+              title="Editar datos del cliente"
+              className="text-neutral-500 hover:text-amber-400 hover:bg-neutral-800/80 p-2 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+            </Button>
+
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              touchFriendly
+              onClick={() => onOpenDelete(c)}
+              aria-label={`Eliminar cliente ${c.name}`}
+              title="Eliminar cliente"
+              className="text-neutral-500 hover:text-rose-400 hover:bg-neutral-800/80 p-2 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </Button>
+          </div>
         </div>
 
         {/* Info de contacto */}
@@ -138,14 +156,9 @@ export const Clients: React.FC = () => {
   const [clients, setClients] = useState<ClientItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Modal nuevo cliente
+  // Modales de alta y edición de cliente
   const [openModal, setOpenModal] = useState(false);
-  const [name, setName] = useState('');
-  const [contactName, setContactName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
-  const [notes, setNotes] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  const [editingClient, setEditingClient] = useState<ClientItem | null>(null);
 
   // Modal de confirmación de eliminación accesible
   const [clientToDelete, setClientToDelete] = useState<ClientItem | null>(null);
@@ -168,36 +181,9 @@ export const Clients: React.FC = () => {
     loadClients();
   }, [loadClients]);
 
-  const handleCreateClient = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim()) {
-      toast.error('El nombre o empresa es obligatorio');
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      await api.post('/api/clients', {
-        name: name.trim(),
-        contactName: contactName.trim() || null,
-        phone: phone.trim() || null,
-        email: email.trim() || null,
-        notes: notes.trim() || null,
-      });
-      toast.success('Cliente registrado exitosamente');
-      setOpenModal(false);
-      setName('');
-      setContactName('');
-      setPhone('');
-      setEmail('');
-      setNotes('');
-      loadClients();
-    } catch (err: any) {
-      toast.error(err.message || 'Error al registrar cliente');
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  const openEditModal = useCallback((client: ClientItem) => {
+    setEditingClient(client);
+  }, []);
 
   const openDeleteConfirmation = useCallback((client: ClientItem) => {
     setClientToDelete(client);
@@ -291,6 +277,7 @@ export const Clients: React.FC = () => {
             <ClientCardItem
               key={c.id}
               c={c}
+              onOpenEdit={openEditModal}
               onOpenDelete={openDeleteConfirmation}
             />
           ))}
@@ -298,87 +285,23 @@ export const Clients: React.FC = () => {
       )}
 
       {/* Modal Alta Rápida de Cliente */}
-      <Dialog open={openModal} onOpenChange={setOpenModal}>
-        <DialogContent className="w-[calc(100%-1.5rem)] max-w-md p-4 sm:p-6">
-          <DialogHeader>
-            <DialogTitle>Alta Rápida de Cliente</DialogTitle>
-            <DialogDescription>
-              Registra un nuevo cliente u organización para cotizar o asignar proyectos.
-            </DialogDescription>
-          </DialogHeader>
+      <ClientFormDialog
+        open={openModal}
+        onOpenChange={setOpenModal}
+        mode="create"
+        onSuccess={loadClients}
+      />
 
-          <form onSubmit={handleCreateClient} className="space-y-3.5">
-            <FormField id="client-name" label="Nombre o Empresa" required>
-              <Input
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Ej: Estudio Jurídico Morales"
-                autoFocus
-              />
-            </FormField>
-
-            <FormField id="client-contact" label="Persona de Contacto (Opcional)">
-              <Input
-                value={contactName}
-                onChange={(e) => setContactName(e.target.value)}
-                placeholder="Ej: Carlos Morales"
-              />
-            </FormField>
-
-            <FormField id="client-phone" label="Teléfono / WhatsApp Internacional (Opcional)">
-              <Input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="Ej: +5491123456789"
-                className="font-mono"
-              />
-            </FormField>
-
-            <FormField id="client-email" label="Email (Opcional)">
-              <Input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="contacto@empresa.com"
-              />
-            </FormField>
-
-            <FormField id="client-notes" label="Notas Adicionales (Opcional)">
-              <Textarea
-                rows={2}
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Observaciones de pago, horarios o requerimientos..."
-              />
-            </FormField>
-
-            <DialogFooter className="flex-col-reverse xs:flex-row gap-2 xs:gap-0">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                touchFriendly
-                onClick={() => setOpenModal(false)}
-                className="w-full xs:w-auto"
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                variant="primary"
-                size="sm"
-                touchFriendly
-                isLoading={submitting}
-                className="w-full xs:w-auto"
-              >
-                Guardar Cliente
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      {/* Modal Edición de Cliente */}
+      <ClientFormDialog
+        open={Boolean(editingClient)}
+        onOpenChange={(open) => {
+          if (!open) setEditingClient(null);
+        }}
+        mode="edit"
+        initial={editingClient}
+        onSuccess={loadClients}
+      />
 
       {/* Modal de Confirmación de Eliminación */}
       <Dialog

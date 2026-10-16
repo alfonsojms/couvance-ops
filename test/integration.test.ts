@@ -175,4 +175,248 @@ describe('QA - Nivel 2 y 3: Pruebas de Integración (API + Base de Datos en Memo
       expect(body).toHaveProperty('message');
     });
   });
+
+  describe('6. Soft Edit de Proyectos (PATCH /api/projects/:id)', () => {
+    let testProjectId = '';
+
+    beforeAll(async () => {
+      // Creamos un proyecto para las pruebas de PATCH
+      const res = await app.request('/api/projects', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Cookie: sessionCookie,
+        },
+        body: JSON.stringify({
+          clientId: createdClientId,
+          title: 'Proyecto Para Soft Edit',
+          category: 'WEBAPP',
+          status: 'IN_PROGRESS',
+        }),
+      });
+      expect(res.status).toBe(201);
+      const proj = await res.json();
+      testProjectId = proj.id;
+    });
+
+    it('PATCH debe editar metadatos exitosamente (200), persistir campos y no alterar clientId ni status', async () => {
+      const res = await app.request(`/api/projects/${testProjectId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Cookie: sessionCookie,
+        },
+        body: JSON.stringify({
+          title: 'Proyecto Editado Con Éxito',
+          category: 'ECOMMERCE',
+          productionUrl: 'https://tienda-acme.com',
+          productionStatus: 'ACTIVE',
+          codeRepoUrl: 'https://github.com/acme/tienda',
+          resourcesUrl: 'https://drive.google.com/tienda',
+          hasRecurring: 1,
+          recurringAmount: 120.5,
+          recurringCurrency: 'USD',
+          recurringPeriod: 'MONTHLY',
+          recurringRenewalDate: '2026-11-15',
+        }),
+      });
+
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body.title).toBe('Proyecto Editado Con Éxito');
+      expect(body.category).toBe('ECOMMERCE');
+      expect(body.productionUrl).toBe('https://tienda-acme.com');
+      expect(body.codeRepoUrl).toBe('https://github.com/acme/tienda');
+      expect(body.resourcesUrl).toBe('https://drive.google.com/tienda');
+      expect(body.hasRecurring).toBe(1);
+      expect(body.recurringAmount).toBe(120.5);
+      expect(body.recurringCurrency).toBe('USD');
+      expect(body.recurringPeriod).toBe('MONTHLY');
+      expect(body.recurringRenewalDate).toBe('2026-11-15');
+      expect(body.clientId).toBe(createdClientId);
+      expect(body.status).toBe('IN_PROGRESS');
+    });
+
+    it('PATCH debe rechazar con 400 si se envía status o clientId (strict)', async () => {
+      const resStatus = await app.request(`/api/projects/${testProjectId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Cookie: sessionCookie,
+        },
+        body: JSON.stringify({
+          status: 'CANCELLED',
+        }),
+      });
+      expect(resStatus.status).toBe(400);
+
+      const resClient = await app.request(`/api/projects/${testProjectId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Cookie: sessionCookie,
+        },
+        body: JSON.stringify({
+          clientId: 'otro-cliente-id',
+        }),
+      });
+      expect(resClient.status).toBe(400);
+    });
+
+    it('PATCH debe rechazar con 400 si hasRecurring es 1 pero falta la fecha de renovación', async () => {
+      const res = await app.request(`/api/projects/${testProjectId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Cookie: sessionCookie,
+        },
+        body: JSON.stringify({
+          hasRecurring: 1,
+          recurringAmount: 50,
+          recurringRenewalDate: '',
+        }),
+      });
+      expect(res.status).toBe(400);
+      const body = await res.json();
+      expect(body.error).toMatch(/renovaci[oó]n/i);
+    });
+
+    it('PATCH sobre un proyecto CANCELLED debe responder 409 Conflict', async () => {
+      // 1. Creamos un proyecto y lo cancelamos vía PUT
+      const resCrear = await app.request('/api/projects', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Cookie: sessionCookie,
+        },
+        body: JSON.stringify({
+          clientId: createdClientId,
+          title: 'Proyecto Para Cancelar',
+          category: 'LANDING',
+          status: 'PROSPECT',
+        }),
+      });
+      expect(resCrear.status).toBe(201);
+      const proj = await resCrear.json();
+
+      const resCancel = await app.request(`/api/projects/${proj.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Cookie: sessionCookie,
+        },
+        body: JSON.stringify({
+          status: 'CANCELLED',
+        }),
+      });
+      expect(resCancel.status).toBe(200);
+
+      // 2. Intentamos editarlo con PATCH
+      const resPatch = await app.request(`/api/projects/${proj.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Cookie: sessionCookie,
+        },
+        body: JSON.stringify({
+          title: 'Nuevo Título Imposible',
+        }),
+      });
+      expect(resPatch.status).toBe(409);
+      const bodyPatch = await resPatch.json();
+      expect(bodyPatch.error).toContain('cancelado no se puede editar');
+    });
+
+    it('Regresión: PUT con status CANCELLED cancela hitos PENDING preservando PAID (RN-05)', async () => {
+      // Creamos proyecto, presupuesto con hitos, pagamos uno, cancelamos proyecto
+      const resProj = await app.request('/api/projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Cookie: sessionCookie },
+        body: JSON.stringify({
+          clientId: createdClientId,
+          title: 'Proyecto RN-05 Cascade',
+          category: 'LANDING',
+        }),
+      });
+      const proj = await resProj.json();
+
+      // Creamos presupuesto de $1000 con preset 50/50
+      const resBudget = await app.request(`/api/projects/${proj.id}/budgets`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Cookie: sessionCookie },
+        body: JSON.stringify({
+          title: 'Presupuesto Base',
+          totalAmount: 1000,
+          milestones: [
+            { title: 'Anticipo 50%', percentage: 50 },
+            { title: 'Final 50%', percentage: 50 },
+          ],
+        }),
+      });
+      const budget = await resBudget.json();
+
+      // Aprobamos presupuesto -> hitos pasan a PENDING
+      await app.request(`/api/budgets/${budget.id}/approve`, {
+        method: 'POST',
+        headers: { Cookie: sessionCookie },
+      });
+
+      // Pagamos el primer hito
+      const hito1 = budget.milestones[0];
+      await app.request(`/api/milestones/${hito1.id}/pay`, {
+        method: 'PATCH',
+        headers: { Cookie: sessionCookie },
+      });
+
+      // Cancelamos el proyecto con PUT
+      const resCancel = await app.request(`/api/projects/${proj.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Cookie: sessionCookie },
+        body: JSON.stringify({ status: 'CANCELLED' }),
+      });
+      expect(resCancel.status).toBe(200);
+
+      // Verificamos los hitos: el pagado sigue PAID, el pendiente quedó CANCELLED
+      const resDetail = await app.request(`/api/projects/${proj.id}`, {
+        headers: { Cookie: sessionCookie },
+      });
+      const detail = await resDetail.json();
+      const ms = detail.budgets[0].milestones;
+      const paidMs = ms.find((m: any) => m.id === hito1.id);
+      const otherMs = ms.find((m: any) => m.id !== hito1.id);
+
+      expect(paidMs.status).toBe('PAID');
+      expect(otherMs.status).toBe('CANCELLED');
+    });
+
+    it('Proyecto editado con productionUrl y COMPLETED aparece en GET /api/showcase (RN-07)', async () => {
+      // Editamos testProjectId a COMPLETED vía PUT (para marcar status) y aseguramos productionUrl vía PATCH
+      await app.request(`/api/projects/${testProjectId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Cookie: sessionCookie },
+        body: JSON.stringify({
+          productionUrl: 'https://tienda-showcase.com',
+          productionStatus: 'ACTIVE',
+        }),
+      });
+
+      await app.request(`/api/projects/${testProjectId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Cookie: sessionCookie },
+        body: JSON.stringify({
+          status: 'COMPLETED',
+        }),
+      });
+
+      const resShowcase = await app.request('/api/showcase', {
+        headers: { Cookie: sessionCookie },
+      });
+      expect(resShowcase.status).toBe(200);
+      const showcase = await resShowcase.json();
+      const item = showcase.find((p: any) => p.id === testProjectId);
+      expect(item).toBeTruthy();
+      expect(item.productionUrl).toBe('https://tienda-showcase.com');
+      expect(item.productionStatus).toBe('ACTIVE');
+    });
+  });
 });

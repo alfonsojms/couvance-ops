@@ -263,6 +263,7 @@ Cualquier agente o desarrollador que modifique la lógica del sistema debe garan
 * `GET /api/projects/:id` — Detalle del proyecto con cliente, presupuestos e hitos.
 * `POST /api/projects` — Crea proyecto vinculado a cliente con categoría y recurrencia opcional.
 * `PUT /api/projects/:id` — Actualiza campos. Si `status === 'CANCELLED'`, cancela en cascada hitos `PENDING`.
+* `PATCH /api/projects/:id` — Soft edit de metadatos (rechaza `clientId` y `status` con 400; retorna 409 si el proyecto está `CANCELLED`).
 * `GET /api/showcase` — Consulta optimizada de portafolio (`COMPLETED` + `production_status = 'ACTIVE'`).
 
 ### Presupuestos e Hitos (`/api/projects/:id/budgets`, `/api/budgets`)

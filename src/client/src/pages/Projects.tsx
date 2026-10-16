@@ -11,10 +11,13 @@ import {
   AlertTriangle,
   RefreshCw,
   Sparkles,
+  Pencil,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '../lib/api';
 import { formatCurrency, copyToClipboard } from '../lib/utils';
+import { ProjectFormDialog } from '../components/ProjectFormDialog';
+import { ClientFormDialog } from '../components/ClientFormDialog';
 import {
   Button,
   Badge,
@@ -82,6 +85,7 @@ interface ProjectItem {
 interface ProjectCardProps {
   p: ProjectItem;
   onOpenBudgets: (p: ProjectItem) => void;
+  onEditProject: (p: ProjectItem) => void;
   onCompleteProject: (projectId: string) => void;
   onSelectCancel: (p: ProjectItem) => void;
 }
@@ -90,6 +94,7 @@ interface ProjectCardProps {
 const ProjectCardItem = memo<ProjectCardProps>(({
   p,
   onOpenBudgets,
+  onEditProject,
   onCompleteProject,
   onSelectCancel,
 }) => {
@@ -221,6 +226,21 @@ const ProjectCardItem = memo<ProjectCardProps>(({
         </Button>
 
         <div className="flex items-center gap-1 shrink-0">
+          {!isCancelled ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              touchFriendly
+              onClick={() => onEditProject(p)}
+              aria-label={`Editar proyecto ${p.title}`}
+              title="Editar metadatos del proyecto"
+              className="text-neutral-400 hover:text-amber-400 hover:bg-neutral-800/80 min-h-[44px] min-w-[44px]"
+            >
+              <Pencil className="w-4 h-4" />
+            </Button>
+          ) : null}
+
           {!isCancelled && p.status !== 'COMPLETED' ? (
             <Button
               type="button"
@@ -263,13 +283,10 @@ export const Projects: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [loading, setLoading] = useState(true);
 
-  // Modal nuevo proyecto
+  // Modales de creación y edición de proyecto
   const [createProjectOpen, setCreateProjectOpen] = useState(false);
-  const [newTitle, setNewTitle] = useState('');
-  const [newClientId, setNewClientId] = useState('');
-  const [newCategory, setNewCategory] = useState<'LANDING' | 'ECOMMERCE' | 'CORPORATE' | 'WEBAPP'>('LANDING');
-  const [newResourcesUrl, setNewResourcesUrl] = useState('');
-  const [submittingProject, setSubmittingProject] = useState(false);
+  const [editingProject, setEditingProject] = useState<ProjectItem | null>(null);
+  const [emptyStateClientModalOpen, setEmptyStateClientModalOpen] = useState(false);
 
   // Modal confirmación de cancelación de proyecto
   const [projectToCancel, setProjectToCancel] = useState<ProjectItem | null>(null);
@@ -311,34 +328,18 @@ export const Projects: React.FC = () => {
     return projects.filter((p) => p.status === statusFilter);
   }, [projects, statusFilter]);
 
-  // Crear nuevo proyecto
-  const handleCreateProject = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTitle.trim() || !newClientId) {
-      toast.error('Completa el título y selecciona un cliente');
+  const handleOpenCreateProject = () => {
+    if (clients.length === 0) {
+      toast.info('Primero registra un cliente para poder asociarlo al proyecto');
+      setEmptyStateClientModalOpen(true);
       return;
     }
-
-    setSubmittingProject(true);
-    try {
-      await api.post('/api/projects', {
-        title: newTitle.trim(),
-        clientId: newClientId,
-        category: newCategory,
-        status: 'PROSPECT',
-        resourcesUrl: newResourcesUrl.trim() || null,
-      });
-      toast.success('Proyecto creado en estado Prospecto');
-      setCreateProjectOpen(false);
-      setNewTitle('');
-      setNewResourcesUrl('');
-      loadProjects();
-    } catch (err: any) {
-      toast.error(err.message || 'Error al crear proyecto');
-    } finally {
-      setSubmittingProject(false);
-    }
+    setCreateProjectOpen(true);
   };
+
+  const handleOpenEditProject = useCallback((project: ProjectItem) => {
+    setEditingProject(project);
+  }, []);
 
   // Abrir modal de presupuestos
   const handleOpenBudgets = useCallback(async (project: ProjectItem) => {
@@ -351,6 +352,20 @@ export const Projects: React.FC = () => {
       toast.error(err.message || 'Error al cargar presupuestos del proyecto');
     }
   }, []);
+
+  const handleProjectCreated = (createdProject: any) => {
+    toast.success('Proyecto creado en estado Prospecto', {
+      action: {
+        label: 'Crear cotización',
+        onClick: () => handleOpenBudgets(createdProject),
+      },
+    });
+    loadProjects();
+  };
+
+  const handleProjectEdited = () => {
+    loadProjects();
+  };
 
   // Generar hitos según preset con cálculo previo para feedback visual
   const calculatedMilestones = useMemo(() => {
@@ -515,7 +530,7 @@ export const Projects: React.FC = () => {
             variant="primary"
             size="sm"
             touchFriendly
-            onClick={() => setCreateProjectOpen(true)}
+            onClick={handleOpenCreateProject}
           >
             <Plus className="w-3.5 h-3.5 mr-1" />
             <span>Nuevo Proyecto</span>
@@ -568,6 +583,7 @@ export const Projects: React.FC = () => {
               key={p.id}
               p={p}
               onOpenBudgets={handleOpenBudgets}
+              onEditProject={handleOpenEditProject}
               onCompleteProject={handleCompleteProject}
               onSelectCancel={setProjectToCancel}
             />
@@ -576,90 +592,38 @@ export const Projects: React.FC = () => {
       )}
 
       {/* Modal Crear Proyecto */}
-      <Dialog open={createProjectOpen} onOpenChange={setCreateProjectOpen}>
-        <DialogContent className="w-[calc(100%-1.5rem)] max-w-md p-4 sm:p-6">
-          <DialogHeader>
-            <DialogTitle>Crear Nuevo Proyecto</DialogTitle>
-            <DialogDescription>
-              Asocia el proyecto a un cliente para habilitar presupuestos y control operativo.
-            </DialogDescription>
-          </DialogHeader>
+      <ProjectFormDialog
+        open={createProjectOpen}
+        onOpenChange={setCreateProjectOpen}
+        mode="create"
+        clients={clients}
+        onRefreshClients={loadProjects}
+        onSuccess={handleProjectCreated}
+      />
 
-          <form onSubmit={handleCreateProject} className="space-y-3.5">
-            <FormField id="project-title" label="Nombre del Proyecto" required>
-              <Input
-                required
-                value={newTitle}
-                onChange={(e) => setNewTitle(e.target.value)}
-                placeholder="Ej: Rediseño Web Corporativa"
-                autoFocus
-              />
-            </FormField>
+      {/* Modal Editar Proyecto */}
+      <ProjectFormDialog
+        open={Boolean(editingProject)}
+        onOpenChange={(open) => {
+          if (!open) setEditingProject(null);
+        }}
+        mode="edit"
+        initial={editingProject}
+        clients={clients}
+        onRefreshClients={loadProjects}
+        onSuccess={handleProjectEdited}
+      />
 
-            <FormField id="project-client" label="Cliente Asociado" required>
-              <Select
-                required
-                value={newClientId}
-                onChange={(e) => setNewClientId(e.target.value)}
-              >
-                <option value="">Selecciona un cliente...</option>
-                {clients.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </Select>
-            </FormField>
-
-            <FormField id="project-category" label="Categoría del Proyecto">
-              <Select
-                value={newCategory}
-                onChange={(e) => setNewCategory(e.target.value as any)}
-              >
-                <option value="LANDING">Landing Page</option>
-                <option value="ECOMMERCE">E-commerce</option>
-                <option value="CORPORATE">Web Corporativa</option>
-                <option value="WEBAPP">Aplicación Web</option>
-              </Select>
-            </FormField>
-
-            <FormField
-              id="project-resources"
-              label="Carpeta de Recursos (Drive / Dropbox opcional)"
-            >
-              <Input
-                type="url"
-                value={newResourcesUrl}
-                onChange={(e) => setNewResourcesUrl(e.target.value)}
-                placeholder="https://drive.google.com/..."
-              />
-            </FormField>
-
-            <DialogFooter className="flex-col-reverse xs:flex-row gap-2 xs:gap-0">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                touchFriendly
-                onClick={() => setCreateProjectOpen(false)}
-                className="w-full xs:w-auto"
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                variant="primary"
-                size="sm"
-                touchFriendly
-                isLoading={submittingProject}
-                className="w-full xs:w-auto"
-              >
-                Crear Proyecto
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      {/* Modal Cliente cuando no hay clientes registrados (Empty State) */}
+      <ClientFormDialog
+        open={emptyStateClientModalOpen}
+        onOpenChange={setEmptyStateClientModalOpen}
+        mode="create"
+        onSuccess={async () => {
+          await loadProjects();
+          setCreateProjectOpen(true);
+        }}
+      />
 
       {/* Modal Presupuestos y Cotizaciones con Presets y Feedback Visual */}
       <Dialog open={budgetModalOpen} onOpenChange={setBudgetModalOpen}>

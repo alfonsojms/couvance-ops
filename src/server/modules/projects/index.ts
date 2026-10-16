@@ -60,8 +60,67 @@ export const projectCreateSchema = z.object({
 
 export const projectUpdateSchema = projectCreateSchema.partial();
 
+export const projectSoftEditSchema = projectCreateSchema
+  .omit({ clientId: true, status: true })
+  .partial()
+  .strict()
+  .superRefine((data, ctx) => {
+    if (data.hasRecurring === 1) {
+      if (!data.recurringRenewalDate || data.recurringRenewalDate.trim() === '') {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['recurringRenewalDate'],
+          message: 'La fecha de renovación es obligatoria cuando el servicio recurrente está activo',
+        });
+      }
+      if (data.recurringAmount === undefined || data.recurringAmount === null || data.recurringAmount <= 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['recurringAmount'],
+          message: 'El monto recurrente es obligatorio cuando el servicio recurrente está activo',
+        });
+      }
+    }
+  });
+
 export type ProjectCreateInput = z.infer<typeof projectCreateSchema>;
 export type ProjectUpdateInput = z.infer<typeof projectUpdateSchema>;
+export type ProjectSoftEditInput = z.infer<typeof projectSoftEditSchema>;
+
+export function buildProjectUpdate(
+  data: Partial<ProjectCreateInput>,
+  existing: typeof projects.$inferSelect,
+  nowIso: string = new Date().toISOString()
+): Partial<typeof projects.$inferInsert> {
+  const updateData: Partial<typeof projects.$inferInsert> = {
+    updatedAt: nowIso,
+  };
+
+  if (data.title !== undefined) updateData.title = data.title;
+  if (data.category !== undefined) updateData.category = data.category;
+  if (data.status !== undefined) updateData.status = data.status;
+  if (data.productionUrl !== undefined) updateData.productionUrl = data.productionUrl || null;
+  if (data.productionStatus !== undefined) updateData.productionStatus = data.productionStatus;
+  if (data.codeRepoUrl !== undefined) updateData.codeRepoUrl = data.codeRepoUrl || null;
+  if (data.resourcesUrl !== undefined) updateData.resourcesUrl = data.resourcesUrl || null;
+  if (data.hasRecurring !== undefined) {
+    updateData.hasRecurring = data.hasRecurring;
+    if (data.hasRecurring === 0) {
+      updateData.recurringAmount = null;
+      updateData.recurringRenewalDate = null;
+    }
+  }
+  if (data.recurringAmount !== undefined && (data.hasRecurring ?? existing.hasRecurring) === 1) {
+    updateData.recurringAmount = data.recurringAmount;
+  }
+  if (data.recurringCurrency !== undefined) updateData.recurringCurrency = data.recurringCurrency;
+  if (data.recurringPeriod !== undefined) updateData.recurringPeriod = data.recurringPeriod;
+  if (data.recurringRenewalDate !== undefined) {
+    updateData.recurringRenewalDate = data.recurringRenewalDate || null;
+  }
+
+  return updateData;
+}
 
 // 1. GET /api/projects — Listado general de proyectos con filtros
 projectsApp.get('/', async (c) => {
@@ -181,6 +240,15 @@ projectsApp.post('/', async (c) => {
     return c.json({ error: 'El cliente especificado no existe' }, 400);
   }
 
+  if (parsed.data.hasRecurring === 1) {
+    if (!parsed.data.recurringRenewalDate || parsed.data.recurringRenewalDate.trim() === '') {
+      return c.json({ error: 'La fecha de renovación es obligatoria cuando el servicio recurrente está activo' }, 400);
+    }
+    if (parsed.data.recurringAmount === undefined || parsed.data.recurringAmount === null || parsed.data.recurringAmount <= 0) {
+      return c.json({ error: 'El monto recurrente es obligatorio cuando el servicio recurrente está activo' }, 400);
+    }
+  }
+
   const nowIso = new Date().toISOString();
   const newId = crypto.randomUUID();
 
@@ -229,30 +297,7 @@ projectsApp.put('/:id', async (c) => {
   }
 
   const nowIso = new Date().toISOString();
-  const updateData: Partial<typeof projects.$inferInsert> = {
-    updatedAt: nowIso,
-  };
-
-  if (parsed.data.title !== undefined) updateData.title = parsed.data.title;
-  if (parsed.data.category !== undefined) updateData.category = parsed.data.category;
-  if (parsed.data.status !== undefined) updateData.status = parsed.data.status;
-  if (parsed.data.productionUrl !== undefined) updateData.productionUrl = parsed.data.productionUrl || null;
-  if (parsed.data.productionStatus !== undefined) updateData.productionStatus = parsed.data.productionStatus;
-  if (parsed.data.codeRepoUrl !== undefined) updateData.codeRepoUrl = parsed.data.codeRepoUrl || null;
-  if (parsed.data.resourcesUrl !== undefined) updateData.resourcesUrl = parsed.data.resourcesUrl || null;
-  if (parsed.data.hasRecurring !== undefined) {
-    updateData.hasRecurring = parsed.data.hasRecurring;
-    if (parsed.data.hasRecurring === 0) {
-      updateData.recurringAmount = null;
-      updateData.recurringRenewalDate = null;
-    }
-  }
-  if (parsed.data.recurringAmount !== undefined && (parsed.data.hasRecurring ?? existing.hasRecurring) === 1) {
-    updateData.recurringAmount = parsed.data.recurringAmount;
-  }
-  if (parsed.data.recurringCurrency !== undefined) updateData.recurringCurrency = parsed.data.recurringCurrency;
-  if (parsed.data.recurringPeriod !== undefined) updateData.recurringPeriod = parsed.data.recurringPeriod;
-  if (parsed.data.recurringRenewalDate !== undefined) updateData.recurringRenewalDate = parsed.data.recurringRenewalDate || null;
+  const updateData = buildProjectUpdate(parsed.data, existing, nowIso);
 
   await db.update(projects).set(updateData).where(eq(projects.id, id));
 
@@ -269,6 +314,52 @@ projectsApp.put('/:id', async (c) => {
         .where(and(eq(milestones.budgetId, b.id), eq(milestones.status, 'PENDING')));
     }
   }
+
+  const [updated] = await db.select().from(projects).where(eq(projects.id, id)).all();
+  return c.json(updated);
+});
+
+// 4b. PATCH /api/projects/:id — Soft edit de metadatos (RN-07, RN-08)
+projectsApp.patch('/:id', async (c) => {
+  const rawId = c.req.param('id');
+  const id = validateAndSanitizeId(rawId);
+  if (!id) {
+    return c.json({ error: 'Identificador de proyecto inválido o malformado.' }, 400);
+  }
+
+  const body = await c.req.json().catch(() => null);
+  const parsed = projectSoftEditSchema.safeParse(body);
+
+  if (!parsed.success) {
+    return c.json({ error: parsed.error.issues[0].message }, 400);
+  }
+
+  const db = getDb(c);
+  const [existing] = await db.select().from(projects).where(eq(projects.id, id)).all();
+  if (!existing) {
+    return c.json({ error: 'Proyecto no encontrado' }, 404);
+  }
+
+  if (existing.status === 'CANCELLED') {
+    return c.json({ error: 'Un proyecto cancelado no se puede editar' }, 409);
+  }
+
+  const effectiveHasRecurring = parsed.data.hasRecurring !== undefined ? parsed.data.hasRecurring : existing.hasRecurring;
+  if (effectiveHasRecurring === 1) {
+    const effectiveRenewalDate = parsed.data.recurringRenewalDate !== undefined ? parsed.data.recurringRenewalDate : existing.recurringRenewalDate;
+    if (!effectiveRenewalDate || effectiveRenewalDate.trim() === '') {
+      return c.json({ error: 'La fecha de renovación es obligatoria cuando el servicio recurrente está activo' }, 400);
+    }
+    const effectiveAmount = parsed.data.recurringAmount !== undefined ? parsed.data.recurringAmount : existing.recurringAmount;
+    if (effectiveAmount === undefined || effectiveAmount === null || effectiveAmount <= 0) {
+      return c.json({ error: 'El monto recurrente es obligatorio cuando el servicio recurrente está activo' }, 400);
+    }
+  }
+
+  const nowIso = new Date().toISOString();
+  const updateData = buildProjectUpdate(parsed.data, existing, nowIso);
+
+  await db.update(projects).set(updateData).where(eq(projects.id, id));
 
   const [updated] = await db.select().from(projects).where(eq(projects.id, id)).all();
   return c.json(updated);
