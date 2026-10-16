@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
-import { eq } from 'drizzle-orm';
-import { getDb, milestones, budgets, projects, clients } from '../../db';
+import { eq, desc, sql, and, ne, isNotNull } from 'drizzle-orm';
+import { getDb, milestones, budgets, projects, clients, type SqliteDb } from '../../db';
 import { handleProjectRenewal } from '../projects';
 
 const financeApp = new Hono();
@@ -30,77 +30,80 @@ export function getDaysUntil(dateString: string): number {
 // 1. GET /api/finance/radar — Radar de cobranzas WhatsApp y recurrentes a 30 días (RN-08, RN-09)
 financeApp.get('/radar', async (c) => {
   try {
-    const db = getDb(c);
+    const db = getDb(c) as SqliteDb;
 
-    const allClients = (await db.select().from(clients).all()) || [];
-    const clientsMap = new Map(allClients.map((cl) => [cl.id, cl]));
-
-    const allProjects = (await db.select().from(projects).all()) || [];
-    const projectsMap = new Map(allProjects.map((p) => [p.id, p]));
-
-    const allBudgets = (await db.select().from(budgets).all()) || [];
-    const budgetsMap = new Map(allBudgets.map((b) => [b.id, b]));
-
-    // 1. Hitos PENDING ordenados por due_date ASC (con fechas vencidas y próximas primero, sin fecha al final)
-    const pendingMilestones = (await db
-      .select()
+    // 1. Hitos PENDING con sus presupuestos, proyectos y clientes mediante INNER JOIN relacional
+    const pendingDTO = await db
+      .select({
+        id: milestones.id,
+        budgetId: milestones.budgetId,
+        projectId: projects.id,
+        milestoneTitle: milestones.title,
+        amount: milestones.amount,
+        percentage: milestones.percentage,
+        currency: budgets.currency,
+        dueDate: milestones.dueDate,
+        status: milestones.status,
+        clientName: clients.name,
+        clientPhone: clients.phone,
+        projectTitle: projects.title,
+      })
       .from(milestones)
-      .where(eq(milestones.status, 'PENDING'))
-      .all()) || [];
+      .innerJoin(budgets, eq(milestones.budgetId, budgets.id))
+      .innerJoin(projects, eq(budgets.projectId, projects.id))
+      .innerJoin(clients, eq(projects.clientId, clients.id))
+      .where(eq(milestones.status, 'PENDING'));
 
-    pendingMilestones.sort((a, b) => {
+    pendingDTO.sort((a, b) => {
       if (!a.dueDate && !b.dueDate) return 0;
       if (!a.dueDate) return 1;
       if (!b.dueDate) return -1;
       return String(a.dueDate).localeCompare(String(b.dueDate));
     });
 
-    const pendingDTO = pendingMilestones.map((m) => {
-      const budget = budgetsMap.get(m.budgetId);
-      const project = budget ? projectsMap.get(budget.projectId) : undefined;
-      const client = project ? clientsMap.get(project.clientId) : undefined;
+    // 2. Servicios recurrentes (has_recurring = 1) activos vinculados a cliente mediante INNER JOIN
+    const recurringProjects = await db
+      .select({
+        projectId: projects.id,
+        projectTitle: projects.title,
+        clientName: clients.name,
+        clientPhone: clients.phone,
+        recurringAmount: projects.recurringAmount,
+        recurringCurrency: projects.recurringCurrency,
+        recurringPeriod: projects.recurringPeriod,
+        recurringRenewalDate: projects.recurringRenewalDate,
+      })
+      .from(projects)
+      .innerJoin(clients, eq(projects.clientId, clients.id))
+      .where(
+        and(
+          eq(projects.hasRecurring, 1),
+          ne(projects.status, 'CANCELLED'),
+          isNotNull(projects.recurringRenewalDate)
+        )
+      );
 
-      return {
-        id: m.id,
-        budgetId: m.budgetId,
-        projectId: project?.id || '',
-        milestoneTitle: m.title,
-        amount: m.amount,
-        percentage: m.percentage,
-        currency: budget?.currency || 'USD',
-        dueDate: m.dueDate,
-        status: m.status,
-        clientName: client?.name || 'Cliente sin nombre',
-        clientPhone: client?.phone || null,
-        projectTitle: project?.title || 'Proyecto sin título',
-      };
-    });
-
-    // 2. Servicios recurrentes (has_recurring = 1) que vencen en 30 días o menos (RN-08)
-    const recurringProjects = allProjects.filter((p) => {
-      if (p.hasRecurring !== 1 || !p.recurringRenewalDate) return false;
-      if (p.status === 'CANCELLED') return false;
-      const days = getDaysUntil(p.recurringRenewalDate);
-      return days <= 30;
-    });
-
-    const recurringDTO = recurringProjects.map((p) => {
-      const client = clientsMap.get(p.clientId);
-      const daysRemaining = p.recurringRenewalDate ? getDaysUntil(p.recurringRenewalDate) : 0;
-
-      return {
-        projectId: p.id,
-        projectTitle: p.title,
-        clientName: client?.name || 'Cliente sin nombre',
-        clientPhone: client?.phone || null,
-        recurringAmount: p.recurringAmount,
-        recurringCurrency: p.recurringCurrency,
-        recurringPeriod: p.recurringPeriod,
-        recurringRenewalDate: p.recurringRenewalDate,
-        daysRemaining,
-        isOverdue: daysRemaining < 0,
-      };
-    });
+    const recurringDTO = recurringProjects
+      .filter((p) => {
+        if (!p.recurringRenewalDate) return false;
+        const days = getDaysUntil(p.recurringRenewalDate);
+        return days <= 30;
+      })
+      .map((p) => {
+        const daysRemaining = p.recurringRenewalDate ? getDaysUntil(p.recurringRenewalDate) : 0;
+        return {
+          projectId: p.projectId,
+          projectTitle: p.projectTitle,
+          clientName: p.clientName || 'Cliente sin nombre',
+          clientPhone: p.clientPhone || null,
+          recurringAmount: p.recurringAmount,
+          recurringCurrency: p.recurringCurrency,
+          recurringPeriod: p.recurringPeriod,
+          recurringRenewalDate: p.recurringRenewalDate,
+          daysRemaining,
+          isOverdue: daysRemaining < 0,
+        };
+      });
 
     // Ordenar alertas recurrentes por urgencia (menor días restantes primero)
     recurringDTO.sort((a, b) => a.daysRemaining - b.daysRemaining);
@@ -118,51 +121,33 @@ financeApp.get('/radar', async (c) => {
 // 2. GET /api/finance/history — Historial de cobros y trazabilidad de ingresos (RN-08)
 financeApp.get('/history', async (c) => {
   try {
-    const db = getDb(c);
+    const db = getDb(c) as SqliteDb;
 
-    const allClients = (await db.select().from(clients).all()) || [];
-    const clientsMap = new Map(allClients.map((cl) => [cl.id, cl]));
+    const effectivePaidAt = sql<string>`COALESCE(${milestones.paidAt}, ${milestones.updatedAt}, ${milestones.createdAt})`;
 
-    const allProjects = (await db.select().from(projects).all()) || [];
-    const projectsMap = new Map(allProjects.map((p) => [p.id, p]));
-
-    const allBudgets = (await db.select().from(budgets).all()) || [];
-    const budgetsMap = new Map(allBudgets.map((b) => [b.id, b]));
-
-    const paidMilestones = (await db
-      .select()
+    const historyDTO = await db
+      .select({
+        id: milestones.id,
+        budgetId: milestones.budgetId,
+        projectId: projects.id,
+        projectTitle: projects.title,
+        projectCategory: projects.category,
+        clientId: clients.id,
+        clientName: clients.name,
+        clientPhone: clients.phone,
+        milestoneTitle: milestones.title,
+        amount: milestones.amount,
+        percentage: milestones.percentage,
+        currency: budgets.currency,
+        paidAt: effectivePaidAt,
+        dueDate: milestones.dueDate,
+      })
       .from(milestones)
+      .innerJoin(budgets, eq(milestones.budgetId, budgets.id))
+      .innerJoin(projects, eq(budgets.projectId, projects.id))
+      .innerJoin(clients, eq(projects.clientId, clients.id))
       .where(eq(milestones.status, 'PAID'))
-      .all()) || [];
-
-    paidMilestones.sort((a, b) => {
-      const dateA = a.paidAt || a.updatedAt || a.createdAt || '';
-      const dateB = b.paidAt || b.updatedAt || b.createdAt || '';
-      return String(dateB).localeCompare(String(dateA));
-    });
-
-    const historyDTO = paidMilestones.map((m) => {
-      const budget = budgetsMap.get(m.budgetId);
-      const project = budget ? projectsMap.get(budget.projectId) : undefined;
-      const client = project ? clientsMap.get(project.clientId) : undefined;
-
-      return {
-        id: m.id,
-        budgetId: m.budgetId,
-        projectId: project?.id || '',
-        projectTitle: project?.title || 'Proyecto sin título',
-        projectCategory: project?.category || 'CORPORATE',
-        clientId: client?.id || '',
-        clientName: client?.name || 'Cliente sin nombre',
-        clientPhone: client?.phone || null,
-        milestoneTitle: m.title,
-        amount: m.amount,
-        percentage: m.percentage,
-        currency: budget?.currency || 'USD',
-        paidAt: m.paidAt || m.updatedAt || m.createdAt,
-        dueDate: m.dueDate || null,
-      };
-    });
+      .orderBy(desc(effectivePaidAt));
 
     const totalCollected = historyDTO.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
 
