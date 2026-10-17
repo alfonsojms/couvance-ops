@@ -131,6 +131,7 @@ describe('UI — páginas restantes tras la división container/presentational',
     await waitFor(() =>
       expect(postMock).toHaveBeenCalledWith('/api/auth/reset-pin', { token: 'tok', newPin: '11223344' })
     );
-    expect(onUnlockSuccess).toHaveBeenCalledTimes(1);
+    // onUnlockSuccess corre recién cuando resuelve la promesa del reset: hay que esperarlo, no asumirlo.
+    await waitFor(() => expect(onUnlockSuccess).toHaveBeenCalledTimes(1));
   });
 });
