@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { api } from '../lib/api';
+import { clientsApi } from '../lib/resources';
+import type { Client } from '../lib/types';
 import {
   Button,
   Dialog,
@@ -14,14 +15,7 @@ import {
   Textarea,
 } from './ui';
 
-export interface ClientFormItem {
-  id: string;
-  name: string;
-  contactName?: string | null;
-  phone?: string | null;
-  email?: string | null;
-  notes?: string | null;
-}
+export type ClientFormItem = Client;
 
 export interface ClientFormDialogProps {
   open: boolean;
@@ -81,11 +75,11 @@ export const ClientFormDialog: React.FC<ClientFormDialogProps> = ({
       };
 
       if (mode === 'create') {
-        const created = await api.post<ClientFormItem>('/api/clients', payload);
+        const created = await clientsApi.create(payload);
         toast.success('Cliente registrado exitosamente');
         onSuccess?.(created);
       } else if (mode === 'edit' && initial) {
-        const updated = await api.put<ClientFormItem>(`/api/clients/${initial.id}`, payload);
+        const updated = await clientsApi.update(initial.id, payload);
         toast.success('Cliente actualizado exitosamente');
         onSuccess?.(updated);
       }

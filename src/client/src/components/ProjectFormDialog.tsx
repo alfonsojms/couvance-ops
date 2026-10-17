@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronDown, ChevronRight, Plus, Globe, Code, FolderArchive, Calendar, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
-import { api } from '../lib/api';
+import { projectsApi } from '../lib/resources';
+import type { ClientRef, ProjectCreateInput, ProjectFormData, ProjectPatch } from '../lib/types';
 import {
   Button,
   Dialog,
@@ -16,31 +17,8 @@ import {
 } from './ui';
 import { ClientFormDialog, ClientFormItem } from './ClientFormDialog';
 
-export interface ProjectClientItem {
-  id: string;
-  name: string;
-}
-
-export interface ProjectFormData {
-  id?: string;
-  clientId: string;
-  title: string;
-  category: 'LANDING' | 'ECOMMERCE' | 'CORPORATE' | 'WEBAPP';
-  status?: 'PROSPECT' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
-  productionUrl?: string | null;
-  productionStatus?: 'ACTIVE' | 'INACTIVE';
-  codeRepoUrl?: string | null;
-  resourcesUrl?: string | null;
-  hasRecurring?: number;
-  recurringAmount?: number | null;
-  recurringCurrency?: string;
-  recurringPeriod?: 'MONTHLY' | 'ANNUALLY';
-  recurringRenewalDate?: string | null;
-  client?: ProjectClientItem | null;
-  totalBudgeted?: number;
-  totalPaid?: number;
-  totalPending?: number;
-}
+export type { ProjectFormData };
+export type ProjectClientItem = ClientRef;
 
 export interface ProjectFormDialogProps {
   open: boolean;
@@ -143,7 +121,7 @@ export const ProjectFormDialog: React.FC<ProjectFormDialogProps> = ({
     setSubmitting(true);
     try {
       if (mode === 'create') {
-        const payload = {
+        const payload: ProjectCreateInput = {
           title: title.trim(),
           clientId,
           category,
@@ -159,12 +137,12 @@ export const ProjectFormDialog: React.FC<ProjectFormDialogProps> = ({
           recurringRenewalDate: hasRecurring && recurringRenewalDate ? recurringRenewalDate : null,
         };
 
-        const created = await api.post<ProjectFormData>('/api/projects', payload);
+        const created = await projectsApi.create(payload);
         onSuccess?.(created);
         onOpenChange(false);
       } else if (mode === 'edit' && initial) {
         // Enviar únicamente los campos modificados (diff contra initial)
-        const diff: Record<string, any> = {};
+        const diff: ProjectPatch = {};
 
         if (title.trim() !== (initial.title || '')) {
           diff.title = title.trim();
@@ -226,7 +204,7 @@ export const ProjectFormDialog: React.FC<ProjectFormDialogProps> = ({
           return;
         }
 
-        const updated = await api.patch<ProjectFormData>(`/api/projects/${initial.id}`, diff);
+        const updated = await projectsApi.softEdit(initial.id!, diff);
         toast.success('Proyecto actualizado exitosamente');
         onSuccess?.(updated);
         onOpenChange(false);

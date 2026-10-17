@@ -14,7 +14,12 @@ import {
   Pencil,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { api } from '../lib/api';
+import { budgetsApi, clientsApi, projectsApi } from '../lib/resources';
+import type {
+  BudgetWithMilestones as BudgetItem,
+  ClientWithTotals as ClientItem,
+  ProjectListItem as ProjectItem,
+} from '../lib/types';
 import { formatCurrency, copyToClipboard } from '../lib/utils';
 import { ProjectFormDialog } from '../components/ProjectFormDialog';
 import { ClientFormDialog } from '../components/ClientFormDialog';
@@ -34,53 +39,6 @@ import {
   Input,
   Select,
 } from '../components/ui';
-
-interface ClientItem {
-  id: string;
-  name: string;
-}
-
-interface MilestoneItem {
-  id: string;
-  budgetId: string;
-  title: string;
-  percentage: number;
-  amount: number;
-  dueDate?: string | null;
-  status: string;
-  paidAt?: string | null;
-}
-
-interface BudgetItem {
-  id: string;
-  projectId: string;
-  title: string;
-  totalAmount: number;
-  currency: string;
-  status: string;
-  milestones?: MilestoneItem[];
-}
-
-interface ProjectItem {
-  id: string;
-  clientId: string;
-  title: string;
-  category: 'LANDING' | 'ECOMMERCE' | 'CORPORATE' | 'WEBAPP';
-  status: 'PROSPECT' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
-  productionUrl?: string | null;
-  productionStatus: 'ACTIVE' | 'INACTIVE';
-  codeRepoUrl?: string | null;
-  resourcesUrl?: string | null;
-  hasRecurring: number;
-  recurringAmount?: number | null;
-  recurringCurrency: string;
-  recurringPeriod: 'MONTHLY' | 'ANNUALLY';
-  recurringRenewalDate?: string | null;
-  client?: ClientItem | null;
-  totalBudgeted: number;
-  totalPaid: number;
-  totalPending: number;
-}
 
 interface ProjectCardProps {
   p: ProjectItem;
@@ -307,8 +265,8 @@ export const Projects: React.FC = () => {
     try {
       setLoading(true);
       const [projData, clientData] = await Promise.all([
-        api.get<ProjectItem[]>('/api/projects'),
-        api.get<ClientItem[]>('/api/clients'),
+        projectsApi.list(),
+        clientsApi.list(),
       ]);
       setProjects(projData);
       setClients(clientData);
@@ -346,7 +304,7 @@ export const Projects: React.FC = () => {
     setSelectedProject(project);
     setBudgetModalOpen(true);
     try {
-      const data = await api.get<BudgetItem[]>(`/api/projects/${project.id}/budgets`);
+      const data = await budgetsApi.listByProject(project.id);
       setProjectBudgets(data);
     } catch (err: any) {
       toast.error(err.message || 'Error al cargar presupuestos del proyecto');
@@ -414,14 +372,14 @@ export const Projects: React.FC = () => {
         percentage: m.percentage,
       }));
 
-      await api.post(`/api/projects/${selectedProject.id}/budgets`, {
+      await budgetsApi.create(selectedProject.id, {
         title: budgetTitle.trim(),
         totalAmount: Math.round(budgetTotal),
         currency: 'USD',
         milestones: milestonesInput,
       });
       toast.success('Presupuesto guardado en borrador');
-      const data = await api.get<BudgetItem[]>(`/api/projects/${selectedProject.id}/budgets`);
+      const data = await budgetsApi.listByProject(selectedProject.id);
       setProjectBudgets(data);
       loadProjects();
     } catch (err: any) {
@@ -435,10 +393,10 @@ export const Projects: React.FC = () => {
   const handleApproveBudget = async (budgetId: string) => {
     try {
       setApprovingBudgetId(budgetId);
-      await api.post(`/api/budgets/${budgetId}/approve`);
+      await budgetsApi.approve(budgetId);
       toast.success('¡Presupuesto aprobado! El proyecto pasó a "En Progreso" y los hitos están listos para cobro.');
       if (selectedProject) {
-        const data = await api.get<BudgetItem[]>(`/api/projects/${selectedProject.id}/budgets`);
+        const data = await budgetsApi.listByProject(selectedProject.id);
         setProjectBudgets(data);
       }
       loadProjects();
@@ -473,7 +431,7 @@ export const Projects: React.FC = () => {
   // Marcar como Completado
   const handleCompleteProject = useCallback(async (projectId: string) => {
     try {
-      await api.put(`/api/projects/${projectId}`, { status: 'COMPLETED' });
+      await projectsApi.setStatus(projectId, 'COMPLETED');
       toast.success('Proyecto marcado como completado');
       loadProjects();
     } catch (err: any) {
@@ -487,7 +445,7 @@ export const Projects: React.FC = () => {
 
     setCancelling(true);
     try {
-      await api.put(`/api/projects/${projectToCancel.id}`, { status: 'CANCELLED' });
+      await projectsApi.setStatus(projectToCancel.id, 'CANCELLED');
       toast.success('Proyecto cancelado. Los pagos previos se mantuvieron intactos.');
       setProjectToCancel(null);
       loadProjects();

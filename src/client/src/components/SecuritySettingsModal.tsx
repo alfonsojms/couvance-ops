@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { KeyRound, Shield, HelpCircle, CheckCircle2, Lock } from 'lucide-react';
 import { toast } from 'sonner';
-import { api } from '../lib/api';
+import { authApi } from '../lib/resources';
 import {
   Dialog,
   DialogContent,
@@ -44,8 +44,8 @@ export const SecuritySettingsModal: React.FC<SecuritySettingsModalProps> = ({
   // Cargar configuración actual al abrir
   useEffect(() => {
     if (isOpen) {
-      api
-        .get<{ q1: string; q2: string; updatedAt?: string }>('/api/auth/settings')
+      authApi
+        .settings()
         .then((data) => {
           setQ1(data.q1 || '');
           setQ2(data.q2 || '');
@@ -89,7 +89,7 @@ export const SecuritySettingsModal: React.FC<SecuritySettingsModalProps> = ({
 
     try {
       setLoading(true);
-      await api.post('/api/auth/change-pin', {
+      await authApi.changePin({
         currentPin: currentPinForPin,
         newPin,
       });
@@ -122,7 +122,7 @@ export const SecuritySettingsModal: React.FC<SecuritySettingsModalProps> = ({
 
     try {
       setLoading(true);
-      await api.post('/api/auth/update-questions', {
+      await authApi.updateQuestions({
         currentPin: currentPinForQuestions,
         q1: q1.trim(),
         a1: a1.trim(),

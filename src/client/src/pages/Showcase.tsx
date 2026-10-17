@@ -1,18 +1,10 @@
 import React, { useEffect, useState, useCallback, useMemo, memo } from 'react';
 import { Sparkles, ExternalLink, Copy, Globe, RefreshCw, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
-import { api } from '../lib/api';
+import { showcaseApi } from '../lib/resources';
+import type { ShowcaseProject } from '../lib/types';
 import { copyToClipboard } from '../lib/utils';
 import { Button, Card, CardPanel, Badge } from '../components/ui';
-
-interface ShowcaseProject {
-  id: string;
-  title: string;
-  category: 'LANDING' | 'ECOMMERCE' | 'CORPORATE' | 'WEBAPP';
-  productionUrl: string;
-  productionStatus: 'ACTIVE' | 'INACTIVE';
-  clientName: string;
-}
 
 const categoryLabels: Record<string, string> = {
   LANDING: 'Landing Page',
@@ -114,7 +106,7 @@ export const Showcase: React.FC = () => {
   const loadShowcase = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await api.get<ShowcaseProject[]>('/api/showcase');
+      const data = await showcaseApi.list();
       setProjects(data);
     } catch (err: any) {
       toast.error(err.message || 'Error al cargar el Showcase');

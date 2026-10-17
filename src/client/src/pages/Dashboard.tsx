@@ -13,7 +13,13 @@ import {
   Search,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { api } from '../lib/api';
+import { budgetsApi, financeApi, milestonesApi, projectsApi } from '../lib/resources';
+import type {
+  FinancialMetrics,
+  PaidMilestone,
+  PendingMilestone as PendingMilestoneDTO,
+  RecurringAlert as RecurringAlertDTO,
+} from '../lib/types';
 import { cn, formatCurrency, formatDate } from '../lib/utils';
 import { WhatsAppButton } from '../components/WhatsAppButton';
 import {
@@ -31,59 +37,11 @@ import {
   DialogFooter,
 } from '../components/ui';
 
-interface PendingMilestoneDTO {
-  id: string;
-  budgetId: string;
-  projectId: string;
-  milestoneTitle: string;
-  amount: number;
-  percentage: number;
-  currency: string;
-  dueDate?: string | null;
-  status: string;
-  clientName: string;
-  clientPhone?: string | null;
-  projectTitle: string;
-}
-
-export interface PaidMilestoneDTO {
-  id: string;
-  milestoneTitle: string;
-  amount: number;
-  percentage: number;
-  currency: string;
-  paidAt: string;
-  dueDate?: string | null;
-  projectId: string;
-  projectTitle: string;
-  projectCategory: string;
-  clientId: string;
-  clientName: string;
-}
+export type PaidMilestoneDTO = PaidMilestone;
 
 export interface DashboardProps {
   initialSubTab?: 'pending' | 'history';
   onSubTabChange?: (tab: 'pending' | 'history') => void;
-}
-
-interface RecurringAlertDTO {
-  projectId: string;
-  projectTitle: string;
-  clientName: string;
-  clientPhone?: string | null;
-  recurringAmount?: number | null;
-  recurringCurrency: string;
-  recurringPeriod: string;
-  recurringRenewalDate: string;
-  daysRemaining: number;
-  isOverdue: boolean;
-}
-
-interface FinancialMetrics {
-  totalInTheStreet: number;
-  totalCollected: number;
-  activeProjectsCount: number;
-  totalProjectsCount: number;
 }
 
 interface PayAllModalData {
@@ -413,9 +371,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ initialSubTab = 'pending',
     try {
       setLoading(true);
       const [metricsData, radarData, historyData] = await Promise.all([
-        api.get<FinancialMetrics>('/api/finance/metrics'),
-        api.get<{ pendingMilestones: PendingMilestoneDTO[]; recurringAlerts: RecurringAlertDTO[] }>('/api/finance/radar'),
-        api.get<{ history: PaidMilestoneDTO[]; totalCollected: number; totalCount: number }>('/api/finance/history'),
+        financeApi.metrics(),
+        financeApi.radar(),
+        financeApi.history(),
       ]);
       setMetrics(metricsData);
       setPendingMilestones(radarData.pendingMilestones);
@@ -452,7 +410,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ initialSubTab = 'pending',
   const handlePayMilestone = useCallback(async (id: string) => {
     try {
       setProcessingId(id);
-      await api.patch(`/api/milestones/${id}/pay`);
+      await milestonesApi.pay(id);
       toast.success('Hito marcado como cobrado.');
       loadDashboardData();
     } catch (err: any) {
@@ -485,7 +443,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ initialSubTab = 'pending',
     const targetBudgetId = payAllTarget.budgetId;
     try {
       setProcessingId(`budget-${targetBudgetId}`);
-      await api.post(`/api/budgets/${targetBudgetId}/pay-all`);
+      await budgetsApi.payAll(targetBudgetId);
       toast.success('Todos los hitos del presupuesto fueron liquidados.');
       setPayAllTarget(null);
       loadDashboardData();
@@ -500,7 +458,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ initialSubTab = 'pending',
   const handleRenewProject = useCallback(async (projectId: string) => {
     try {
       setProcessingId(`renew-${projectId}`);
-      const res = await api.post<{ ok: boolean; message: string }>(`/api/projects/${projectId}/renew`);
+      const res = await projectsApi.renew(projectId);
       toast.success(res.message || 'Renovación extendida con éxito.');
       loadDashboardData();
     } catch (err: any) {

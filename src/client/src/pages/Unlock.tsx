@@ -12,7 +12,8 @@ import {
 } from '../components/ui/Dialog';
 import { FormField, Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
-import { api } from '../lib/api';
+import { authApi } from '../lib/resources';
+import type { SecurityQuestions } from '../lib/types';
 
 interface UnlockProps {
   onUnlockSuccess: () => void;
@@ -26,7 +27,7 @@ export const Unlock: React.FC<UnlockProps> = ({ onUnlockSuccess }) => {
 
   // Estados del modal de recuperación
   const [recoveryOpen, setRecoveryOpen] = useState(false);
-  const [questions, setQuestions] = useState<{ q1: string; q2: string } | null>(null);
+  const [questions, setQuestions] = useState<SecurityQuestions | null>(null);
   const [a1, setA1] = useState('');
   const [a2, setA2] = useState('');
   const [resetToken, setResetToken] = useState<string | null>(null);
@@ -41,7 +42,7 @@ export const Unlock: React.FC<UnlockProps> = ({ onUnlockSuccess }) => {
       setErrorMsg(null);
 
       try {
-        await api.post('/api/auth/unlock', { pin: pinToSubmit });
+        await authApi.unlock(pinToSubmit);
         toast.success('Desbloqueado exitosamente');
         onUnlockSuccess();
       } catch (err: any) {
@@ -110,7 +111,7 @@ export const Unlock: React.FC<UnlockProps> = ({ onUnlockSuccess }) => {
     setConfirmPin('');
 
     try {
-      const data = await api.get<{ q1: string; q2: string }>('/api/auth/questions');
+      const data = await authApi.questions();
       setQuestions(data);
     } catch (err: any) {
       toast.error('Error al cargar preguntas de recuperación');
@@ -126,7 +127,7 @@ export const Unlock: React.FC<UnlockProps> = ({ onUnlockSuccess }) => {
 
     setRecoveryLoading(true);
     try {
-      const res = await api.post<{ ok: boolean; resetToken: string }>('/api/auth/recover', {
+      const res = await authApi.recover({
         a1: a1.trim(),
         a2: a2.trim(),
       });
@@ -152,7 +153,7 @@ export const Unlock: React.FC<UnlockProps> = ({ onUnlockSuccess }) => {
 
     setRecoveryLoading(true);
     try {
-      await api.post('/api/auth/reset-pin', {
+      await authApi.resetPin({
         token: resetToken,
         newPin,
       });

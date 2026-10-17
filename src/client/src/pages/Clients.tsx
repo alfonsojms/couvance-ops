@@ -12,7 +12,8 @@ import {
   Pencil,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { api } from '../lib/api';
+import { clientsApi } from '../lib/resources';
+import type { ClientWithTotals as ClientItem } from '../lib/types';
 import { formatCurrency } from '../lib/utils';
 import { WhatsAppButton } from '../components/WhatsAppButton';
 import { ClientFormDialog } from '../components/ClientFormDialog';
@@ -30,18 +31,6 @@ import {
   Input,
   Textarea,
 } from '../components/ui';
-
-interface ClientItem {
-  id: string;
-  name: string;
-  contactName?: string | null;
-  phone?: string | null;
-  email?: string | null;
-  notes?: string | null;
-  projectsCount: number;
-  totalPaid: number;
-  totalPending: number;
-}
 
 interface ClientCardProps {
   c: ClientItem;
@@ -168,7 +157,7 @@ export const Clients: React.FC = () => {
   const loadClients = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await api.get<ClientItem[]>('/api/clients');
+      const data = await clientsApi.list();
       setClients(data);
     } catch (err: any) {
       toast.error(err.message || 'Error al cargar clientes');
@@ -203,7 +192,7 @@ export const Clients: React.FC = () => {
 
     setDeleting(true);
     try {
-      await api.del(`/api/clients/${clientToDelete.id}`);
+      await clientsApi.remove(clientToDelete.id);
       toast.success('Cliente eliminado');
       setClientToDelete(null);
       loadClients();

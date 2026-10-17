@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { api, setUnauthorizedHandler } from '../lib/api';
+import { setUnauthorizedHandler } from '../lib/api';
+import { authApi } from '../lib/resources';
 
 export function useAuth() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -7,7 +8,7 @@ export function useAuth() {
 
   const checkAuth = useCallback(async () => {
     try {
-      const res = await api.get<{ authenticated: boolean }>('/api/auth/status');
+      const res = await authApi.status();
       setIsAuthenticated(res.authenticated);
     } catch {
       setIsAuthenticated(false);
@@ -24,13 +25,13 @@ export function useAuth() {
   }, [checkAuth]);
 
   const unlock = async (pin: string) => {
-    await api.post('/api/auth/unlock', { pin });
+    await authApi.unlock(pin);
     setIsAuthenticated(true);
   };
 
   const lock = async () => {
     try {
-      await api.post('/api/auth/lock');
+      await authApi.lock();
     } finally {
       setIsAuthenticated(false);
     }
