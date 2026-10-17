@@ -1,7 +1,7 @@
 # ⚡ Couvance Ops — Radar de Cobranzas y Operaciones sin Burocracia
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7%20Strict-3178C6?logo=typescript&logoColor=white)](tsconfig.json)
-[![Vitest](https://img.shields.io/badge/Vitest-28%2F28%20Passing-6E9F18?logo=vitest&logoColor=white)](test/budgets.test.ts)
+[![Vitest](https://img.shields.io/badge/Vitest-43%2F43%20Passing-6E9F18?logo=vitest&logoColor=white)](test/budgets.test.ts)
 [![Playwright](https://img.shields.io/badge/Playwright-E2E%20Verified-2EAD33?logo=playwright&logoColor=white)](e2e/whatsapp-clipboard.spec.ts)
 [![Cloudflare Edge](https://img.shields.io/badge/Cloudflare%20Edge-D1%20%2B%20Pages%20($0%2FTCO)-F38020?logo=cloudflare&logoColor=white)](wrangler.toml)
 [![Node & Docker](https://img.shields.io/badge/Node.js%2020-Docker%20SQLite%20WAL-339933?logo=docker&logoColor=white)](docker-compose.yml)
@@ -133,7 +133,7 @@ En finanzas de agencia, los errores de redondeo destruyen la confianza con los c
 
 ### 4. Defensa en Profundidad: Sanitización y Anti-Inyección SQL
 - **Consultas 100% Parametrizadas:** Drizzle ORM gestiona todas las variables mediante parámetros posicionales (`?`). Cero concatenación de cadenas o uso de `sql.raw()`.
-- **Protección contra Bytes Nulos (`\0` / `%00`):** En motores C/C++ como SQLite, los bytes nulos provocan truncamiento de buffers. El middleware [`sanitizeMiddleware`](src/server/middlewares/sanitize.ts#L8-L29) intercepta URLs, query params y payloads, rechazando con `400 Bad Request` cualquier intento de inyección.
+- **Protección contra Bytes Nulos (`\0` / `%00`):** En motores C/C++ como SQLite, los bytes nulos provocan truncamiento de buffers. El middleware global [`sanitizeMiddleware`](src/server/middlewares/sanitize.ts#L111-L133) intercepta la URL y los query params, rechazando con `400 Bad Request` cualquier byte nulo; los payloads se limpian campo por campo en los esquemas Zod con [`sanitizedText`](src/server/middlewares/sanitize.ts#L96-L105).
 - **Validación Estricta de Identificadores (`validateAndSanitizeId`):** Todos los parámetros de ruta (`:id`, `:projectId`, `:budgetId`) se verifican contra `/^[a-zA-Z0-9_-]{1,64}$/`. Comillas, delimitadores (`;`) u operadores SQL son bloqueados antes de tocar la base de datos.
 - **Normalización Unicode en Zod:** Textos normalizados en forma canónica `NFC`, caracteres de control invisibles purgados y límites de caracteres estrictos en cada campo.
 
@@ -166,12 +166,15 @@ couvance-ops/
 ├── e2e/                        # Pruebas End-to-End con Playwright
 │   ├── clients.spec.ts         # Flujo E2E de gestión y validación de clientes
 │   ├── unlock.spec.ts          # Flujo E2E de desbloqueo PIN y recuperación
-│   └── whatsapp-clipboard.spec.ts # Flujo E2E de radar, wa.me y fallback portapapeles
+│   ├── whatsapp-clipboard.spec.ts # Flujo E2E de radar, wa.me y fallback portapapeles
+│   └── workflow-projects-soft-edit.spec.ts # Flujo E2E de edición de proyectos y cliente inline
 ├── functions/api/[[route]].ts  # Entrypoint Edge para Cloudflare Pages Functions
 ├── test/                       # Suite de Pruebas Unitarias y de UI (Vitest)
 │   ├── budgets.test.ts         # Reglas contables RN-01 a RN-04 y absorción de residuos
 │   ├── integration.test.ts     # Ciclo de vida API completo en SQLite en memoria
+│   ├── dashboard.ui.test.tsx   # Tests UI del Radar e historial de cobranzas
 │   ├── notfound.ui.test.tsx    # Tests UI de página 404 y navegación contextual
+│   ├── project-form-dialog.ui.test.tsx # Tests UI del formulario de proyectos
 │   ├── responsive-navbar.ui.test.tsx # Tests UI de Navbar responsivo y Thumb Zone
 │   └── unlock.ui.test.tsx      # Tests UI de teclado numérico, PIN y CSS shake
 ├── src/
@@ -192,6 +195,8 @@ couvance-ops/
 │       └── src/
 │           ├── components/
 │           │   ├── ui/         # Design System Atómico (Button, Badge, Card, Dialog, Input, MetricCard)
+│           │   ├── ClientFormDialog.tsx      # Alta y edición de clientes
+│           │   ├── ProjectFormDialog.tsx     # Alta/edición de proyectos con creación de cliente inline
 │           │   ├── Navbar.tsx  # Barra de navegación adaptativa (Desktop header + Mobile bottom bar)
 │           │   ├── NumericKeypad.tsx         # Teclado táctil numérico con listener físico
 │           │   ├── SecuritySettingsModal.tsx # Gestión de PIN maestro y preguntas secretas (Lazy)
@@ -199,7 +204,7 @@ couvance-ops/
 │           ├── hooks/
 │           │   └── useAuth.ts  # Estado de sesión y autenticación
 │           ├── pages/
-│           │   ├── Dashboard.tsx   # Radar de cobranzas, renovaciones y métricas clave
+│           │   ├── Dashboard.tsx   # Radar de cobranzas, historial de cobros, renovaciones y métricas
 │           │   ├── Projects.tsx    # Gestión de proyectos, cotizador 50/50 y 40/30/30
 │           │   ├── Showcase.tsx    # Catálogo de ventas & ficha WhatsApp para prospectos
 │           │   ├── Clients.tsx     # Directorio de clientes con protección de integridad
@@ -211,7 +216,8 @@ couvance-ops/
 │
 ├── Dockerfile                  # Multi-stage build optimizado (node:20-slim)
 ├── docker-compose.yml          # Configuración con volumen persistente couvance_data
-├── INICIAR.bat                 # Script de arranque en 1 clic para entorno local Windows
+├── INICIAR.bat / dev.ps1       # Arranque en 1 clic para entorno local Windows (backend + frontend)
+├── CLAUDE.md / agents.md       # Guías de contexto y reglas para agentes de IA
 ├── wrangler.toml               # Configuración Cloudflare Pages & binding D1
 ├── drizzle.config.ts           # Configuración de Drizzle Kit
 ├── playwright.config.ts        # Configuración de pruebas E2E Playwright
@@ -232,7 +238,7 @@ En software de producción, lo que decides no construir es tan importante como l
 1. **Sin sobreingeniería:** Para un equipo de 2 socios, implementar microservicios, Kubernetes o SSO con Auth0/Okta habría añadido complejidad injustificada. Un PIN maestro con HMAC-SHA256, cookie `SameSite=Lax` y recuperación por preguntas secretas resuelve el 100% de la necesidad sin fricciones.
 2. **Compatibilidad Edge Real:** Cero dependencias nativas de Node (`fs`, `child_process`, `bcrypt`) en el núcleo compartido. El backend es isomórfico y corre idéntico en Cloudflare Pages Functions y Node.js.
 3. **Modelado Financiero Defensivo:** La absorción del residuo fraccionario en el último hito elimina descuadres contables por redondeo ([`test/budgets.test.ts`](test/budgets.test.ts)).
-4. **Garantía de Calidad de Doble Capa:** Suite automatizada completa con **Vitest** (28 pruebas pasando para reglas contables RN-01 a RN-04, validaciones Zod, ciclo API en memoria y componentes UI con React Testing Library) + **Playwright** para validar flujos críticos de usuario de punta a punta.
+4. **Garantía de Calidad de Doble Capa:** Suite automatizada completa con **Vitest** (43 pruebas pasando para reglas contables RN-01 a RN-04, validaciones Zod, ciclo API en memoria y componentes UI con React Testing Library) + **Playwright** para validar flujos críticos de usuario de punta a punta.
 
 ### ⚠️ Trade-offs y Compromisos Asumidos
 1. **Acceso Compartido (Monotenant):** Diseñado para la operativa conjunta de los socios con un PIN común. No incluye permisos por roles (RBAC) ni separación multi-empresa.
@@ -292,6 +298,13 @@ npm run test:e2e
 
 # Abrir el explorador interactivo visual de Playwright
 npm run test:e2e:ui
+
+# Ejecutar un solo archivo o caso
+npx vitest run test/budgets.test.ts -t "texto del caso"
+npx playwright test e2e/unlock.spec.ts
+
+# Verificación de tipos
+npx tsc --noEmit
 ```
 
 ---
@@ -333,7 +346,7 @@ La aplicación compilará cliente y servidor, aplicará las migraciones automát
 
 ## 📊 Métricas de Build & Calidad de Código
 
-- **Pruebas Automatizadas:** 28 tests pasando al 100% en Vitest (5 suites unitarias y de UI) + suites E2E Playwright.
+- **Pruebas Automatizadas:** 43 tests pasando al 100% en Vitest (7 suites de integración y de UI) + suites E2E Playwright.
 - **TypeScript:** 0 errores en compilación estricta (`npx tsc --noEmit`).
 - **Bundle Frontend:** `282.49 kB` JS principal (`88.71 kB` gzip) con code-splitting automático por rutas y vistas secundarias lazy loaded (`SecuritySettingsModal`, `Showcase`, etc.) / `38.19 kB` CSS (`7.12 kB` gzip).
 - **Bundle Servidor:** `64.57 KB` bundle ESM autónomo generado con `tsup` (incluyendo middlewares de sanitización anti-SQLi y bytes nulos).

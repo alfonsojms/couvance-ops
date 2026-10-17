@@ -53,7 +53,8 @@ couvance-ops/
 │   │   │   └── index.ts        # Factoría agnóstica de BD según runtime
 │   │   ├── middlewares/
 │   │   │   ├── auth.ts         # Validación de PIN y cookie de sesión
-│   │   │   └── rate-limit.ts   # Rate limiting (5 intentos fallidos / 15 min en /api/auth/*)
+│   │   │   ├── rate-limit.ts   # Rate limiting (5 intentos fallidos / 15 min en /api/auth/*)
+│   │   │   └── sanitize.ts     # Rechazo de bytes nulos en URL, helpers sanitizedText / validateAndSanitizeId
 │   │   ├── modules/
 │   │   │   ├── auth/           # Login PIN, preguntas secretas, reseteo, logout
 │   │   │   ├── clients/        # Gestión de clientes y protección 409
@@ -66,29 +67,37 @@ couvance-ops/
 │   │   └── index.ts            # Entrypoint export para Cloudflare
 │   │
 │   └── client/                 # FRONTEND (React + Vite SPA)
-│       ├── src/
-│       │   ├── components/     # Componentes UI (Navbar, Modales, WhatsApp Button, Teclado PIN)
-│       │   ├── hooks/          # Custom hooks para API y estado
-│       │   ├── pages/
-│       │   │   ├── Dashboard.tsx   # Radar de cobros y métricas clave
-│       │   │   ├── Projects.tsx    # Gestión de proyectos y cotizaciones
-│       │   │   ├── Showcase.tsx    # Catálogo de ventas filtrable
-│       │   │   ├── Clients.tsx     # Directorio de clientes
-│       │   │   └── Unlock.tsx      # Teclado numérico PIN de 8 dígitos
-│       │   ├── lib/
-│       │   │   ├── utils.ts        # Enlaces wa.me y copy-to-clipboard
-│       │   │   └── api.ts          # Cliente HTTP tipado
-│       │   ├── App.tsx
-│       │   └── main.tsx
-│       ├── index.html
-│       └── vite.config.ts
+│       └── src/
+│           ├── components/     # Navbar, NumericKeypad, WhatsAppButton, diálogos de formulario, ui/ (primitivas)
+│           ├── hooks/
+│           │   └── useAuth.ts      # Estado de sesión y autenticación
+│           ├── pages/
+│           │   ├── Dashboard.tsx   # Radar de cobros, historial de cobranzas y métricas clave
+│           │   ├── Projects.tsx    # Gestión de proyectos y cotizaciones
+│           │   ├── Showcase.tsx    # Catálogo de ventas filtrable
+│           │   ├── Clients.tsx     # Directorio de clientes
+│           │   ├── NotFound.tsx    # Página 404
+│           │   └── Unlock.tsx      # Teclado numérico PIN de 8 dígitos
+│           ├── lib/
+│           │   ├── utils.ts        # Enlaces wa.me y copy-to-clipboard
+│           │   └── api.ts          # Cliente HTTP tipado
+│           ├── App.tsx
+│           └── main.tsx
 │
+├── test/                       # Vitest: integración API (SQLite :memory:) y UI (*.ui.test.tsx)
+├── e2e/                        # Playwright: flujos de punta a punta contra node-entry en :3000
+├── index.html                  # Entrada HTML de Vite (en la raíz, no en src/client)
+├── vite.config.ts              # Proxy /api -> :3000, alias @ y @server
+├── vitest.config.ts
+├── playwright.config.ts
 ├── Dockerfile                  # Multi-stage build (node:20-slim)
 ├── docker-compose.yml          # Compose specification con volumen persistente couvance_data
 ├── wrangler.toml               # Configuración Cloudflare Pages & D1 binding
 ├── drizzle.config.ts           # Configuración Drizzle Kit
+├── INICIAR.bat / dev.ps1       # Arranque local en Windows (backend + frontend)
 ├── package.json
 ├── tsconfig.json
+├── CLAUDE.md                   # Guía resumida para Claude Code
 └── agents.md                   # Este archivo
 ```
 
@@ -232,7 +241,12 @@ Cualquier agente o desarrollador que modifique la lógica del sistema debe garan
    - Límite: Máximo 5 intentos fallidos por ventana de 15 minutos por IP (`cf-connecting-ip` || `x-forwarded-for` || `127.0.0.1`).
    - Superado el límite: `429 Too Many Requests`.
 
-4. **Middleware de Rutas (`pinAuthMiddleware`):**
+4. **Sanitización de Entradas (`src/server/middlewares/sanitize.ts`):**
+   - `sanitizeMiddleware` (global) rechaza con `400` cualquier byte nulo (`\0` / `%00`) en la URL o en los query params. **No modifica el body.**
+   - Los textos del body se limpian en los esquemas Zod con `sanitizedText(min, max)` (elimina caracteres de control, normaliza NFC, hace trim y limita longitud).
+   - Los parámetros de ruta (`:id`, `:projectId`) se validan con `validateAndSanitizeId` contra `/^[a-zA-Z0-9_-]{1,64}$/`.
+
+5. **Middleware de Rutas (`pinAuthMiddleware`):**
    - Aplica a todas las rutas bajo `/api/*`.
    - **Rutas Públicas Exentas:**
      - `POST /api/auth/unlock`
@@ -251,6 +265,10 @@ Cualquier agente o desarrollador que modifique la lógica del sistema debe garan
 * `POST /api/auth/recover` — Valida respuestas secretas. Retorna token temporal de recuperación (validez 10 min).
 * `POST /api/auth/reset-pin` — Valida token temporal y actualiza `pin_hash` atómicamente en D1/SQLite.
 * `POST /api/auth/lock` — Invalida y borra la cookie de sesión.
+* `GET /api/auth/status` (alias `GET /api/auth/me`) — Verifica si hay sesión activa.
+* `GET /api/auth/settings` — Retorna `{ q1, q2, updatedAt }` para la vista de configuración de seguridad.
+* `POST /api/auth/change-pin` — Cambia el PIN maestro tras validar el PIN actual (requiere sesión).
+* `POST /api/auth/update-questions` — Actualiza las preguntas y respuestas secretas (requiere sesión).
 
 ### Clientes (`/api/clients`)
 * `GET /api/clients` — Listado de clientes con conteo de proyectos y saldos asociados.
@@ -269,6 +287,7 @@ Cualquier agente o desarrollador que modifique la lógica del sistema debe garan
 ### Presupuestos e Hitos (`/api/projects/:id/budgets`, `/api/budgets`)
 * `POST /api/projects/:id/budgets` — Crea presupuesto e hitos en estado `DRAFT` (valida 100% y enteros).
 * `GET /api/projects/:id/budgets` — Historial de presupuestos del proyecto.
+* `GET /api/budgets/:id` — Detalle de un presupuesto con sus hitos.
 * `PUT /api/budgets/:id` — Edita presupuesto e hitos (solo en estado `DRAFT`).
 * `POST /api/budgets/:id/approve` — Aprobación en 1 clic: presupuesto a `APPROVED`, proyecto a `IN_PROGRESS`, hitos a `PENDING`.
 * `POST /api/budgets/:id/reject` — Marca presupuesto como `REJECTED`.
@@ -278,7 +297,7 @@ Cualquier agente o desarrollador que modifique la lógica del sistema debe garan
 ### Finanzas & Radar (`/api/finance`)
 * `GET /api/finance/radar` — Retorna hitos `PENDING` ordenados por fecha y proyectos con recurrente a vencer en <30 días.
 * `GET /api/finance/history` — Retorna historial de hitos `PAID` ordenados por fecha con detalle de cliente, proyecto y monto.
-* `POST /api/projects/:id/renew` — Avanza `recurring_renewal_date` según `recurring_period` tras registrar cobro.
+* `POST /api/projects/:id/renew` — Avanza `recurring_renewal_date` según `recurring_period` tras registrar cobro (también expuesto como `POST /api/finance/projects/:id/renew` y `POST /api/finance/:id/renew`).
 * `GET /api/finance/metrics` — Métricas globales: Total en la calle, Total cobrado, Saldo pendiente.
 
 ### Respaldo & Salud (`/api/backup`, `/api/health`)
@@ -300,10 +319,23 @@ Cualquier agente o desarrollador que modifique la lógica del sistema debe garan
     "db:generate": "drizzle-kit generate",
     "db:migrate:local": "wrangler d1 migrations apply couvance-ops-db --local",
     "db:migrate:prod": "wrangler d1 migrations apply couvance-ops-db --remote",
-    "start": "node dist/server/node-entry.js"
+    "start": "node dist/server/node-entry.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
   }
 }
 ```
+
+### Pruebas y verificación
+```bash
+npm test                                        # Vitest (test/**/*.test.ts(x))
+npx vitest run test/budgets.test.ts -t "texto"  # un archivo / un caso
+npm run test:e2e                                # Playwright, levanta node-entry en :3000 automáticamente
+npx tsc --noEmit                                # Typecheck (no hay script de lint)
+```
+Los tests de integración crean SQLite `:memory:`, aplican `./drizzle`, llaman a `setGlobalDb()` + `seedInitialAuthIfNeeded()` y usan `app.request(...)` sin levantar servidor. PIN sembrado por defecto: `12345678`.
 
 ### Ejecución con Docker
 ```bash
@@ -336,6 +368,8 @@ docker compose logs -f couvance-ops
 Antes de generar o modificar código en este repositorio, verifica:
 - [ ] ¿El endpoint o función respeta el tipado estricto de TypeScript?
 - [ ] ¿Los esquemas de entrada y salida están validados con **Zod**?
+- [ ] ¿Los textos de entrada usan `sanitizedText` y los IDs de ruta `validateAndSanitizeId`?
+- [ ] ¿La BD se obtiene con `getDb(c)` y las escrituras multi-tabla son atómicas (`db.batch` en D1 / `db.transaction` en SQLite)?
 - [ ] ¿Se preservaron los montos de presupuestos e hitos como números enteros sin decimales?
 - [ ] ¿El último hito absorbe cualquier residuo fraccionario del porcentaje?
 - [ ] ¿Se mantiene la exclusión de `auth_config` en exportaciones de respaldo y endpoints públicos?
