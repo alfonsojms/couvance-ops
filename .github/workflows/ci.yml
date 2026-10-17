@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Typecheck, unit tests and builds
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Typecheck
+        run: npx tsc --noEmit
+      - name: Unit and integration tests
+        run: npm test
+      - name: Build (client + server)
+        run: npm run build
+      - name: Cloudflare Edge bundle
+        run: npx wrangler pages functions build --outdir "$RUNNER_TEMP/edge" --compatibility-flags nodejs_compat --compatibility-date 2024-09-23
+      - name: Edge bundle must not contain native drivers
+        run: |
+          if grep -rl "better-sqlite3" "$RUNNER_TEMP/edge"; then
+            echo "The Edge bundle references better-sqlite3" >&2
+            exit 1
+          fi
+
+  e2e:
+    name: End-to-end (Playwright)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Build client
+        run: npm run build:client
+      - name: Run E2E
+        run: npm run test:e2e
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-artifacts
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 7
