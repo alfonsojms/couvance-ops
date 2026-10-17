@@ -69,9 +69,10 @@ couvance-ops/
 │   └── client/                 # FRONTEND (React + Vite SPA)
 │       └── src/
 │           ├── components/     # Navbar, NumericKeypad, WhatsAppButton, diálogos de formulario, ui/ (primitivas)
-│           ├── hooks/
-│           │   └── useAuth.ts      # Estado de sesión y autenticación
-│           ├── pages/
+│           │   └── dashboard/, projects/, clients/, unlock/, security/, showcase/  # Componentes presentacionales por página (solo props)
+│           ├── hooks/          # useAuth (sesión) y un hook de datos/acciones por página (useDashboardData, useProjectsData, ...)
+│           ├── lib/            # api.ts (núcleo HTTP), resources/ (un cliente por recurso), types.ts (tipos compartidos), utils.ts
+│           ├── pages/          # Contenedores finos: conectan el hook de la página con sus componentes
 │           │   ├── Dashboard.tsx   # Radar de cobros, historial de cobranzas y métricas clave
 │           │   ├── Projects.tsx    # Gestión de proyectos y cotizaciones
 │           │   ├── Showcase.tsx    # Catálogo de ventas filtrable

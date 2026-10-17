@@ -27,12 +27,12 @@ Assumptions (not user requirements): layer file names (`domain.ts`, `schemas.ts`
 | T4 | S4, S5, S8 | 03 budgets | inline | done | `46217cf` test DB helper, `0de7f18` budgets layered + S8; gate green (L11); verifier PASS S2/S4/S5/S8 (142 probes × 2 drivers, only authorized S8 diffs); RDD review approved (3 lenses, 0 blockers) (L12) |
 | T5 | S4, S5 | 04 projects | inline | done | `e784a82`: RED→GREEN `test/projects-cancel.test.ts` (atomic cancel, both drivers); contract snapshots unchanged; gate green (L14) |
 | T6 | S4 | 05 finance-clients | inline | done | `a626176`: contract snapshots unchanged on both drivers; gate green (L15) |
-| T7 | S4 | 06 auth-backup | inline | pending | |
-| T8 | S6 | 07 client-api | inline | pending | |
-| T9 | S6 | 08 dashboard | inline | pending | |
-| T10 | S6 | 09 projects-page | inline | pending | |
-| T11 | S6 | 10 remaining-pages | inline | pending | |
-| T12 | S7 | each slice + final | inline | pending | |
+| T7 | S4 | 06 auth-backup | inline | done | `fb21fe1`; verifier PASS S2/S4 (207 probes × 2 drivers, 0 diffs); RDD review approved (risk/reliability, 0 blockers) (L16) |
+| T8 | S6, S2 | 07 client-api | delegated (context backstop) | done | `c47309d`; `test/api-resources.test.ts` pins every call (L17) |
+| T9 | S6 | 08 dashboard | delegated (parallel) | done | `b710177`; `test/dashboard-helpers.test.ts` (L17) |
+| T10 | S6 | 09 projects-page | delegated (parallel) | done | `fe6b109`; L7 label fix; `test/projects-page-*` (L17) |
+| T11 | S6 | 10 remaining-pages | delegated (parallel) | done | `5a813d1`; `test/remaining-pages-ui.test.tsx` (L17) |
+| T12 | S7 | each slice + final | inline | done | docs updated per slice; final frontend convention in `CLAUDE.md`/`agents.md` (L18) |
 
 - **T1** Characterization tests (Vitest, in-memory SQLite) for every endpoint the SPA consumes that has no coverage today: clients GET/PUT, projects GET list totals and renew, budgets list and pay-all, finance radar/metrics/history, showcase, backup export (no `auth_config`), auth questions/recover/reset-pin/lock/status/settings/change-pin/update-questions. Shared test helper to build the app over a fresh DB.
 - **T2** Isolate the E2E database per run (Playwright `webServer` with its own `DATABASE_URL`), so the 3 E2E specs that fail today from accumulated data pass again.
@@ -47,7 +47,7 @@ Assumptions (not user requirements): layer file names (`domain.ts`, `schemas.ts`
 - **T11** Clients, Unlock, SecuritySettingsModal, Showcase cleanup.
 - **T12** Docs updated alongside each slice; final architecture section in `CLAUDE.md` and `agents.md`.
 
-Route evidence: all tasks inline. No Writer-trigger reason holds yet. Each slice depends on the previous one, so no units run in parallel, and the parent context is below the backstop.
+Route evidence: T1–T7 and T12 inline (each backend slice depends on the previous one). T8 was delegated to one bounded writer under the long-session context backstop. T9, T10 and T11 ran as three parallel writers with disjoint edit surfaces in the same tree; the parent owned git and ran one seam check at the end.
 
 ## Log
 
@@ -56,6 +56,25 @@ Route evidence: all tasks inline. No Writer-trigger reason holds yet. Each slice
 - **L2 (2026-10-16):** Scope answer: "Backend + frontend".
 - **L3 (2026-10-16):** Delivery answer: "Stacked a main (Recommended)". Forecast is well above 400 authored lines (about 1,700 backend and 2,500 frontend lines involved).
 - **L4 (2026-10-16):** Explorer map. Backend duplication: ID validation 14×; JSON parse, 404 and totals 3×; renew exposed 3× (2 routes without ID validation). Only approve is atomic. The D1 `batch` path is untested. Radar, metrics, projects list totals, pay-all, backup and most auth endpoints have no tests. Spot check confirmed budget edit deletes and re-inserts milestones without a transaction (`budgets/index.ts:207-240`).
+- **L18 (2026-10-17):** Frontend closed and final docs (T12).
+  - Seam check on `5a813d1` with all ten slices stacked: `tsc` 0 errors; vitest 18 files / 189 passed; `npm run build` OK; E2E 9 passed; wrangler Edge bundle exit 0, 0 `better-sqlite3` refs.
+  - Docs: `CLAUDE.md` "Frontend" describes the container/hook/presentational convention and the HTTP layer; the `agents.md` tree shows `lib/`, the per-area component folders and the page hooks.
+  - Next (L13): set up CI/CD with the user, then push the ten stacked branches and open the chained PRs in order.
+- **L17 (2026-10-17):** Frontend slices (S6).
+  - T8 `c47309d` (`refactor/arch-07-client-api`): `lib/types.ts` + `lib/resources/*`; no component calls `api.*` or `fetch` directly (checked by grep); `test/api-resources.test.ts` pins method, URL and body. Writer diff matched its surface; spot check 35 passed.
+  - T9 `b710177` (`refactor/arch-08-dashboard`): Dashboard 813 → 70 lines; `useDashboardData`/`useDashboardView` + `components/dashboard/*`.
+  - T10 `fe6b109` (`refactor/arch-09-projects-page`): Projects and ProjectFormDialog split into `useProjectsData`/`useProjectBudgets`/`useProjectForm` + `components/projects/*`. The L7 note is fixed: the "Cliente Asociado" label now targets the `<select>` in create mode. Its test's RED against the old code was NOT observed.
+  - T11 `5a813d1` (`refactor/arch-10-remaining-pages`): Clients, Unlock, Showcase and SecuritySettingsModal split. The new UI test also passed on the previous code (differential check by the writer).
+  - Existing UI tests were not modified. Writers did not run E2E or the build (shared port and `dist/`); the parent's seam check covers them (L18).
+  - Risk: none (no HTTP, copy, markup or behavior change, apart from the label `id` moving from the wrapper `div` to the `<select>`).
+- **L16 (2026-10-17):** Slice 06 (`refactor/arch-06-auth-backup`).
+  - Pending slice 04–05 closed first: RDD review on base `0de7f18` (reliability/resilience), consent granted, approved with 0 blockers, acknowledged (lineage `review-13b14b9cbf571ede`). Its advisory about the O(clients × milestones) client listing was fixed in `4f9aee2` (`groupBy` in `shared/collections.ts`).
+  - T7 `fb21fe1`: auth split into schemas / `auth_config` repository / service / routes. `issueToken` is the only token signer and `getRequestToken` + `isValidSessionToken` the only session readers, shared by the guard and `/status`. Rate limiting reaches the service as a failed-attempts port. DomainError gained `unauthorized` (401) and `internal` (500, no stack). Backup layered.
+  - Risk: item 2 (authentication, credentials, session guard).
+  - Independent verifier: baseline `4f9aee2`, 207 probes per driver, 0 diffs. Coverage: cookie attributes, decoded token TTLs (30 days / 10 minutes), the rate limit, 17 token variants against guarded routes, a missing `auth_config`, no hash leaks, and the DB unchanged after every rejected request. S2/S4 PASS. Its junctions were removed one by one (checked with `LinkType`) before its scratch was deleted.
+  - RDD: reviewed alone in a temporary worktree on `4f9aee2..fb21fe1` (high, item 2 escalated), consent granted, approved with 0 blockers, acknowledged (lineage `review-766c14e80601b754`). Reviewed boundary is `fb21fe1`.
+  - Advisories, not changed: the auth service imports token helpers from `middlewares/auth.ts` (could move to `shared/`).
+  - Pre-existing follow-ups (unchanged): reset tokens are reusable within 10 minutes; `reset-pin` returns 200 even without an `auth_config` row; 500 bodies of unexpected errors include `stack` outside production; the S8 races (L14).
 - **L15 (2026-10-17):** Slice 05 (`refactor/arch-05-finance-clients`, stacked on slice 04), commit `a626176` (T6).
   - Clients and finance split into layers. `sumMilestones` (in `projects/domain.ts`) is now the only PAID/PENDING total; project totals, client balances and finance metrics all reuse it.
   - `asQueryDb` (`db/index.ts`) types projected and joined queries on both drivers and replaces the `as SqliteDb` casts.
