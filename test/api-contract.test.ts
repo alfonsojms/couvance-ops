@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { createContractHarness, type ContractHarness, DEFAULT_PIN } from './helpers/contract';
+import { createContractHarness, type ContractHarness, CONTRACT_DRIVERS, DEFAULT_PIN } from './helpers/contract';
 
 /**
  * Tests de contrato de la API (caracterización).
@@ -8,8 +8,11 @@ import { createContractHarness, type ContractHarness, DEFAULT_PIN } from './help
  * recorriendo un escenario de negocio completo en orden. Sirven de red de seguridad para el
  * refactor por capas: cualquier cambio en una respuesta rompe el snapshot y debe justificarse.
  * Las claves de los objetos se comparan ordenadas, así que reordenar campos no rompe nada.
+ *
+ * El escenario corre sobre los dos drivers: `sqlite` (Node/Docker) y `d1` (D1 local real vía
+ * miniflare, el camino de producción en Cloudflare). Cada driver tiene sus propios snapshots.
  */
-describe('Contrato de la API', () => {
+describe.each(CONTRACT_DRIVERS)('Contrato de la API [%s]', (driver) => {
   let h: ContractHarness;
   const ids: Record<string, string> = {};
 
@@ -23,8 +26,8 @@ describe('Contrato de la API', () => {
   const milestonesOf = (budget: any): any[] => budget?.milestones ?? budget?.budget?.milestones ?? [];
 
   beforeAll(async () => {
-    h = await createContractHarness();
-  });
+    h = await createContractHarness(driver);
+  }, 60_000);
 
   afterAll(() => h.dispose());
 
@@ -327,7 +330,7 @@ describe('Contrato de la API', () => {
       h.clearSession();
       const res = await h.raw('GET', '/api/health');
       expect(res.status).toBe(200);
-      expect(res.body).toMatchObject({ status: 'ok', runtime: 'node' });
+      expect(res.body).toMatchObject({ status: 'ok', runtime: driver === 'd1' ? 'cloudflare' : 'node' });
     });
 
     it('404 de API', async () => {
