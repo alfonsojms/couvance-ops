@@ -1,0 +1,2327 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Contrato de la API > auth con sesión > cambia PIN y preguntas 1`] = `
+{
+  "body": {
+    "error": "El PIN actual ingresado es incorrecto.",
+  },
+  "status": 401,
+}
+`;
+
+exports[`Contrato de la API > auth con sesión > cambia PIN y preguntas 2`] = `
+{
+  "body": {
+    "message": "PIN maestro actualizado exitosamente.",
+    "ok": true,
+  },
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > auth con sesión > cambia PIN y preguntas 3`] = `
+{
+  "body": {
+    "message": "Preguntas y respuestas de seguridad actualizadas exitosamente.",
+    "ok": true,
+  },
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > auth con sesión > cambia PIN y preguntas 4`] = `
+{
+  "body": {
+    "q1": "¿Color favorito?",
+    "q2": "¿Ciudad natal?",
+    "updatedAt": "2026-10-16T12:01:19.000Z",
+  },
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > auth con sesión > lock cierra la sesión 1`] = `
+{
+  "body": {
+    "message": "Sesión cerrada.",
+    "ok": true,
+  },
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > auth con sesión > lock cierra la sesión 2`] = `
+{
+  "body": {
+    "authenticated": false,
+  },
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > auth con sesión > lock cierra la sesión 3`] = `
+{
+  "body": {
+    "error": "No autenticado. Ingrese el PIN maestro.",
+  },
+  "status": 401,
+}
+`;
+
+exports[`Contrato de la API > auth con sesión > recupera el acceso con preguntas secretas y resetea el PIN 1`] = `
+{
+  "body": {
+    "q1": "¿Color favorito?",
+    "q2": "¿Ciudad natal?",
+  },
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > auth con sesión > recupera el acceso con preguntas secretas y resetea el PIN 2`] = `
+{
+  "body": {
+    "error": "Una o ambas respuestas son incorrectas.",
+  },
+  "status": 401,
+}
+`;
+
+exports[`Contrato de la API > auth con sesión > recupera el acceso con preguntas secretas y resetea el PIN 3`] = `
+{
+  "body": {
+    "message": "Respuestas correctas. Puede configurar un nuevo PIN.",
+    "ok": true,
+    "resetToken": "<token>",
+  },
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > auth con sesión > recupera el acceso con preguntas secretas y resetea el PIN 4`] = `
+{
+  "body": {
+    "error": "Token de recuperación inválido o vencido.",
+  },
+  "status": 401,
+}
+`;
+
+exports[`Contrato de la API > auth con sesión > recupera el acceso con preguntas secretas y resetea el PIN 5`] = `
+{
+  "body": {
+    "message": "PIN actualizado exitosamente.",
+    "ok": true,
+  },
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > auth con sesión > recupera el acceso con preguntas secretas y resetea el PIN 6`] = `
+{
+  "body": {
+    "message": "Acceso autorizado.",
+    "ok": true,
+  },
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > auth con sesión > recupera el acceso con preguntas secretas y resetea el PIN 7`] = `
+{
+  "body": {
+    "authenticated": true,
+  },
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > auth sin sesión > questions es público 1`] = `
+{
+  "body": {
+    "q1": "¿Cuál es el nombre de tu primera mascota?",
+    "q2": "¿En qué ciudad se fundó la agencia?",
+  },
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > auth sin sesión > rutas privadas sin sesión responden 401 1`] = `
+{
+  "body": {
+    "error": "No autenticado. Ingrese el PIN maestro.",
+  },
+  "status": 401,
+}
+`;
+
+exports[`Contrato de la API > auth sin sesión > status sin sesión 1`] = `
+{
+  "body": {
+    "authenticated": false,
+  },
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > auth sin sesión > unlock con PIN incorrecto y con formato inválido 1`] = `
+{
+  "body": {
+    "error": "PIN incorrecto. Intente nuevamente.",
+  },
+  "status": 401,
+}
+`;
+
+exports[`Contrato de la API > auth sin sesión > unlock con PIN incorrecto y con formato inválido 2`] = `
+{
+  "body": {
+    "error": "El PIN debe tener exactamente 8 dígitos numéricos",
+  },
+  "status": 400,
+}
+`;
+
+exports[`Contrato de la API > auth sin sesión > unlock correcto abre sesión 1`] = `
+{
+  "body": {
+    "message": "Acceso autorizado.",
+    "ok": true,
+  },
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > auth sin sesión > unlock correcto abre sesión 2`] = `
+{
+  "body": {
+    "authenticated": true,
+  },
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > auth sin sesión > unlock correcto abre sesión 3`] = `
+{
+  "body": {
+    "authenticated": true,
+  },
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > auth sin sesión > unlock correcto abre sesión 4`] = `
+{
+  "body": {
+    "q1": "¿Cuál es el nombre de tu primera mascota?",
+    "q2": "¿En qué ciudad se fundó la agencia?",
+    "updatedAt": "2026-10-16T12:00:00.000Z",
+  },
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > backup > exporta datos sin credenciales 1`] = `"attachment; filename="couvance-ops-backup-2026-10-16.json""`;
+
+exports[`Contrato de la API > backup > exporta datos sin credenciales 2`] = `
+{
+  "body": {
+    "data": {
+      "budgets": [
+        {
+          "createdAt": "2026-10-16T12:00:33.000Z",
+          "currency": "USD",
+          "id": "<id:8>",
+          "projectId": "<id:4>",
+          "status": "APPROVED",
+          "title": "Diseño y desarrollo web",
+          "totalAmount": 2400,
+          "updatedAt": "2026-10-16T12:00:44.000Z",
+        },
+        {
+          "createdAt": "2026-10-16T12:00:34.000Z",
+          "currency": "EUR",
+          "id": "<id:11>",
+          "projectId": "<id:5>",
+          "status": "APPROVED",
+          "title": "Tienda a medida v2",
+          "totalAmount": 1001,
+          "updatedAt": "2026-10-16T12:00:45.000Z",
+        },
+        {
+          "createdAt": "2026-10-16T12:00:35.000Z",
+          "currency": "USD",
+          "id": "<id:15>",
+          "projectId": "<id:6>",
+          "status": "APPROVED",
+          "title": "Landing",
+          "totalAmount": 950,
+          "updatedAt": "2026-10-16T12:00:46.000Z",
+        },
+        {
+          "createdAt": "2026-10-16T12:00:36.000Z",
+          "currency": "USD",
+          "id": "<id:17>",
+          "projectId": "<id:6>",
+          "status": "REJECTED",
+          "title": "Landing premium",
+          "totalAmount": 1500,
+          "updatedAt": "2026-10-16T12:00:47.000Z",
+        },
+      ],
+      "clients": [
+        {
+          "contactName": "Dra. Marta Pérez",
+          "createdAt": "2026-10-16T12:00:10.000Z",
+          "email": "marta@sonrisa.example",
+          "id": "<id:1>",
+          "name": "Clínica Dental Sonrisa",
+          "notes": "Paga siempre por transferencia",
+          "phone": "+34600000101",
+          "updatedAt": "2026-10-16T12:00:10.000Z",
+        },
+        {
+          "contactName": null,
+          "createdAt": "2026-10-16T12:00:11.000Z",
+          "email": null,
+          "id": "<id:2>",
+          "name": "Ferretería El Tornillo SL",
+          "notes": null,
+          "phone": "+34600000102",
+          "updatedAt": "2026-10-16T12:00:15.000Z",
+        },
+        {
+          "contactName": null,
+          "createdAt": "2026-10-16T12:00:12.000Z",
+          "email": null,
+          "id": "<id:3>",
+          "name": "Cliente sin proyectos",
+          "notes": null,
+          "phone": null,
+          "updatedAt": "2026-10-16T12:00:12.000Z",
+        },
+      ],
+      "milestones": [
+        {
+          "amount": 1200,
+          "budgetId": "<id:8>",
+          "createdAt": "2026-10-16T12:00:33.000Z",
+          "dueDate": "2026-10-10",
+          "id": "<id:9>",
+          "paidAt": "2026-10-16T12:00:51.000Z",
+          "percentage": 50,
+          "status": "PAID",
+          "title": "50% Anticipo",
+          "updatedAt": "2026-10-16T12:00:51.000Z",
+        },
+        {
+          "amount": 1200,
+          "budgetId": "<id:8>",
+          "createdAt": "2026-10-16T12:00:33.000Z",
+          "dueDate": "2026-10-20",
+          "id": "<id:10>",
+          "paidAt": null,
+          "percentage": 50,
+          "status": "PENDING",
+          "title": "50% Entrega",
+          "updatedAt": "2026-10-16T12:00:44.000Z",
+        },
+        {
+          "amount": 950,
+          "budgetId": "<id:15>",
+          "createdAt": "2026-10-16T12:00:35.000Z",
+          "dueDate": "2026-10-18",
+          "id": "<id:16>",
+          "paidAt": "2026-10-16T12:00:54.000Z",
+          "percentage": 100,
+          "status": "PAID",
+          "title": "Entrega",
+          "updatedAt": "2026-10-16T12:00:54.000Z",
+        },
+        {
+          "amount": 1500,
+          "budgetId": "<id:17>",
+          "createdAt": "2026-10-16T12:00:36.000Z",
+          "dueDate": null,
+          "id": "<id:18>",
+          "paidAt": null,
+          "percentage": 100,
+          "status": "DRAFT",
+          "title": "Entrega",
+          "updatedAt": "2026-10-16T12:00:36.000Z",
+        },
+        {
+          "amount": 400,
+          "budgetId": "<id:11>",
+          "createdAt": "2026-10-16T12:00:40.000Z",
+          "dueDate": "2026-10-01",
+          "id": "<id:19>",
+          "paidAt": "2026-10-16T12:00:53.000Z",
+          "percentage": 40,
+          "status": "PAID",
+          "title": "Anticipo",
+          "updatedAt": "2026-10-16T12:00:53.000Z",
+        },
+        {
+          "amount": 300,
+          "budgetId": "<id:11>",
+          "createdAt": "2026-10-16T12:00:40.000Z",
+          "dueDate": "2026-10-17",
+          "id": "<id:20>",
+          "paidAt": null,
+          "percentage": 30,
+          "status": "CANCELLED",
+          "title": "Catálogo",
+          "updatedAt": "2026-10-16T12:00:58.000Z",
+        },
+        {
+          "amount": 301,
+          "budgetId": "<id:11>",
+          "createdAt": "2026-10-16T12:00:40.000Z",
+          "dueDate": "2026-11-30",
+          "id": "<id:21>",
+          "paidAt": null,
+          "percentage": 30,
+          "status": "CANCELLED",
+          "title": "Lanzamiento",
+          "updatedAt": "2026-10-16T12:00:58.000Z",
+        },
+      ],
+      "projects": [
+        {
+          "category": "CORPORATE",
+          "clientId": "<id:1>",
+          "codeRepoUrl": null,
+          "createdAt": "2026-10-16T12:00:19.000Z",
+          "hasRecurring": 1,
+          "id": "<id:4>",
+          "productionStatus": "ACTIVE",
+          "productionUrl": "https://sonrisa.example.com",
+          "recurringAmount": 180,
+          "recurringCurrency": "USD",
+          "recurringPeriod": "ANNUALLY",
+          "recurringRenewalDate": "2028-10-28",
+          "resourcesUrl": null,
+          "status": "IN_PROGRESS",
+          "title": "Web corporativa con reserva de citas",
+          "updatedAt": "2026-10-16T12:01:03.000Z",
+        },
+        {
+          "category": "ECOMMERCE",
+          "clientId": "<id:2>",
+          "codeRepoUrl": null,
+          "createdAt": "2026-10-16T12:00:20.000Z",
+          "hasRecurring": 1,
+          "id": "<id:5>",
+          "productionStatus": "ACTIVE",
+          "productionUrl": null,
+          "recurringAmount": 29.99,
+          "recurringCurrency": "USD",
+          "recurringPeriod": "MONTHLY",
+          "recurringRenewalDate": "2026-03-03",
+          "resourcesUrl": null,
+          "status": "CANCELLED",
+          "title": "Tienda online de herramientas",
+          "updatedAt": "2026-10-16T12:01:02.000Z",
+        },
+        {
+          "category": "LANDING",
+          "clientId": "<id:2>",
+          "codeRepoUrl": "https://github.com/example/landing",
+          "createdAt": "2026-10-16T12:00:21.000Z",
+          "hasRecurring": 0,
+          "id": "<id:6>",
+          "productionStatus": "ACTIVE",
+          "productionUrl": "https://catalogo.example.com",
+          "recurringAmount": null,
+          "recurringCurrency": "USD",
+          "recurringPeriod": "ANNUALLY",
+          "recurringRenewalDate": null,
+          "resourcesUrl": null,
+          "status": "COMPLETED",
+          "title": "Landing de catálogo 2026",
+          "updatedAt": "2026-10-16T12:00:57.000Z",
+        },
+        {
+          "category": "WEBAPP",
+          "clientId": "<id:1>",
+          "codeRepoUrl": null,
+          "createdAt": "2026-10-16T12:00:22.000Z",
+          "hasRecurring": 1,
+          "id": "<id:7>",
+          "productionStatus": "ACTIVE",
+          "productionUrl": null,
+          "recurringAmount": 49.5,
+          "recurringCurrency": "USD",
+          "recurringPeriod": "MONTHLY",
+          "recurringRenewalDate": "2026-11-05",
+          "resourcesUrl": null,
+          "status": "IN_PROGRESS",
+          "title": "Mantenimiento de la web del consultorio",
+          "updatedAt": "2026-10-16T12:00:22.000Z",
+        },
+      ],
+    },
+    "exportedAt": "2026-10-16T12:01:13.000Z",
+    "version": "1.0",
+  },
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > budgets > aprueba, rechaza y no permite editar fuera de DRAFT 1`] = `
+{
+  "body": {
+    "budget": {
+      "createdAt": "2026-10-16T12:00:33.000Z",
+      "currency": "USD",
+      "id": "<id:8>",
+      "projectId": "<id:4>",
+      "status": "APPROVED",
+      "title": "Diseño y desarrollo web",
+      "totalAmount": 2400,
+      "updatedAt": "2026-10-16T12:00:44.000Z",
+    },
+    "message": "Presupuesto aprobado y proyecto activado exitosamente.",
+    "milestones": [
+      {
+        "amount": 1200,
+        "budgetId": "<id:8>",
+        "createdAt": "2026-10-16T12:00:33.000Z",
+        "dueDate": "2026-10-10",
+        "id": "<id:9>",
+        "paidAt": null,
+        "percentage": 50,
+        "status": "PENDING",
+        "title": "50% Anticipo",
+        "updatedAt": "2026-10-16T12:00:44.000Z",
+      },
+      {
+        "amount": 1200,
+        "budgetId": "<id:8>",
+        "createdAt": "2026-10-16T12:00:33.000Z",
+        "dueDate": "2026-10-20",
+        "id": "<id:10>",
+        "paidAt": null,
+        "percentage": 50,
+        "status": "PENDING",
+        "title": "50% Entrega",
+        "updatedAt": "2026-10-16T12:00:44.000Z",
+      },
+    ],
+    "ok": true,
+  },
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > budgets > aprueba, rechaza y no permite editar fuera de DRAFT 2`] = `
+{
+  "body": {
+    "budget": {
+      "createdAt": "2026-10-16T12:00:34.000Z",
+      "currency": "EUR",
+      "id": "<id:11>",
+      "projectId": "<id:5>",
+      "status": "APPROVED",
+      "title": "Tienda a medida v2",
+      "totalAmount": 1001,
+      "updatedAt": "2026-10-16T12:00:45.000Z",
+    },
+    "message": "Presupuesto aprobado y proyecto activado exitosamente.",
+    "milestones": [
+      {
+        "amount": 400,
+        "budgetId": "<id:11>",
+        "createdAt": "2026-10-16T12:00:40.000Z",
+        "dueDate": "2026-10-01",
+        "id": "<id:19>",
+        "paidAt": null,
+        "percentage": 40,
+        "status": "PENDING",
+        "title": "Anticipo",
+        "updatedAt": "2026-10-16T12:00:45.000Z",
+      },
+      {
+        "amount": 300,
+        "budgetId": "<id:11>",
+        "createdAt": "2026-10-16T12:00:40.000Z",
+        "dueDate": "2026-10-17",
+        "id": "<id:20>",
+        "paidAt": null,
+        "percentage": 30,
+        "status": "PENDING",
+        "title": "Catálogo",
+        "updatedAt": "2026-10-16T12:00:45.000Z",
+      },
+      {
+        "amount": 301,
+        "budgetId": "<id:11>",
+        "createdAt": "2026-10-16T12:00:40.000Z",
+        "dueDate": "2026-11-30",
+        "id": "<id:21>",
+        "paidAt": null,
+        "percentage": 30,
+        "status": "PENDING",
+        "title": "Lanzamiento",
+        "updatedAt": "2026-10-16T12:00:45.000Z",
+      },
+    ],
+    "ok": true,
+  },
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > budgets > aprueba, rechaza y no permite editar fuera de DRAFT 3`] = `
+{
+  "body": {
+    "budget": {
+      "createdAt": "2026-10-16T12:00:35.000Z",
+      "currency": "USD",
+      "id": "<id:15>",
+      "projectId": "<id:6>",
+      "status": "APPROVED",
+      "title": "Landing",
+      "totalAmount": 950,
+      "updatedAt": "2026-10-16T12:00:46.000Z",
+    },
+    "message": "Presupuesto aprobado y proyecto activado exitosamente.",
+    "milestones": [
+      {
+        "amount": 950,
+        "budgetId": "<id:15>",
+        "createdAt": "2026-10-16T12:00:35.000Z",
+        "dueDate": "2026-10-18",
+        "id": "<id:16>",
+        "paidAt": null,
+        "percentage": 100,
+        "status": "PENDING",
+        "title": "Entrega",
+        "updatedAt": "2026-10-16T12:00:46.000Z",
+      },
+    ],
+    "ok": true,
+  },
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > budgets > aprueba, rechaza y no permite editar fuera de DRAFT 4`] = `
+{
+  "body": {
+    "budget": {
+      "createdAt": "2026-10-16T12:00:36.000Z",
+      "currency": "USD",
+      "id": "<id:17>",
+      "projectId": "<id:6>",
+      "status": "REJECTED",
+      "title": "Landing premium",
+      "totalAmount": 1500,
+      "updatedAt": "2026-10-16T12:00:47.000Z",
+    },
+    "message": "Presupuesto rechazado.",
+    "ok": true,
+  },
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > budgets > aprueba, rechaza y no permite editar fuera de DRAFT 5`] = `
+{
+  "body": {
+    "error": "Solo se pueden editar presupuestos en estado DRAFT (Borrador).",
+  },
+  "status": 400,
+}
+`;
+
+exports[`Contrato de la API > budgets > aprueba, rechaza y no permite editar fuera de DRAFT 6`] = `
+{
+  "body": {
+    "error": "Identificador de presupuesto inválido o malformado.",
+  },
+  "status": 400,
+}
+`;
+
+exports[`Contrato de la API > budgets > cobra hitos individuales y con pay-all 1`] = `
+{
+  "body": {
+    "amount": 1200,
+    "budgetId": "<id:8>",
+    "createdAt": "2026-10-16T12:00:33.000Z",
+    "dueDate": "2026-10-10",
+    "id": "<id:9>",
+    "paidAt": "2026-10-16T12:00:51.000Z",
+    "percentage": 50,
+    "status": "PAID",
+    "title": "50% Anticipo",
+    "updatedAt": "2026-10-16T12:00:51.000Z",
+  },
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > budgets > cobra hitos individuales y con pay-all 2`] = `
+{
+  "body": {
+    "amount": 400,
+    "budgetId": "<id:11>",
+    "createdAt": "2026-10-16T12:00:40.000Z",
+    "dueDate": "2026-10-01",
+    "id": "<id:19>",
+    "paidAt": "2026-10-16T12:00:53.000Z",
+    "percentage": 40,
+    "status": "PAID",
+    "title": "Anticipo",
+    "updatedAt": "2026-10-16T12:00:53.000Z",
+  },
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > budgets > cobra hitos individuales y con pay-all 3`] = `
+{
+  "body": {
+    "message": "Todos los hitos pendientes fueron cobrados exitosamente.",
+    "milestones": [
+      {
+        "amount": 950,
+        "budgetId": "<id:15>",
+        "createdAt": "2026-10-16T12:00:35.000Z",
+        "dueDate": "2026-10-18",
+        "id": "<id:16>",
+        "paidAt": "2026-10-16T12:00:54.000Z",
+        "percentage": 100,
+        "status": "PAID",
+        "title": "Entrega",
+        "updatedAt": "2026-10-16T12:00:54.000Z",
+      },
+    ],
+    "ok": true,
+  },
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > budgets > cobra hitos individuales y con pay-all 4`] = `
+{
+  "body": {
+    "error": "Hito no encontrado",
+  },
+  "status": 404,
+}
+`;
+
+exports[`Contrato de la API > budgets > cobra hitos individuales y con pay-all 5`] = `
+{
+  "body": [
+    {
+      "createdAt": "2026-10-16T12:00:33.000Z",
+      "currency": "USD",
+      "id": "<id:8>",
+      "milestones": [
+        {
+          "amount": 1200,
+          "budgetId": "<id:8>",
+          "createdAt": "2026-10-16T12:00:33.000Z",
+          "dueDate": "2026-10-10",
+          "id": "<id:9>",
+          "paidAt": "2026-10-16T12:00:51.000Z",
+          "percentage": 50,
+          "status": "PAID",
+          "title": "50% Anticipo",
+          "updatedAt": "2026-10-16T12:00:51.000Z",
+        },
+        {
+          "amount": 1200,
+          "budgetId": "<id:8>",
+          "createdAt": "2026-10-16T12:00:33.000Z",
+          "dueDate": "2026-10-20",
+          "id": "<id:10>",
+          "paidAt": null,
+          "percentage": 50,
+          "status": "PENDING",
+          "title": "50% Entrega",
+          "updatedAt": "2026-10-16T12:00:44.000Z",
+        },
+      ],
+      "projectId": "<id:4>",
+      "status": "APPROVED",
+      "title": "Diseño y desarrollo web",
+      "totalAmount": 2400,
+      "updatedAt": "2026-10-16T12:00:44.000Z",
+    },
+  ],
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > budgets > crea presupuestos con absorción del residuo y valida la regla del 100% 1`] = `
+{
+  "body": {
+    "createdAt": "2026-10-16T12:00:33.000Z",
+    "currency": "USD",
+    "id": "<id:8>",
+    "milestones": [
+      {
+        "amount": 1200,
+        "budgetId": "<id:8>",
+        "createdAt": "2026-10-16T12:00:33.000Z",
+        "dueDate": "2026-10-10",
+        "id": "<id:9>",
+        "paidAt": null,
+        "percentage": 50,
+        "status": "DRAFT",
+        "title": "50% Anticipo",
+        "updatedAt": "2026-10-16T12:00:33.000Z",
+      },
+      {
+        "amount": 1200,
+        "budgetId": "<id:8>",
+        "createdAt": "2026-10-16T12:00:33.000Z",
+        "dueDate": "2026-10-20",
+        "id": "<id:10>",
+        "paidAt": null,
+        "percentage": 50,
+        "status": "DRAFT",
+        "title": "50% Entrega",
+        "updatedAt": "2026-10-16T12:00:33.000Z",
+      },
+    ],
+    "projectId": "<id:4>",
+    "status": "DRAFT",
+    "title": "Diseño y desarrollo web",
+    "totalAmount": 2400,
+    "updatedAt": "2026-10-16T12:00:33.000Z",
+  },
+  "status": 201,
+}
+`;
+
+exports[`Contrato de la API > budgets > crea presupuestos con absorción del residuo y valida la regla del 100% 2`] = `
+{
+  "body": {
+    "createdAt": "2026-10-16T12:00:34.000Z",
+    "currency": "EUR",
+    "id": "<id:11>",
+    "milestones": [
+      {
+        "amount": 330,
+        "budgetId": "<id:11>",
+        "createdAt": "2026-10-16T12:00:34.000Z",
+        "dueDate": "2026-10-01",
+        "id": "<id:12>",
+        "paidAt": null,
+        "percentage": 33,
+        "status": "DRAFT",
+        "title": "Anticipo",
+        "updatedAt": "2026-10-16T12:00:34.000Z",
+      },
+      {
+        "amount": 330,
+        "budgetId": "<id:11>",
+        "createdAt": "2026-10-16T12:00:34.000Z",
+        "dueDate": "2026-10-17",
+        "id": "<id:13>",
+        "paidAt": null,
+        "percentage": 33,
+        "status": "DRAFT",
+        "title": "Catálogo",
+        "updatedAt": "2026-10-16T12:00:34.000Z",
+      },
+      {
+        "amount": 340,
+        "budgetId": "<id:11>",
+        "createdAt": "2026-10-16T12:00:34.000Z",
+        "dueDate": "2026-11-30",
+        "id": "<id:14>",
+        "paidAt": null,
+        "percentage": 34,
+        "status": "DRAFT",
+        "title": "Lanzamiento",
+        "updatedAt": "2026-10-16T12:00:34.000Z",
+      },
+    ],
+    "projectId": "<id:5>",
+    "status": "DRAFT",
+    "title": "Tienda a medida",
+    "totalAmount": 1000,
+    "updatedAt": "2026-10-16T12:00:34.000Z",
+  },
+  "status": 201,
+}
+`;
+
+exports[`Contrato de la API > budgets > crea presupuestos con absorción del residuo y valida la regla del 100% 3`] = `
+{
+  "body": {
+    "createdAt": "2026-10-16T12:00:35.000Z",
+    "currency": "USD",
+    "id": "<id:15>",
+    "milestones": [
+      {
+        "amount": 950,
+        "budgetId": "<id:15>",
+        "createdAt": "2026-10-16T12:00:35.000Z",
+        "dueDate": "2026-10-18",
+        "id": "<id:16>",
+        "paidAt": null,
+        "percentage": 100,
+        "status": "DRAFT",
+        "title": "Entrega",
+        "updatedAt": "2026-10-16T12:00:35.000Z",
+      },
+    ],
+    "projectId": "<id:6>",
+    "status": "DRAFT",
+    "title": "Landing",
+    "totalAmount": 950,
+    "updatedAt": "2026-10-16T12:00:35.000Z",
+  },
+  "status": 201,
+}
+`;
+
+exports[`Contrato de la API > budgets > crea presupuestos con absorción del residuo y valida la regla del 100% 4`] = `
+{
+  "body": {
+    "createdAt": "2026-10-16T12:00:36.000Z",
+    "currency": "USD",
+    "id": "<id:17>",
+    "milestones": [
+      {
+        "amount": 1500,
+        "budgetId": "<id:17>",
+        "createdAt": "2026-10-16T12:00:36.000Z",
+        "dueDate": null,
+        "id": "<id:18>",
+        "paidAt": null,
+        "percentage": 100,
+        "status": "DRAFT",
+        "title": "Entrega",
+        "updatedAt": "2026-10-16T12:00:36.000Z",
+      },
+    ],
+    "projectId": "<id:6>",
+    "status": "DRAFT",
+    "title": "Landing premium",
+    "totalAmount": 1500,
+    "updatedAt": "2026-10-16T12:00:36.000Z",
+  },
+  "status": 201,
+}
+`;
+
+exports[`Contrato de la API > budgets > crea presupuestos con absorción del residuo y valida la regla del 100% 5`] = `
+{
+  "body": {
+    "error": "La suma de los porcentajes de los hitos debe ser exactamente 100% (RN-02).",
+  },
+  "status": 400,
+}
+`;
+
+exports[`Contrato de la API > budgets > crea presupuestos con absorción del residuo y valida la regla del 100% 6`] = `
+{
+  "body": {
+    "error": "El monto total debe ser un entero estricto sin decimales (RN-01)",
+  },
+  "status": 400,
+}
+`;
+
+exports[`Contrato de la API > budgets > crea presupuestos con absorción del residuo y valida la regla del 100% 7`] = `
+{
+  "body": {
+    "error": "Proyecto no encontrado",
+  },
+  "status": 404,
+}
+`;
+
+exports[`Contrato de la API > budgets > edita un presupuesto en DRAFT y lo consulta 1`] = `
+{
+  "body": {
+    "createdAt": "2026-10-16T12:00:34.000Z",
+    "currency": "EUR",
+    "id": "<id:11>",
+    "milestones": [
+      {
+        "amount": 400,
+        "budgetId": "<id:11>",
+        "createdAt": "2026-10-16T12:00:40.000Z",
+        "dueDate": "2026-10-01",
+        "id": "<id:19>",
+        "paidAt": null,
+        "percentage": 40,
+        "status": "DRAFT",
+        "title": "Anticipo",
+        "updatedAt": "2026-10-16T12:00:40.000Z",
+      },
+      {
+        "amount": 300,
+        "budgetId": "<id:11>",
+        "createdAt": "2026-10-16T12:00:40.000Z",
+        "dueDate": "2026-10-17",
+        "id": "<id:20>",
+        "paidAt": null,
+        "percentage": 30,
+        "status": "DRAFT",
+        "title": "Catálogo",
+        "updatedAt": "2026-10-16T12:00:40.000Z",
+      },
+      {
+        "amount": 301,
+        "budgetId": "<id:11>",
+        "createdAt": "2026-10-16T12:00:40.000Z",
+        "dueDate": "2026-11-30",
+        "id": "<id:21>",
+        "paidAt": null,
+        "percentage": 30,
+        "status": "DRAFT",
+        "title": "Lanzamiento",
+        "updatedAt": "2026-10-16T12:00:40.000Z",
+      },
+    ],
+    "projectId": "<id:5>",
+    "status": "DRAFT",
+    "title": "Tienda a medida v2",
+    "totalAmount": 1001,
+    "updatedAt": "2026-10-16T12:00:40.000Z",
+  },
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > budgets > edita un presupuesto en DRAFT y lo consulta 2`] = `
+{
+  "body": {
+    "createdAt": "2026-10-16T12:00:34.000Z",
+    "currency": "EUR",
+    "id": "<id:11>",
+    "milestones": [
+      {
+        "amount": 400,
+        "budgetId": "<id:11>",
+        "createdAt": "2026-10-16T12:00:40.000Z",
+        "dueDate": "2026-10-01",
+        "id": "<id:19>",
+        "paidAt": null,
+        "percentage": 40,
+        "status": "DRAFT",
+        "title": "Anticipo",
+        "updatedAt": "2026-10-16T12:00:40.000Z",
+      },
+      {
+        "amount": 300,
+        "budgetId": "<id:11>",
+        "createdAt": "2026-10-16T12:00:40.000Z",
+        "dueDate": "2026-10-17",
+        "id": "<id:20>",
+        "paidAt": null,
+        "percentage": 30,
+        "status": "DRAFT",
+        "title": "Catálogo",
+        "updatedAt": "2026-10-16T12:00:40.000Z",
+      },
+      {
+        "amount": 301,
+        "budgetId": "<id:11>",
+        "createdAt": "2026-10-16T12:00:40.000Z",
+        "dueDate": "2026-11-30",
+        "id": "<id:21>",
+        "paidAt": null,
+        "percentage": 30,
+        "status": "DRAFT",
+        "title": "Lanzamiento",
+        "updatedAt": "2026-10-16T12:00:40.000Z",
+      },
+    ],
+    "projectId": "<id:5>",
+    "status": "DRAFT",
+    "title": "Tienda a medida v2",
+    "totalAmount": 1001,
+    "updatedAt": "2026-10-16T12:00:40.000Z",
+  },
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > budgets > edita un presupuesto en DRAFT y lo consulta 3`] = `
+{
+  "body": {
+    "error": "Presupuesto no encontrado",
+  },
+  "status": 404,
+}
+`;
+
+exports[`Contrato de la API > budgets > edita un presupuesto en DRAFT y lo consulta 4`] = `
+{
+  "body": [
+    {
+      "createdAt": "2026-10-16T12:00:34.000Z",
+      "currency": "EUR",
+      "id": "<id:11>",
+      "milestones": [
+        {
+          "amount": 400,
+          "budgetId": "<id:11>",
+          "createdAt": "2026-10-16T12:00:40.000Z",
+          "dueDate": "2026-10-01",
+          "id": "<id:19>",
+          "paidAt": null,
+          "percentage": 40,
+          "status": "DRAFT",
+          "title": "Anticipo",
+          "updatedAt": "2026-10-16T12:00:40.000Z",
+        },
+        {
+          "amount": 300,
+          "budgetId": "<id:11>",
+          "createdAt": "2026-10-16T12:00:40.000Z",
+          "dueDate": "2026-10-17",
+          "id": "<id:20>",
+          "paidAt": null,
+          "percentage": 30,
+          "status": "DRAFT",
+          "title": "Catálogo",
+          "updatedAt": "2026-10-16T12:00:40.000Z",
+        },
+        {
+          "amount": 301,
+          "budgetId": "<id:11>",
+          "createdAt": "2026-10-16T12:00:40.000Z",
+          "dueDate": "2026-11-30",
+          "id": "<id:21>",
+          "paidAt": null,
+          "percentage": 30,
+          "status": "DRAFT",
+          "title": "Lanzamiento",
+          "updatedAt": "2026-10-16T12:00:40.000Z",
+        },
+      ],
+      "projectId": "<id:5>",
+      "status": "DRAFT",
+      "title": "Tienda a medida v2",
+      "totalAmount": 1001,
+      "updatedAt": "2026-10-16T12:00:40.000Z",
+    },
+  ],
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > clients > actualiza un cliente y maneja ids inválidos o inexistentes 1`] = `
+{
+  "body": {
+    "contactName": null,
+    "createdAt": "2026-10-16T12:00:11.000Z",
+    "email": null,
+    "id": "<id:2>",
+    "name": "Ferretería El Tornillo SL",
+    "notes": null,
+    "phone": "+34600000102",
+    "updatedAt": "2026-10-16T12:00:15.000Z",
+  },
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > clients > actualiza un cliente y maneja ids inválidos o inexistentes 2`] = `
+{
+  "body": {
+    "error": "Identificador de cliente inválido o malformado.",
+  },
+  "status": 400,
+}
+`;
+
+exports[`Contrato de la API > clients > actualiza un cliente y maneja ids inválidos o inexistentes 3`] = `
+{
+  "body": {
+    "error": "Cliente no encontrado",
+  },
+  "status": 404,
+}
+`;
+
+exports[`Contrato de la API > clients > crea clientes y valida el body 1`] = `
+{
+  "body": {
+    "contactName": "Dra. Marta Pérez",
+    "createdAt": "2026-10-16T12:00:10.000Z",
+    "email": "marta@sonrisa.example",
+    "id": "<id:1>",
+    "name": "Clínica Dental Sonrisa",
+    "notes": "Paga siempre por transferencia",
+    "phone": "+34600000101",
+    "updatedAt": "2026-10-16T12:00:10.000Z",
+  },
+  "status": 201,
+}
+`;
+
+exports[`Contrato de la API > clients > crea clientes y valida el body 2`] = `
+{
+  "body": {
+    "contactName": null,
+    "createdAt": "2026-10-16T12:00:11.000Z",
+    "email": null,
+    "id": "<id:2>",
+    "name": "Ferretería El Tornillo",
+    "notes": null,
+    "phone": null,
+    "updatedAt": "2026-10-16T12:00:11.000Z",
+  },
+  "status": 201,
+}
+`;
+
+exports[`Contrato de la API > clients > crea clientes y valida el body 3`] = `
+{
+  "body": {
+    "contactName": null,
+    "createdAt": "2026-10-16T12:00:12.000Z",
+    "email": null,
+    "id": "<id:3>",
+    "name": "Cliente sin proyectos",
+    "notes": null,
+    "phone": null,
+    "updatedAt": "2026-10-16T12:00:12.000Z",
+  },
+  "status": 201,
+}
+`;
+
+exports[`Contrato de la API > clients > crea clientes y valida el body 4`] = `
+{
+  "body": {
+    "error": "El nombre o empresa es obligatorio",
+  },
+  "status": 400,
+}
+`;
+
+exports[`Contrato de la API > clients > crea clientes y valida el body 5`] = `
+{
+  "body": {
+    "error": "Email inválido",
+  },
+  "status": 400,
+}
+`;
+
+exports[`Contrato de la API > clients > lista clientes sin proyectos 1`] = `
+{
+  "body": [
+    {
+      "contactName": "Dra. Marta Pérez",
+      "createdAt": "2026-10-16T12:00:10.000Z",
+      "email": "marta@sonrisa.example",
+      "id": "<id:1>",
+      "name": "Clínica Dental Sonrisa",
+      "notes": "Paga siempre por transferencia",
+      "phone": "+34600000101",
+      "projectsCount": 0,
+      "totalPaid": 0,
+      "totalPending": 0,
+      "updatedAt": "2026-10-16T12:00:10.000Z",
+    },
+    {
+      "contactName": null,
+      "createdAt": "2026-10-16T12:00:11.000Z",
+      "email": null,
+      "id": "<id:2>",
+      "name": "Ferretería El Tornillo SL",
+      "notes": null,
+      "phone": "+34600000102",
+      "projectsCount": 0,
+      "totalPaid": 0,
+      "totalPending": 0,
+      "updatedAt": "2026-10-16T12:00:15.000Z",
+    },
+    {
+      "contactName": null,
+      "createdAt": "2026-10-16T12:00:12.000Z",
+      "email": null,
+      "id": "<id:3>",
+      "name": "Cliente sin proyectos",
+      "notes": null,
+      "phone": null,
+      "projectsCount": 0,
+      "totalPaid": 0,
+      "totalPending": 0,
+      "updatedAt": "2026-10-16T12:00:12.000Z",
+    },
+  ],
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > clients: borrado (RN-06) > 409 con proyectos, 200 sin proyectos 1`] = `
+{
+  "body": {
+    "error": "No es posible eliminar el cliente porque posee 2 proyecto(s) asociado(s). Para preservar el histórico contable y de cotizaciones, mantenga el cliente en el sistema.",
+  },
+  "status": 409,
+}
+`;
+
+exports[`Contrato de la API > clients: borrado (RN-06) > 409 con proyectos, 200 sin proyectos 2`] = `
+{
+  "body": {
+    "message": "Cliente eliminado exitosamente.",
+    "ok": true,
+  },
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > clients: borrado (RN-06) > 409 con proyectos, 200 sin proyectos 3`] = `
+{
+  "body": {
+    "error": "Cliente no encontrado",
+  },
+  "status": 404,
+}
+`;
+
+exports[`Contrato de la API > finance, showcase y listados con totales > listados con totales 1`] = `
+{
+  "body": [
+    {
+      "category": "CORPORATE",
+      "client": {
+        "contactName": "Dra. Marta Pérez",
+        "createdAt": "2026-10-16T12:00:10.000Z",
+        "email": "marta@sonrisa.example",
+        "id": "<id:1>",
+        "name": "Clínica Dental Sonrisa",
+        "notes": "Paga siempre por transferencia",
+        "phone": "+34600000101",
+        "updatedAt": "2026-10-16T12:00:10.000Z",
+      },
+      "clientId": "<id:1>",
+      "codeRepoUrl": null,
+      "createdAt": "2026-10-16T12:00:19.000Z",
+      "hasRecurring": 1,
+      "id": "<id:4>",
+      "productionStatus": "ACTIVE",
+      "productionUrl": "https://sonrisa.example.com",
+      "recurringAmount": 180,
+      "recurringCurrency": "USD",
+      "recurringPeriod": "ANNUALLY",
+      "recurringRenewalDate": "2028-10-28",
+      "resourcesUrl": null,
+      "status": "IN_PROGRESS",
+      "title": "Web corporativa con reserva de citas",
+      "totalBudgeted": 2400,
+      "totalPaid": 1200,
+      "totalPending": 1200,
+      "updatedAt": "2026-10-16T12:01:03.000Z",
+    },
+    {
+      "category": "ECOMMERCE",
+      "client": {
+        "contactName": null,
+        "createdAt": "2026-10-16T12:00:11.000Z",
+        "email": null,
+        "id": "<id:2>",
+        "name": "Ferretería El Tornillo SL",
+        "notes": null,
+        "phone": "+34600000102",
+        "updatedAt": "2026-10-16T12:00:15.000Z",
+      },
+      "clientId": "<id:2>",
+      "codeRepoUrl": null,
+      "createdAt": "2026-10-16T12:00:20.000Z",
+      "hasRecurring": 1,
+      "id": "<id:5>",
+      "productionStatus": "ACTIVE",
+      "productionUrl": null,
+      "recurringAmount": 29.99,
+      "recurringCurrency": "USD",
+      "recurringPeriod": "MONTHLY",
+      "recurringRenewalDate": "2026-03-03",
+      "resourcesUrl": null,
+      "status": "CANCELLED",
+      "title": "Tienda online de herramientas",
+      "totalBudgeted": 1001,
+      "totalPaid": 400,
+      "totalPending": 0,
+      "updatedAt": "2026-10-16T12:01:02.000Z",
+    },
+    {
+      "category": "LANDING",
+      "client": {
+        "contactName": null,
+        "createdAt": "2026-10-16T12:00:11.000Z",
+        "email": null,
+        "id": "<id:2>",
+        "name": "Ferretería El Tornillo SL",
+        "notes": null,
+        "phone": "+34600000102",
+        "updatedAt": "2026-10-16T12:00:15.000Z",
+      },
+      "clientId": "<id:2>",
+      "codeRepoUrl": "https://github.com/example/landing",
+      "createdAt": "2026-10-16T12:00:21.000Z",
+      "hasRecurring": 0,
+      "id": "<id:6>",
+      "productionStatus": "ACTIVE",
+      "productionUrl": "https://catalogo.example.com",
+      "recurringAmount": null,
+      "recurringCurrency": "USD",
+      "recurringPeriod": "ANNUALLY",
+      "recurringRenewalDate": null,
+      "resourcesUrl": null,
+      "status": "COMPLETED",
+      "title": "Landing de catálogo 2026",
+      "totalBudgeted": 950,
+      "totalPaid": 950,
+      "totalPending": 0,
+      "updatedAt": "2026-10-16T12:00:57.000Z",
+    },
+    {
+      "category": "WEBAPP",
+      "client": {
+        "contactName": "Dra. Marta Pérez",
+        "createdAt": "2026-10-16T12:00:10.000Z",
+        "email": "marta@sonrisa.example",
+        "id": "<id:1>",
+        "name": "Clínica Dental Sonrisa",
+        "notes": "Paga siempre por transferencia",
+        "phone": "+34600000101",
+        "updatedAt": "2026-10-16T12:00:10.000Z",
+      },
+      "clientId": "<id:1>",
+      "codeRepoUrl": null,
+      "createdAt": "2026-10-16T12:00:22.000Z",
+      "hasRecurring": 1,
+      "id": "<id:7>",
+      "productionStatus": "ACTIVE",
+      "productionUrl": null,
+      "recurringAmount": 49.5,
+      "recurringCurrency": "USD",
+      "recurringPeriod": "MONTHLY",
+      "recurringRenewalDate": "2026-11-05",
+      "resourcesUrl": null,
+      "status": "IN_PROGRESS",
+      "title": "Mantenimiento de la web del consultorio",
+      "totalBudgeted": 0,
+      "totalPaid": 0,
+      "totalPending": 0,
+      "updatedAt": "2026-10-16T12:00:22.000Z",
+    },
+  ],
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > finance, showcase y listados con totales > listados con totales 2`] = `
+{
+  "body": [
+    {
+      "category": "CORPORATE",
+      "client": {
+        "contactName": "Dra. Marta Pérez",
+        "createdAt": "2026-10-16T12:00:10.000Z",
+        "email": "marta@sonrisa.example",
+        "id": "<id:1>",
+        "name": "Clínica Dental Sonrisa",
+        "notes": "Paga siempre por transferencia",
+        "phone": "+34600000101",
+        "updatedAt": "2026-10-16T12:00:10.000Z",
+      },
+      "clientId": "<id:1>",
+      "codeRepoUrl": null,
+      "createdAt": "2026-10-16T12:00:19.000Z",
+      "hasRecurring": 1,
+      "id": "<id:4>",
+      "productionStatus": "ACTIVE",
+      "productionUrl": "https://sonrisa.example.com",
+      "recurringAmount": 180,
+      "recurringCurrency": "USD",
+      "recurringPeriod": "ANNUALLY",
+      "recurringRenewalDate": "2028-10-28",
+      "resourcesUrl": null,
+      "status": "IN_PROGRESS",
+      "title": "Web corporativa con reserva de citas",
+      "totalBudgeted": 2400,
+      "totalPaid": 1200,
+      "totalPending": 1200,
+      "updatedAt": "2026-10-16T12:01:03.000Z",
+    },
+    {
+      "category": "WEBAPP",
+      "client": {
+        "contactName": "Dra. Marta Pérez",
+        "createdAt": "2026-10-16T12:00:10.000Z",
+        "email": "marta@sonrisa.example",
+        "id": "<id:1>",
+        "name": "Clínica Dental Sonrisa",
+        "notes": "Paga siempre por transferencia",
+        "phone": "+34600000101",
+        "updatedAt": "2026-10-16T12:00:10.000Z",
+      },
+      "clientId": "<id:1>",
+      "codeRepoUrl": null,
+      "createdAt": "2026-10-16T12:00:22.000Z",
+      "hasRecurring": 1,
+      "id": "<id:7>",
+      "productionStatus": "ACTIVE",
+      "productionUrl": null,
+      "recurringAmount": 49.5,
+      "recurringCurrency": "USD",
+      "recurringPeriod": "MONTHLY",
+      "recurringRenewalDate": "2026-11-05",
+      "resourcesUrl": null,
+      "status": "IN_PROGRESS",
+      "title": "Mantenimiento de la web del consultorio",
+      "totalBudgeted": 0,
+      "totalPaid": 0,
+      "totalPending": 0,
+      "updatedAt": "2026-10-16T12:00:22.000Z",
+    },
+  ],
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > finance, showcase y listados con totales > listados con totales 3`] = `
+{
+  "body": [
+    {
+      "contactName": "Dra. Marta Pérez",
+      "createdAt": "2026-10-16T12:00:10.000Z",
+      "email": "marta@sonrisa.example",
+      "id": "<id:1>",
+      "name": "Clínica Dental Sonrisa",
+      "notes": "Paga siempre por transferencia",
+      "phone": "+34600000101",
+      "projectsCount": 2,
+      "totalPaid": 1200,
+      "totalPending": 1200,
+      "updatedAt": "2026-10-16T12:00:10.000Z",
+    },
+    {
+      "contactName": null,
+      "createdAt": "2026-10-16T12:00:11.000Z",
+      "email": null,
+      "id": "<id:2>",
+      "name": "Ferretería El Tornillo SL",
+      "notes": null,
+      "phone": "+34600000102",
+      "projectsCount": 2,
+      "totalPaid": 1350,
+      "totalPending": 0,
+      "updatedAt": "2026-10-16T12:00:15.000Z",
+    },
+    {
+      "contactName": null,
+      "createdAt": "2026-10-16T12:00:12.000Z",
+      "email": null,
+      "id": "<id:3>",
+      "name": "Cliente sin proyectos",
+      "notes": null,
+      "phone": null,
+      "projectsCount": 0,
+      "totalPaid": 0,
+      "totalPending": 0,
+      "updatedAt": "2026-10-16T12:00:12.000Z",
+    },
+  ],
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > finance, showcase y listados con totales > radar, métricas e historial 1`] = `
+{
+  "body": {
+    "pendingMilestones": [
+      {
+        "amount": 1200,
+        "budgetId": "<id:8>",
+        "clientName": "Clínica Dental Sonrisa",
+        "clientPhone": "+34600000101",
+        "currency": "USD",
+        "dueDate": "2026-10-20",
+        "id": "<id:10>",
+        "milestoneTitle": "50% Entrega",
+        "percentage": 50,
+        "projectId": "<id:4>",
+        "projectTitle": "Web corporativa con reserva de citas",
+        "status": "PENDING",
+      },
+    ],
+    "recurringAlerts": [
+      {
+        "clientName": "Clínica Dental Sonrisa",
+        "clientPhone": "+34600000101",
+        "daysRemaining": 20,
+        "isOverdue": false,
+        "projectId": "<id:7>",
+        "projectTitle": "Mantenimiento de la web del consultorio",
+        "recurringAmount": 49.5,
+        "recurringCurrency": "USD",
+        "recurringPeriod": "MONTHLY",
+        "recurringRenewalDate": "2026-11-05",
+      },
+    ],
+  },
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > finance, showcase y listados con totales > radar, métricas e historial 2`] = `
+{
+  "body": {
+    "activeProjectsCount": 2,
+    "activeRecurringCount": 2,
+    "annuallyRecurring": 180,
+    "monthlyRecurring": 49.5,
+    "totalActiveRecurring": 229.5,
+    "totalCollected": 2550,
+    "totalInTheStreet": 1200,
+    "totalPending": 1200,
+    "totalProjectsCount": 4,
+  },
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > finance, showcase y listados con totales > radar, métricas e historial 3`] = `
+{
+  "body": {
+    "history": [
+      {
+        "amount": 950,
+        "budgetId": "<id:15>",
+        "clientId": "<id:2>",
+        "clientName": "Ferretería El Tornillo SL",
+        "clientPhone": "+34600000102",
+        "currency": "USD",
+        "dueDate": "2026-10-18",
+        "id": "<id:16>",
+        "milestoneTitle": "Entrega",
+        "paidAt": "2026-10-16T12:00:54.000Z",
+        "percentage": 100,
+        "projectCategory": "LANDING",
+        "projectId": "<id:6>",
+        "projectTitle": "Landing de catálogo 2026",
+      },
+      {
+        "amount": 400,
+        "budgetId": "<id:11>",
+        "clientId": "<id:2>",
+        "clientName": "Ferretería El Tornillo SL",
+        "clientPhone": "+34600000102",
+        "currency": "EUR",
+        "dueDate": "2026-10-01",
+        "id": "<id:19>",
+        "milestoneTitle": "Anticipo",
+        "paidAt": "2026-10-16T12:00:53.000Z",
+        "percentage": 40,
+        "projectCategory": "ECOMMERCE",
+        "projectId": "<id:5>",
+        "projectTitle": "Tienda online de herramientas",
+      },
+      {
+        "amount": 1200,
+        "budgetId": "<id:8>",
+        "clientId": "<id:1>",
+        "clientName": "Clínica Dental Sonrisa",
+        "clientPhone": "+34600000101",
+        "currency": "USD",
+        "dueDate": "2026-10-10",
+        "id": "<id:9>",
+        "milestoneTitle": "50% Anticipo",
+        "paidAt": "2026-10-16T12:00:51.000Z",
+        "percentage": 50,
+        "projectCategory": "CORPORATE",
+        "projectId": "<id:4>",
+        "projectTitle": "Web corporativa con reserva de citas",
+      },
+    ],
+    "totalCollected": 2550,
+    "totalCount": 3,
+  },
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > finance, showcase y listados con totales > showcase 1`] = `
+{
+  "body": [
+    {
+      "category": "LANDING",
+      "clientId": "<id:2>",
+      "clientName": "Ferretería El Tornillo SL",
+      "codeRepoUrl": "https://github.com/example/landing",
+      "createdAt": "2026-10-16T12:00:21.000Z",
+      "hasRecurring": 0,
+      "id": "<id:6>",
+      "productionStatus": "ACTIVE",
+      "productionUrl": "https://catalogo.example.com",
+      "recurringAmount": null,
+      "recurringCurrency": "USD",
+      "recurringPeriod": "ANNUALLY",
+      "recurringRenewalDate": null,
+      "resourcesUrl": null,
+      "status": "COMPLETED",
+      "title": "Landing de catálogo 2026",
+      "updatedAt": "2026-10-16T12:00:57.000Z",
+    },
+  ],
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > health y 404 > 404 de API 1`] = `
+{
+  "body": {
+    "error": "Not Found",
+    "message": "El endpoint 'GET /api/no-existe' no existe en la API de Couvance Ops.",
+    "statusCode": 404,
+    "timestamp": "2026-10-16T12:01:33.000Z",
+  },
+  "status": 404,
+}
+`;
+
+exports[`Contrato de la API > projects > crea proyectos con y sin recurrencia 1`] = `
+{
+  "body": {
+    "category": "CORPORATE",
+    "clientId": "<id:1>",
+    "codeRepoUrl": null,
+    "createdAt": "2026-10-16T12:00:19.000Z",
+    "hasRecurring": 1,
+    "id": "<id:4>",
+    "productionStatus": "ACTIVE",
+    "productionUrl": "https://sonrisa.example.com",
+    "recurringAmount": 180,
+    "recurringCurrency": "USD",
+    "recurringPeriod": "ANNUALLY",
+    "recurringRenewalDate": "2026-10-28",
+    "resourcesUrl": null,
+    "status": "PROSPECT",
+    "title": "Web corporativa con reserva de citas",
+    "updatedAt": "2026-10-16T12:00:19.000Z",
+  },
+  "status": 201,
+}
+`;
+
+exports[`Contrato de la API > projects > crea proyectos con y sin recurrencia 2`] = `
+{
+  "body": {
+    "category": "ECOMMERCE",
+    "clientId": "<id:2>",
+    "codeRepoUrl": null,
+    "createdAt": "2026-10-16T12:00:20.000Z",
+    "hasRecurring": 1,
+    "id": "<id:5>",
+    "productionStatus": "ACTIVE",
+    "productionUrl": null,
+    "recurringAmount": 29.99,
+    "recurringCurrency": "USD",
+    "recurringPeriod": "MONTHLY",
+    "recurringRenewalDate": "2026-01-31",
+    "resourcesUrl": null,
+    "status": "PROSPECT",
+    "title": "Tienda online de herramientas",
+    "updatedAt": "2026-10-16T12:00:20.000Z",
+  },
+  "status": 201,
+}
+`;
+
+exports[`Contrato de la API > projects > crea proyectos con y sin recurrencia 3`] = `
+{
+  "body": {
+    "category": "LANDING",
+    "clientId": "<id:2>",
+    "codeRepoUrl": null,
+    "createdAt": "2026-10-16T12:00:21.000Z",
+    "hasRecurring": 0,
+    "id": "<id:6>",
+    "productionStatus": "ACTIVE",
+    "productionUrl": null,
+    "recurringAmount": null,
+    "recurringCurrency": "USD",
+    "recurringPeriod": "ANNUALLY",
+    "recurringRenewalDate": null,
+    "resourcesUrl": null,
+    "status": "PROSPECT",
+    "title": "Landing de catálogo",
+    "updatedAt": "2026-10-16T12:00:21.000Z",
+  },
+  "status": 201,
+}
+`;
+
+exports[`Contrato de la API > projects > crea proyectos con y sin recurrencia 4`] = `
+{
+  "body": {
+    "category": "WEBAPP",
+    "clientId": "<id:1>",
+    "codeRepoUrl": null,
+    "createdAt": "2026-10-16T12:00:22.000Z",
+    "hasRecurring": 1,
+    "id": "<id:7>",
+    "productionStatus": "ACTIVE",
+    "productionUrl": null,
+    "recurringAmount": 49.5,
+    "recurringCurrency": "USD",
+    "recurringPeriod": "MONTHLY",
+    "recurringRenewalDate": "2026-11-05",
+    "resourcesUrl": null,
+    "status": "IN_PROGRESS",
+    "title": "Mantenimiento de la web del consultorio",
+    "updatedAt": "2026-10-16T12:00:22.000Z",
+  },
+  "status": 201,
+}
+`;
+
+exports[`Contrato de la API > projects > lista proyectos (todos y filtrado por estado) y obtiene el detalle 1`] = `
+{
+  "body": [
+    {
+      "category": "CORPORATE",
+      "client": {
+        "contactName": "Dra. Marta Pérez",
+        "createdAt": "2026-10-16T12:00:10.000Z",
+        "email": "marta@sonrisa.example",
+        "id": "<id:1>",
+        "name": "Clínica Dental Sonrisa",
+        "notes": "Paga siempre por transferencia",
+        "phone": "+34600000101",
+        "updatedAt": "2026-10-16T12:00:10.000Z",
+      },
+      "clientId": "<id:1>",
+      "codeRepoUrl": null,
+      "createdAt": "2026-10-16T12:00:19.000Z",
+      "hasRecurring": 1,
+      "id": "<id:4>",
+      "productionStatus": "ACTIVE",
+      "productionUrl": "https://sonrisa.example.com",
+      "recurringAmount": 180,
+      "recurringCurrency": "USD",
+      "recurringPeriod": "ANNUALLY",
+      "recurringRenewalDate": "2026-10-28",
+      "resourcesUrl": null,
+      "status": "PROSPECT",
+      "title": "Web corporativa con reserva de citas",
+      "totalBudgeted": 0,
+      "totalPaid": 0,
+      "totalPending": 0,
+      "updatedAt": "2026-10-16T12:00:19.000Z",
+    },
+    {
+      "category": "ECOMMERCE",
+      "client": {
+        "contactName": null,
+        "createdAt": "2026-10-16T12:00:11.000Z",
+        "email": null,
+        "id": "<id:2>",
+        "name": "Ferretería El Tornillo SL",
+        "notes": null,
+        "phone": "+34600000102",
+        "updatedAt": "2026-10-16T12:00:15.000Z",
+      },
+      "clientId": "<id:2>",
+      "codeRepoUrl": null,
+      "createdAt": "2026-10-16T12:00:20.000Z",
+      "hasRecurring": 1,
+      "id": "<id:5>",
+      "productionStatus": "ACTIVE",
+      "productionUrl": null,
+      "recurringAmount": 29.99,
+      "recurringCurrency": "USD",
+      "recurringPeriod": "MONTHLY",
+      "recurringRenewalDate": "2026-01-31",
+      "resourcesUrl": null,
+      "status": "PROSPECT",
+      "title": "Tienda online de herramientas",
+      "totalBudgeted": 0,
+      "totalPaid": 0,
+      "totalPending": 0,
+      "updatedAt": "2026-10-16T12:00:20.000Z",
+    },
+    {
+      "category": "LANDING",
+      "client": {
+        "contactName": null,
+        "createdAt": "2026-10-16T12:00:11.000Z",
+        "email": null,
+        "id": "<id:2>",
+        "name": "Ferretería El Tornillo SL",
+        "notes": null,
+        "phone": "+34600000102",
+        "updatedAt": "2026-10-16T12:00:15.000Z",
+      },
+      "clientId": "<id:2>",
+      "codeRepoUrl": null,
+      "createdAt": "2026-10-16T12:00:21.000Z",
+      "hasRecurring": 0,
+      "id": "<id:6>",
+      "productionStatus": "ACTIVE",
+      "productionUrl": null,
+      "recurringAmount": null,
+      "recurringCurrency": "USD",
+      "recurringPeriod": "ANNUALLY",
+      "recurringRenewalDate": null,
+      "resourcesUrl": null,
+      "status": "PROSPECT",
+      "title": "Landing de catálogo",
+      "totalBudgeted": 0,
+      "totalPaid": 0,
+      "totalPending": 0,
+      "updatedAt": "2026-10-16T12:00:21.000Z",
+    },
+    {
+      "category": "WEBAPP",
+      "client": {
+        "contactName": "Dra. Marta Pérez",
+        "createdAt": "2026-10-16T12:00:10.000Z",
+        "email": "marta@sonrisa.example",
+        "id": "<id:1>",
+        "name": "Clínica Dental Sonrisa",
+        "notes": "Paga siempre por transferencia",
+        "phone": "+34600000101",
+        "updatedAt": "2026-10-16T12:00:10.000Z",
+      },
+      "clientId": "<id:1>",
+      "codeRepoUrl": null,
+      "createdAt": "2026-10-16T12:00:22.000Z",
+      "hasRecurring": 1,
+      "id": "<id:7>",
+      "productionStatus": "ACTIVE",
+      "productionUrl": null,
+      "recurringAmount": 49.5,
+      "recurringCurrency": "USD",
+      "recurringPeriod": "MONTHLY",
+      "recurringRenewalDate": "2026-11-05",
+      "resourcesUrl": null,
+      "status": "IN_PROGRESS",
+      "title": "Mantenimiento de la web del consultorio",
+      "totalBudgeted": 0,
+      "totalPaid": 0,
+      "totalPending": 0,
+      "updatedAt": "2026-10-16T12:00:22.000Z",
+    },
+  ],
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > projects > lista proyectos (todos y filtrado por estado) y obtiene el detalle 2`] = `
+{
+  "body": [
+    {
+      "category": "CORPORATE",
+      "client": {
+        "contactName": "Dra. Marta Pérez",
+        "createdAt": "2026-10-16T12:00:10.000Z",
+        "email": "marta@sonrisa.example",
+        "id": "<id:1>",
+        "name": "Clínica Dental Sonrisa",
+        "notes": "Paga siempre por transferencia",
+        "phone": "+34600000101",
+        "updatedAt": "2026-10-16T12:00:10.000Z",
+      },
+      "clientId": "<id:1>",
+      "codeRepoUrl": null,
+      "createdAt": "2026-10-16T12:00:19.000Z",
+      "hasRecurring": 1,
+      "id": "<id:4>",
+      "productionStatus": "ACTIVE",
+      "productionUrl": "https://sonrisa.example.com",
+      "recurringAmount": 180,
+      "recurringCurrency": "USD",
+      "recurringPeriod": "ANNUALLY",
+      "recurringRenewalDate": "2026-10-28",
+      "resourcesUrl": null,
+      "status": "PROSPECT",
+      "title": "Web corporativa con reserva de citas",
+      "totalBudgeted": 0,
+      "totalPaid": 0,
+      "totalPending": 0,
+      "updatedAt": "2026-10-16T12:00:19.000Z",
+    },
+    {
+      "category": "ECOMMERCE",
+      "client": {
+        "contactName": null,
+        "createdAt": "2026-10-16T12:00:11.000Z",
+        "email": null,
+        "id": "<id:2>",
+        "name": "Ferretería El Tornillo SL",
+        "notes": null,
+        "phone": "+34600000102",
+        "updatedAt": "2026-10-16T12:00:15.000Z",
+      },
+      "clientId": "<id:2>",
+      "codeRepoUrl": null,
+      "createdAt": "2026-10-16T12:00:20.000Z",
+      "hasRecurring": 1,
+      "id": "<id:5>",
+      "productionStatus": "ACTIVE",
+      "productionUrl": null,
+      "recurringAmount": 29.99,
+      "recurringCurrency": "USD",
+      "recurringPeriod": "MONTHLY",
+      "recurringRenewalDate": "2026-01-31",
+      "resourcesUrl": null,
+      "status": "PROSPECT",
+      "title": "Tienda online de herramientas",
+      "totalBudgeted": 0,
+      "totalPaid": 0,
+      "totalPending": 0,
+      "updatedAt": "2026-10-16T12:00:20.000Z",
+    },
+    {
+      "category": "LANDING",
+      "client": {
+        "contactName": null,
+        "createdAt": "2026-10-16T12:00:11.000Z",
+        "email": null,
+        "id": "<id:2>",
+        "name": "Ferretería El Tornillo SL",
+        "notes": null,
+        "phone": "+34600000102",
+        "updatedAt": "2026-10-16T12:00:15.000Z",
+      },
+      "clientId": "<id:2>",
+      "codeRepoUrl": null,
+      "createdAt": "2026-10-16T12:00:21.000Z",
+      "hasRecurring": 0,
+      "id": "<id:6>",
+      "productionStatus": "ACTIVE",
+      "productionUrl": null,
+      "recurringAmount": null,
+      "recurringCurrency": "USD",
+      "recurringPeriod": "ANNUALLY",
+      "recurringRenewalDate": null,
+      "resourcesUrl": null,
+      "status": "PROSPECT",
+      "title": "Landing de catálogo",
+      "totalBudgeted": 0,
+      "totalPaid": 0,
+      "totalPending": 0,
+      "updatedAt": "2026-10-16T12:00:21.000Z",
+    },
+  ],
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > projects > lista proyectos (todos y filtrado por estado) y obtiene el detalle 3`] = `
+{
+  "body": {
+    "budgets": [],
+    "category": "CORPORATE",
+    "client": {
+      "contactName": "Dra. Marta Pérez",
+      "createdAt": "2026-10-16T12:00:10.000Z",
+      "email": "marta@sonrisa.example",
+      "id": "<id:1>",
+      "name": "Clínica Dental Sonrisa",
+      "notes": "Paga siempre por transferencia",
+      "phone": "+34600000101",
+      "updatedAt": "2026-10-16T12:00:10.000Z",
+    },
+    "clientId": "<id:1>",
+    "codeRepoUrl": null,
+    "createdAt": "2026-10-16T12:00:19.000Z",
+    "hasRecurring": 1,
+    "id": "<id:4>",
+    "productionStatus": "ACTIVE",
+    "productionUrl": "https://sonrisa.example.com",
+    "recurringAmount": 180,
+    "recurringCurrency": "USD",
+    "recurringPeriod": "ANNUALLY",
+    "recurringRenewalDate": "2026-10-28",
+    "resourcesUrl": null,
+    "status": "PROSPECT",
+    "title": "Web corporativa con reserva de citas",
+    "updatedAt": "2026-10-16T12:00:19.000Z",
+  },
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > projects > lista proyectos (todos y filtrado por estado) y obtiene el detalle 4`] = `
+{
+  "body": {
+    "error": "Proyecto no encontrado",
+  },
+  "status": 404,
+}
+`;
+
+exports[`Contrato de la API > projects > lista proyectos (todos y filtrado por estado) y obtiene el detalle 5`] = `
+{
+  "body": {
+    "error": "Identificador de proyecto inválido o malformado.",
+  },
+  "status": 400,
+}
+`;
+
+exports[`Contrato de la API > projects > rechaza proyectos inválidos 1`] = `
+{
+  "body": {
+    "error": "El título del proyecto es obligatorio",
+  },
+  "status": 400,
+}
+`;
+
+exports[`Contrato de la API > projects > rechaza proyectos inválidos 2`] = `
+{
+  "body": {
+    "error": "La fecha de renovación es obligatoria cuando el servicio recurrente está activo",
+  },
+  "status": 400,
+}
+`;
+
+exports[`Contrato de la API > projects > rechaza proyectos inválidos 3`] = `
+{
+  "body": {
+    "error": "Formato de identificador inválido: solo se permiten caracteres alfanuméricos, guiones y guiones bajos",
+  },
+  "status": 400,
+}
+`;
+
+exports[`Contrato de la API > projects > soft edit con PATCH 1`] = `
+{
+  "body": {
+    "category": "LANDING",
+    "clientId": "<id:2>",
+    "codeRepoUrl": "https://github.com/example/landing",
+    "createdAt": "2026-10-16T12:00:21.000Z",
+    "hasRecurring": 0,
+    "id": "<id:6>",
+    "productionStatus": "ACTIVE",
+    "productionUrl": null,
+    "recurringAmount": null,
+    "recurringCurrency": "USD",
+    "recurringPeriod": "ANNUALLY",
+    "recurringRenewalDate": null,
+    "resourcesUrl": null,
+    "status": "PROSPECT",
+    "title": "Landing de catálogo 2026",
+    "updatedAt": "2026-10-16T12:00:31.000Z",
+  },
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > projects > soft edit con PATCH 2`] = `
+{
+  "body": {
+    "error": "Unrecognized key(s) in object: 'status'",
+  },
+  "status": 400,
+}
+`;
+
+exports[`Contrato de la API > projects: cambios de estado y renovaciones > completa y cancela proyectos con PUT (cascada no destructiva) 1`] = `
+{
+  "body": {
+    "category": "LANDING",
+    "clientId": "<id:2>",
+    "codeRepoUrl": "https://github.com/example/landing",
+    "createdAt": "2026-10-16T12:00:21.000Z",
+    "hasRecurring": 0,
+    "id": "<id:6>",
+    "productionStatus": "ACTIVE",
+    "productionUrl": "https://catalogo.example.com",
+    "recurringAmount": null,
+    "recurringCurrency": "USD",
+    "recurringPeriod": "ANNUALLY",
+    "recurringRenewalDate": null,
+    "resourcesUrl": null,
+    "status": "COMPLETED",
+    "title": "Landing de catálogo 2026",
+    "updatedAt": "2026-10-16T12:00:57.000Z",
+  },
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > projects: cambios de estado y renovaciones > completa y cancela proyectos con PUT (cascada no destructiva) 2`] = `
+{
+  "body": {
+    "category": "ECOMMERCE",
+    "clientId": "<id:2>",
+    "codeRepoUrl": null,
+    "createdAt": "2026-10-16T12:00:20.000Z",
+    "hasRecurring": 1,
+    "id": "<id:5>",
+    "productionStatus": "ACTIVE",
+    "productionUrl": null,
+    "recurringAmount": 29.99,
+    "recurringCurrency": "USD",
+    "recurringPeriod": "MONTHLY",
+    "recurringRenewalDate": "2026-01-31",
+    "resourcesUrl": null,
+    "status": "CANCELLED",
+    "title": "Tienda online de herramientas",
+    "updatedAt": "2026-10-16T12:00:58.000Z",
+  },
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > projects: cambios de estado y renovaciones > completa y cancela proyectos con PUT (cascada no destructiva) 3`] = `
+{
+  "body": {
+    "budgets": [
+      {
+        "createdAt": "2026-10-16T12:00:34.000Z",
+        "currency": "EUR",
+        "id": "<id:11>",
+        "milestones": [
+          {
+            "amount": 400,
+            "budgetId": "<id:11>",
+            "createdAt": "2026-10-16T12:00:40.000Z",
+            "dueDate": "2026-10-01",
+            "id": "<id:19>",
+            "paidAt": "2026-10-16T12:00:53.000Z",
+            "percentage": 40,
+            "status": "PAID",
+            "title": "Anticipo",
+            "updatedAt": "2026-10-16T12:00:53.000Z",
+          },
+          {
+            "amount": 300,
+            "budgetId": "<id:11>",
+            "createdAt": "2026-10-16T12:00:40.000Z",
+            "dueDate": "2026-10-17",
+            "id": "<id:20>",
+            "paidAt": null,
+            "percentage": 30,
+            "status": "CANCELLED",
+            "title": "Catálogo",
+            "updatedAt": "2026-10-16T12:00:58.000Z",
+          },
+          {
+            "amount": 301,
+            "budgetId": "<id:11>",
+            "createdAt": "2026-10-16T12:00:40.000Z",
+            "dueDate": "2026-11-30",
+            "id": "<id:21>",
+            "paidAt": null,
+            "percentage": 30,
+            "status": "CANCELLED",
+            "title": "Lanzamiento",
+            "updatedAt": "2026-10-16T12:00:58.000Z",
+          },
+        ],
+        "projectId": "<id:5>",
+        "status": "APPROVED",
+        "title": "Tienda a medida v2",
+        "totalAmount": 1001,
+        "updatedAt": "2026-10-16T12:00:45.000Z",
+      },
+    ],
+    "category": "ECOMMERCE",
+    "client": {
+      "contactName": null,
+      "createdAt": "2026-10-16T12:00:11.000Z",
+      "email": null,
+      "id": "<id:2>",
+      "name": "Ferretería El Tornillo SL",
+      "notes": null,
+      "phone": "+34600000102",
+      "updatedAt": "2026-10-16T12:00:15.000Z",
+    },
+    "clientId": "<id:2>",
+    "codeRepoUrl": null,
+    "createdAt": "2026-10-16T12:00:20.000Z",
+    "hasRecurring": 1,
+    "id": "<id:5>",
+    "productionStatus": "ACTIVE",
+    "productionUrl": null,
+    "recurringAmount": 29.99,
+    "recurringCurrency": "USD",
+    "recurringPeriod": "MONTHLY",
+    "recurringRenewalDate": "2026-01-31",
+    "resourcesUrl": null,
+    "status": "CANCELLED",
+    "title": "Tienda online de herramientas",
+    "updatedAt": "2026-10-16T12:00:58.000Z",
+  },
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > projects: cambios de estado y renovaciones > completa y cancela proyectos con PUT (cascada no destructiva) 4`] = `
+{
+  "body": {
+    "error": "Un proyecto cancelado no se puede editar",
+  },
+  "status": 409,
+}
+`;
+
+exports[`Contrato de la API > projects: cambios de estado y renovaciones > renueva servicios recurrentes por las tres rutas 1`] = `
+{
+  "body": {
+    "message": "Renovación registrada exitosamente. Próxima fecha: 2027-10-28",
+    "nextRenewalDate": "2027-10-28",
+    "ok": true,
+  },
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > projects: cambios de estado y renovaciones > renueva servicios recurrentes por las tres rutas 2`] = `
+{
+  "body": {
+    "message": "Renovación registrada exitosamente. Próxima fecha: 2026-03-03",
+    "nextRenewalDate": "2026-03-03",
+    "ok": true,
+  },
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > projects: cambios de estado y renovaciones > renueva servicios recurrentes por las tres rutas 3`] = `
+{
+  "body": {
+    "message": "Renovación registrada exitosamente. Próxima fecha: 2028-10-28",
+    "nextRenewalDate": "2028-10-28",
+    "ok": true,
+  },
+  "status": 200,
+}
+`;
+
+exports[`Contrato de la API > projects: cambios de estado y renovaciones > renueva servicios recurrentes por las tres rutas 4`] = `
+{
+  "body": {
+    "error": "El proyecto no tiene un servicio recurrente configurado con fecha de renovación.",
+  },
+  "status": 400,
+}
+`;
+
+exports[`Contrato de la API > projects: cambios de estado y renovaciones > renueva servicios recurrentes por las tres rutas 5`] = `
+{
+  "body": {
+    "error": "Identificador de proyecto inválido o malformado.",
+  },
+  "status": 400,
+}
+`;
