@@ -29,11 +29,12 @@ test.describe('E2E — Workflow de Alta Inline, Soft Edit y Cotización Encadena
     await page.getByPlaceholder('Ej: +5491123456789').fill('+18095551111');
     await page.getByRole('button', { name: /Guardar Cliente/i }).click();
 
-    // Localizamos la tarjeta y pulsamos el botón Editar (lápiz)
-    const card = page.locator('div', { hasText: initialName }).first();
-    await expect(card).toBeVisible();
+    // El botón lleva aria-label "Editar cliente <nombre>", así que se identifica de forma exacta.
+    const clientHeading = page.getByRole('heading', { name: initialName, exact: true });
+    const editButton = page.getByRole('button', { name: `Editar cliente ${initialName}`, exact: true });
+    await expect(clientHeading).toBeVisible();
 
-    await card.getByRole('button', { name: /Editar cliente/i }).click();
+    await editButton.click();
 
     // Verificamos modal de edición
     const editModal = page.getByRole('dialog');
@@ -46,7 +47,10 @@ test.describe('E2E — Workflow de Alta Inline, Soft Edit y Cotización Encadena
     await page.getByRole('button', { name: /Guardar Cambios/i }).click();
 
     await expect(editModal).not.toBeVisible();
-    await expect(card.getByText('+18095552222')).toBeVisible();
+    // El contenedor más interno con el nombre del cliente y el teléfono nuevo es su tarjeta.
+    const updatedCard = page.locator('div').filter({ has: clientHeading }).filter({ hasText: '+18095552222' }).last();
+    await expect(updatedCard).toBeVisible();
+    await expect(updatedCard).not.toContainText('+18095551111');
   });
 
   test('Flujo completo: Crear cliente inline -> Crear proyecto -> Encadenar cotización desde Toast -> Soft edit', async ({ page }) => {
@@ -97,16 +101,16 @@ test.describe('E2E — Workflow de Alta Inline, Soft Edit y Cotización Encadena
     await expect(budgetModal).not.toBeVisible();
 
     // 6. Probamos Soft Edit desde la tarjeta del proyecto
-    const projectCard = page.locator('div', { hasText: projectTitle }).first();
-    await expect(projectCard).toBeVisible();
+    const editProjectButton = page.getByRole('button', { name: `Editar proyecto ${projectTitle}`, exact: true });
+    await expect(editProjectButton).toBeVisible();
 
-    await projectCard.getByRole('button', { name: /Editar proyecto/i }).click();
+    await editProjectButton.click();
 
     const editProjModal = page.getByRole('dialog').filter({ hasText: /Editar Proyecto/i });
     await expect(editProjModal).toBeVisible();
 
     // Cliente debe estar deshabilitado
-    const clientDisabledInput = editProjModal.getByLabelText(/Cliente Asociado/i);
+    const clientDisabledInput = editProjModal.getByLabel(/Cliente Asociado/i);
     await expect(clientDisabledInput).toBeDisabled();
 
     // Modificamos URL de producción

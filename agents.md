@@ -332,10 +332,12 @@ Cualquier agente o desarrollador que modifique la lógica del sistema debe garan
 ```bash
 npm test                                        # Vitest (test/**/*.test.ts(x))
 npx vitest run test/budgets.test.ts -t "texto"  # un archivo / un caso
-npm run test:e2e                                # Playwright, levanta node-entry en :3000 automáticamente
+npm run test:e2e                                # Playwright, levanta node-entry en :3101 con una SQLite temporal nueva
 npx tsc --noEmit                                # Typecheck (no hay script de lint)
 ```
 Los tests de integración crean SQLite `:memory:`, aplican `./drizzle`, llaman a `setGlobalDb()` + `seedInitialAuthIfNeeded()` y usan `app.request(...)` sin levantar servidor. PIN sembrado por defecto: `12345678`.
+
+`test/api-contract.test.ts` fija con snapshots el contrato HTTP completo (status + cuerpo de cada endpoint) recorriendo un escenario de negocio con reloj fijo y UUIDs normalizados. Es la red de seguridad de cualquier refactor: un cambio de respuesta rompe el snapshot, y regenerarlo (`npx vitest run -u`) solo es válido cuando el cambio de contrato es intencional y está autorizado.
 
 ### Ejecución con Docker
 ```bash

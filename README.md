@@ -104,13 +104,14 @@ Las reglas que protegen el dinero están documentadas como invariantes (RN-01 a 
 
 ## Tests
 
-- **Vitest:** integración de la API contra SQLite en memoria (ciclo completo de clientes, proyectos, presupuestos y cobros), reglas contables, CORS y componentes de UI con Testing Library.
-- **Playwright:** flujos de punta a punta (desbloqueo, alta de clientes, WhatsApp y portapapeles, edición de proyectos) contra el servidor real.
+- **Contrato de la API:** un escenario de negocio completo recorre todos los endpoints y fija con snapshots el status y el cuerpo de cada respuesta ([`test/api-contract.test.ts`](test/api-contract.test.ts)). Es la red de seguridad para refactorizar sin romper producción.
+- **Vitest:** integración de la API contra SQLite en memoria, reglas contables, CORS y componentes de UI con Testing Library.
+- **Playwright:** flujos de punta a punta (desbloqueo, alta de clientes, WhatsApp y portapapeles, edición de proyectos) contra un servidor propio con una base temporal nueva en cada corrida.
 
 ```bash
 npm test                                              # Vitest
 npx vitest run test/budgets.test.ts -t "texto"        # un archivo o un caso
-npm run test:e2e                                      # Playwright (levanta el servidor solo)
+npm run test:e2e                                      # Playwright (servidor en :3101 con base temporal)
 npx tsc --noEmit                                      # verificación de tipos
 ```
 
@@ -162,7 +163,6 @@ Si la base está vacía, la primera petición crea las credenciales iniciales. C
 
 - **Un solo PIN compartido.** Está pensado para dos socios; no hay usuarios ni roles separados.
 - **Rate limit en memoria.** En Node es estricto; en Cloudflare cada isolate lleva su propio contador, así que ahí solo mitiga.
-- **Los E2E comparten la base local.** Corridas repetidas acumulan datos y algunos tests fallan por elementos duplicados. El siguiente paso es darles una base aislada por corrida.
 - **Capas por separar.** Hoy los handlers mezclan HTTP, validación y acceso a datos. La lógica de cálculo ya está aislada en funciones puras; falta separar dominio y repositorios por módulo.
 - **Integración continua pendiente.** Los tests se corren en local antes de cada despliegue.
 
