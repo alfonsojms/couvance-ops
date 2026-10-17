@@ -15,7 +15,7 @@ Branch: one branch per slice, `refactor/arch-NN-<slug>` off `main`. Delivery: `a
 
 Assumptions (not user requirements): layer file names (`domain.ts`, `schemas.ts`, `repository.ts`, `service.ts`, `routes.ts`); `index.ts` keeps exporting the Hono sub-app so `app.ts` mounts stay stable.
 
-- **S8 — Status transitions (authorized API change, L8).** User choice: "Corregir con reglas (Recommended)". The option they picked reads: "Aprobar/rechazar solo desde DRAFT o SENT (si no, 409). Pagar solo hitos PENDING (DRAFT o CANCELLED dan 409). Pagar un hito ya PAID responde 200 sin tocar la fecha original, así un doble toque en el celular no rompe nada. Cambia la API: los snapshots se actualizan a propósito." This is the only authorized contract change so far. The affected snapshots are regenerated deliberately in T4 and the diff is reviewed line by line.
+- **S8 — Status transitions (authorized API change, L8).** User choice: "Corregir con reglas (Recommended)". The option they picked reads: "Aprobar/rechazar solo desde DRAFT o SENT (si no, 409). Pagar solo hitos PENDING (DRAFT o CANCELLED dan 409). Pagar un hito ya PAID responde 200 sin tocar la fecha original, así un doble toque en el celular no rompe nada. Cambia la API: los snapshots se actualizan a propósito." This is the only authorized contract change so far. The contract scenario never sends an S8-affected request, so its snapshots stayed unchanged; S8 is pinned by `test/budgets-transitions.test.ts` on both drivers (L12).
 
 ## Tasks
 
@@ -24,7 +24,7 @@ Assumptions (not user requirements): layer file names (`domain.ts`, `schemas.ts`
 | T1 | S2 | 01 safety-net | inline | done | `e2eda9c`: 28 contract tests / 90 snapshots, deterministic on re-run |
 | T2 | S2 | 01 safety-net | inline | done | `da03958`: E2E 9/9 passed on two consecutive runs |
 | T3 | S4, S5 | 02 server-infra | inline | done | `18bf098` D1 contract run, `0842675` helpers + runAtomic; verifier PASS S2/S4/S5 (217 probes, 0 diffs); RDD review approved (3 lenses, 0 findings) |
-| T4 | S4, S5, S8 | 03 budgets | inline | pending | |
+| T4 | S4, S5, S8 | 03 budgets | inline | done | `46217cf` test DB helper, `0de7f18` budgets layered + S8; gate green (L11); verifier PASS S2/S4/S5/S8 (142 probes × 2 drivers, only authorized S8 diffs); RDD review approved (3 lenses, 0 blockers) (L12) |
 | T5 | S4, S5 | 04 projects | inline | pending | |
 | T6 | S4 | 05 finance-clients | inline | pending | |
 | T7 | S4 | 06 auth-backup | inline | pending | |
@@ -56,6 +56,26 @@ Route evidence: all tasks inline. No Writer-trigger reason holds yet. Each slice
 - **L2 (2026-10-16):** Scope answer: "Backend + frontend".
 - **L3 (2026-10-16):** Delivery answer: "Stacked a main (Recommended)". Forecast is well above 400 authored lines (about 1,700 backend and 2,500 frontend lines involved).
 - **L4 (2026-10-16):** Explorer map. Backend duplication: ID validation 14×; JSON parse, 404 and totals 3×; renew exposed 3× (2 routes without ID validation). Only approve is atomic. The D1 `batch` path is untested. Radar, metrics, projects list totals, pay-all, backup and most auth endpoints have no tests. Spot check confirmed budget edit deletes and re-inserts milestones without a transaction (`budgets/index.ts:207-240`).
+- **L12 (2026-10-17):** T4 verification and review closed.
+  - Independent verifier: baseline `4ec5f13` vs candidate `0de7f18`. It sent 142 HTTP probes per driver, on SQLite and on local D1. S2/S4/S5/S8 PASS, no blockers.
+    - Every diff is an authorized S8 change: approve/reject from APPROVED or REJECTED now returns 409; paying a DRAFT milestone returns 409 (it used to pay it); paying a CANCELLED one returns 409 (it used to be 400, same message); paying a PAID one keeps the original `paidAt`.
+    - Every 4xx left the table dump byte-identical. RN-01, RN-03 and RN-05 still hold.
+    - Mutation check: replacing `runAtomic` with sequential awaits fails 4 of 6 tests in `test/budgets-repository.test.ts` on both drivers, so that test really guards S5.
+  - Correction to L7: the contract scenario never re-pays a PAID milestone, so that statement was wrong. S8 text updated accordingly.
+  - Parent spot check: `npx vitest run test/budgets-transitions.test.ts test/budgets-repository.test.ts test/api-contract.test.ts` → 81 passed. The verifier's `node_modules` junctions were removed as junctions (checked with `LinkType`) before its scratch folder was deleted.
+  - RDD: review on base `0842675`, committed-only, `.claude/` excluded, lenses risk/resilience/reliability. Consent granted by the user. Approved with 0 blockers and acknowledged (lineage `review-fc0baa518806bca0`). Reviewed boundary is now `0de7f18`.
+  - My first START, launched through `node spawnSync`, failed to resolve the repo root (`operation_outcome_unknown`). Bound STATUS showed no transaction had been created; a fresh preflight, with START run as the exact bash command, worked.
+  - Follow-ups (advisory, non-blocking, not regressions):
+    - The S8 guards are check-then-act. `approve`/`reject`/`pay` update by id only, so concurrent requests (approve vs reject, pay vs project cancel) can bypass the rule. Fix: add the expected status to the UPDATE's WHERE. Candidate for T5, which touches the cancel cascade.
+    - The milestones `inArray` over a project's budget ids could hit D1's 100-parameter limit past about 100 budgets per project (out of domain).
+    - A trim suggestion on PUT (`service.ts:30`).
+  - Pre-existing, unchanged: malformed JSON returns `400 "Expected object, received null"`; the 500 body includes the stack with absolute paths.
+- **L11 (2026-10-17):** Slice 03 (`refactor/arch-03-budgets`, stacked on slice 02) committed.
+  - `46217cf`: `test/helpers/db.ts` builds a migrated SQLite or local D1 for tests; the contract harness and the `runAtomic` tests reuse it.
+  - `0de7f18` (T4): budgets split into `domain`/`schemas`/`repository`/`service`/`routes`; create and edit run through `runAtomic`; services throw `DomainError` (`shared/errors.ts`), which `handleHttpError` maps to 400/404/409; S8 transitions enforced. Docs: layer convention in `CLAUDE.md`, S8 rules in `agents.md`.
+  - The contract snapshots did not change: the scenario never hits the S8 paths. S8 is pinned by `test/budgets-transitions.test.ts` on both drivers; atomic create/edit by `test/budgets-repository.test.ts`.
+  - Gate: vitest 12 files / 136 tests passed; `tsc` OK; `npm run build` OK; E2E 9 passed; `wrangler pages functions build --compatibility-flags nodejs_compat` exit 0, 0 `better-sqlite3` refs.
+  - Risk: item 3 (`handleHttpError` is shared by every endpoint through `app.onError`; budgets contract changes per S8). RDD assess on base `0842675`, committed-only, `.claude/` excluded: high, `review_due: true`. Independent verifier launched before the review.
 - **L10 (2026-10-16):** T3 verification and review closed.
   - Independent verifier: baseline `18bf098` vs candidate `0842675`, 217 compared records (215 HTTP probes, a DB dump and a console capture), 0 diffs. It covered malformed bodies on 12 endpoints, 16 id routes × 5 ids, id-vs-body precedence, 401s, the rate-limit sequence, a closed DB (500 shape) and approval end to end. S2/S4/S5 PASS, no blockers. Advisories: the default `parseBody` fallback is never observable; the finance renew aliases skip `requireId` (pre-existing, scheduled for T5).
   - Parent spot check: `npx vitest run test/server-infra.test.ts test/api-contract.test.ts` → 65 passed. The verifier's scratch junctions were removed before deleting the folder; the repo `node_modules` is intact.
