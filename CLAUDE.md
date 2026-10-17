@@ -42,7 +42,15 @@ Los handlers siempre obtienen la BD con `getDb(c)` (`src/server/db/index.ts`), q
 
 **Cadena de middlewares** (en `app.ts`): inyección de BD → `sanitizeMiddleware` (solo rechaza bytes nulos en URL/query con 400; **no toca el body**: los textos se limpian con `.transform(sanitizeString)` dentro de cada esquema Zod y los IDs de ruta con `requireId`) → `pinAuthMiddleware` en `/api/*`, que exime `POST /api/auth/unlock`, `GET /api/auth/questions`, `POST /api/auth/recover`, `POST /api/auth/reset-pin` y `GET /api/health`. Cookie `couvance_session` (HttpOnly, `SameSite=Lax` obligatorio para abrir links desde WhatsApp, 30 días), firmada con `PIN_SECRET`. Rate limit en memoria de 5 fallos / 15 min por IP en `/api/auth/*`. **No hay middleware CORS a propósito**: SPA y API comparten origen en todos los entornos (ver `test/cors.test.ts`); no lo reintroduzcas.
 
-**Módulos** en `src/server/modules/<dominio>/index.ts`, cada uno un sub-app Hono montado en `app.ts` (`budgets` se monta en `/api` porque expone rutas `/projects/:id/budgets`, `/budgets/:id/*` y `/milestones/:id/pay`). El esquema Drizzle (`src/server/db/schema.ts`) usa propiedades camelCase mapeadas a columnas snake_case.
+**Módulos** en `src/server/modules/<dominio>/`, cada uno un sub-app Hono montado en `app.ts` (`budgets` se monta en `/api` porque expone rutas `/projects/:id/budgets`, `/budgets/:id/*` y `/milestones/:id/pay`). El esquema Drizzle (`src/server/db/schema.ts`) usa propiedades camelCase mapeadas a columnas snake_case.
+
+**Capas por módulo** (refactor en curso, ver `odd/tasks/layered-architecture-refactor.md`; `budgets` es la referencia). Las dependencias van en un solo sentido:
+- `domain.ts`: reglas puras (cálculos, transiciones de estado). Sin Hono, Drizzle, reloj ni IDs.
+- `schemas.ts`: esquemas Zod de entrada.
+- `repository.ts`: `createXRepository(db)` con queries Drizzle; escrituras de varias filas o tablas vía `runAtomic`. Sobre la unión `D1Db | SqliteDb` siempre `await` a `.all()`, y `select()` sin argumentos.
+- `service.ts`: `createXService(repo, clock?)` con los casos de uso. No conoce HTTP: lanza `DomainError` (`invalid`/`notFound`/`conflict` de `shared/errors.ts`, que `app.onError` traduce a 400/404/409).
+- `routes.ts`: solo HTTP (`requireId`, `parseBody`, armar la respuesta).
+- `index.ts`: exporta las rutas como default y lo que otros módulos o tests necesiten.
 
 **Frontend**: SPA React en `src/client/src` (alias `@` → `src/client/src`, `@server` → `src/server`), cliente HTTP tipado en `lib/api.ts`, helpers de `wa.me`/portapapeles en `lib/utils.ts`, primitivas UI propias en `components/ui`. `index.html` y `vite.config.ts` están en la raíz.
 
@@ -52,8 +60,9 @@ Los handlers siempre obtienen la BD con `getDb(c)` (`src/server/db/index.ts`), q
 
 - **RN-01** Montos de presupuestos e hitos son **enteros**. Hito = `Math.round(total * pct / 100)` y **el último hito absorbe el residuo** para que la suma sea exactamente `total_amount`. Solo `projects.recurring_amount` admite decimales.
 - **RN-02** Los porcentajes de los hitos deben sumar exactamente 100, si no → `400`.
-- **RN-03** `POST /api/budgets/:id/approve` es atómico: presupuesto `APPROVED`, proyecto `IN_PROGRESS`, hitos `DRAFT` → `PENDING`. Presupuestos solo editables en `DRAFT`.
+- **RN-03** `POST /api/budgets/:id/approve` es atómico: presupuesto `APPROVED`, proyecto `IN_PROGRESS`, hitos `DRAFT` → `PENDING`. Presupuestos solo editables en `DRAFT`. Crear y editar un presupuesto (con sus hitos) también son atómicos.
 - **RN-04** `POST /api/budgets/:id/pay-all`: todos los hitos `PENDING` → `PAID` con `paid_at`.
+- **Transiciones de estado**: aprobar o rechazar solo desde `DRAFT` o `SENT`; si no, 409. Cobrar un hito solo si está `PENDING` (`DRAFT` o `CANCELLED` → 409). Cobrar un hito ya `PAID` responde 200 sin tocar el `paid_at` original, para que un doble toque sea inofensivo. Las reglas están en `modules/budgets/domain.ts` y los tests en `test/budgets-transitions.test.ts`.
 - **RN-05** Cancelar un proyecto cancela hitos `PENDING` pero **nunca toca los `PAID`**; el proyecto no se borra. `PATCH /api/projects/:id` rechaza `clientId`/`status` (400) y devuelve 409 si está `CANCELLED`.
 - **RN-06** `DELETE /api/clients/:id` → `409` si el cliente tiene cualquier proyecto.
 - **RN-07** Showcase: solo `COMPLETED` + `production_status = 'ACTIVE'` + `production_url` no vacío.

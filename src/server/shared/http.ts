@@ -2,6 +2,13 @@ import type { Context } from 'hono';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import type { z } from 'zod';
 import { validateAndSanitizeId } from '../middlewares/sanitize';
+import { DomainError, type DomainErrorKind } from './errors';
+
+const DOMAIN_ERROR_STATUS: Record<DomainErrorKind, ContentfulStatusCode> = {
+  invalid: 400,
+  not_found: 404,
+  conflict: 409,
+};
 
 /**
  * Error HTTP esperado (validación, recurso inexistente, conflicto de negocio).
@@ -18,10 +25,13 @@ export class HttpError extends Error {
   }
 }
 
-/** Traduce un HttpError a su respuesta JSON; devuelve null para cualquier otro error. */
+/** Traduce un HttpError o DomainError a su respuesta JSON `{ error }`; devuelve null para cualquier otro error. */
 export function handleHttpError(err: Error, c: Context): Response | null {
   if (err instanceof HttpError) {
     return c.json({ error: err.message }, err.status);
+  }
+  if (err instanceof DomainError) {
+    return c.json({ error: err.message }, DOMAIN_ERROR_STATUS[err.kind]);
   }
   return null;
 }

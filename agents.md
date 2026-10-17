@@ -59,7 +59,7 @@ couvance-ops/
 │   │   │   ├── auth/           # Login PIN, preguntas secretas, reseteo, logout
 │   │   │   ├── clients/        # Gestión de clientes y protección 409
 │   │   │   ├── projects/       # Proyectos, showcase y cancelación en cascada
-│   │   │   ├── budgets/        # Presupuestos e hitos (cálculo de residuos, aprobación)
+│   │   │   ├── budgets/        # Presupuestos e hitos: domain, schemas, repository, service, routes
 │   │   │   ├── finance/        # Radar de cobranzas WhatsApp, recurrentes y métricas
 │   │   │   └── backup/         # Exportación estructurada JSON (excluye AUTH_CONFIG)
 │   │   ├── app.ts              # Instancia central de Hono y enrutador API
@@ -186,7 +186,9 @@ Cualquier agente o desarrollador que modifique la lógica del sistema debe garan
      - Presupuesto pasa a `APPROVED`.
      - Proyecto pasa a `IN_PROGRESS`.
      - Todos los hitos asociados pasan de `DRAFT` a `PENDING`.
-     - Se ejecuta de manera atómica (usando `db.batch` en Cloudflare D1 o transacción en SQLite local).
+     - Se ejecuta de manera atómica con `runAtomic` (`db.batch` en Cloudflare D1, transacción en SQLite local).
+     - Solo es válido desde `DRAFT` o `SENT`; en cualquier otro estado responde `409 Conflict` sin modificar nada (lo mismo aplica a `reject`).
+   - Crear y editar un presupuesto junto con sus hitos también es atómico: una falla a mitad de camino no deja presupuestos sin hitos ni hitos huérfanos.
 
 4. **RN-04 (Operación Cobro Express "Cobrar Todo"):**
    - `POST /api/budgets/:id/pay-all` actualiza todos los hitos en estado `PENDING` del presupuesto a `PAID`, registrando `paid_at = new Date().toISOString()`.
@@ -289,9 +291,9 @@ Cualquier agente o desarrollador que modifique la lógica del sistema debe garan
 * `GET /api/projects/:id/budgets` — Historial de presupuestos del proyecto.
 * `GET /api/budgets/:id` — Detalle de un presupuesto con sus hitos.
 * `PUT /api/budgets/:id` — Edita presupuesto e hitos (solo en estado `DRAFT`).
-* `POST /api/budgets/:id/approve` — Aprobación en 1 clic: presupuesto a `APPROVED`, proyecto a `IN_PROGRESS`, hitos a `PENDING`.
-* `POST /api/budgets/:id/reject` — Marca presupuesto como `REJECTED`.
-* `PATCH /api/milestones/:id/pay` — Marca hito individual como `PAID` con `paid_at = now()`.
+* `POST /api/budgets/:id/approve` — Aprobación en 1 clic: presupuesto a `APPROVED`, proyecto a `IN_PROGRESS`, hitos a `PENDING`. Solo desde `DRAFT` o `SENT`; en otro estado responde `409 Conflict`.
+* `POST /api/budgets/:id/reject` — Marca presupuesto como `REJECTED`. Solo desde `DRAFT` o `SENT`; en otro estado responde `409 Conflict`.
+* `PATCH /api/milestones/:id/pay` — Marca un hito `PENDING` como `PAID` con `paid_at = now()`. Un hito `DRAFT` (presupuesto sin aprobar) o `CANCELLED` responde `409 Conflict`. Un hito ya `PAID` responde `200` sin modificar su `paid_at` original (idempotente ante doble toque).
 * `POST /api/budgets/:id/pay-all` — Marca todos los hitos pendientes del presupuesto como `PAID`.
 
 ### Finanzas & Radar (`/api/finance`)
