@@ -1,7 +1,7 @@
 # ==========================================
 # Stage 1: Builder
 # ==========================================
-FROM node:20-slim AS builder
+FROM node:24-slim AS builder
 WORKDIR /app
 
 # Instalar herramientas para compilar módulos nativos (better-sqlite3)
@@ -25,7 +25,7 @@ RUN npm prune --omit=dev
 # ==========================================
 # Stage 2: Runner de Producción
 # ==========================================
-FROM node:20-slim AS runner
+FROM node:24-slim AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
