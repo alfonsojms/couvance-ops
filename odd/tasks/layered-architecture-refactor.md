@@ -56,6 +56,18 @@ Route evidence: T1–T7 and T12 inline (each backend slice depends on the previo
 - **L2 (2026-10-16):** Scope answer: "Backend + frontend".
 - **L3 (2026-10-16):** Delivery answer: "Stacked a main (Recommended)". Forecast is well above 400 authored lines (about 1,700 backend and 2,500 frontend lines involved).
 - **L4 (2026-10-16):** Explorer map. Backend duplication: ID validation 14×; JSON parse, 404 and totals 3×; renew exposed 3× (2 routes without ID validation). Only approve is atomic. The D1 `batch` path is untested. Radar, metrics, projects list totals, pay-all, backup and most auth endpoints have no tests. Spot check confirmed budget edit deletes and re-inserts milestones without a transaction (`budgets/index.ts:207-240`).
+- **L19 (2026-10-17):** Frontend reviews.
+  - A single review of `fb21fe1..000e18b` (8,268 lines) stopped with `lens_context_budget_exceeded`; no authority was created.
+  - Following the stop's continuation, each slice was assessed alone in a temporary worktree:
+    - T9 (`c47309d..b710177`) and T10 (`b710177..fe6b109`): medium, `under_budget`, not due.
+    - T8 (`fb21fe1..c47309d`): high (auth resource), reviewed on risk/reliability. Consent granted. Approved with 0 blockers, acknowledged.
+    - T11 + docs (`fe6b109..000e18b`): high (`ChangePinForm`), reviewed on risk/reliability. Consent granted. Approved with 0 blockers, acknowledged.
+  - Advisory fixed in `e5a8713`: the unlock recovery test now waits for `onUnlockSuccess` instead of asserting it synchronously.
+  - Advisories left as follow-ups:
+    - The showcase "Visitar" link uses the stored `productionUrl` without a scheme check. This is pre-existing; Zod already requires a URL on input.
+    - The physical-keyboard PIN handling has no test.
+    - Two pure helpers live under `components/dashboard/` and are imported by hooks.
+  - Temporary worktrees were removed. Only the main worktree remains.
 - **L18 (2026-10-17):** Frontend closed and final docs (T12).
   - Seam check on `5a813d1` with all ten slices stacked: `tsc` 0 errors; vitest 18 files / 189 passed; `npm run build` OK; E2E 9 passed; wrangler Edge bundle exit 0, 0 `better-sqlite3` refs.
   - Docs: `CLAUDE.md` "Frontend" describes the container/hook/presentational convention and the HTTP layer; the `agents.md` tree shows `lib/`, the per-area component folders and the page hooks.
