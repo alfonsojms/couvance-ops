@@ -21,8 +21,8 @@ Open decision (ask when T4 starts): unchecked status transitions (paying an alre
 
 | ID | Specs | Slice / PR | Route | Status | Evidence |
 |----|-------|-----------|-------|--------|----------|
-| T1 | S2 | 01 safety-net | inline | in progress | |
-| T2 | S2 | 01 safety-net | inline | pending | |
+| T1 | S2 | 01 safety-net | inline | done | `e2eda9c`: 28 contract tests / 90 snapshots, deterministic on re-run |
+| T2 | S2 | 01 safety-net | inline | done | `da03958`: E2E 9/9 passed on two consecutive runs |
 | T3 | S4, S5 | 02 server-infra | inline | pending | |
 | T4 | S4, S5 | 03 budgets | inline | pending | |
 | T5 | S4, S5 | 04 projects | inline | pending | |
@@ -56,5 +56,15 @@ Route evidence: all tasks inline. No Writer-trigger reason holds yet. Each slice
 - **L2 (2026-10-16):** Scope answer: "Backend + frontend".
 - **L3 (2026-10-16):** Delivery answer: "Stacked a main (Recommended)". Forecast is well above 400 authored lines (about 1,700 backend and 2,500 frontend lines involved).
 - **L4 (2026-10-16):** Explorer map. Backend duplication: ID validation 14×; JSON parse, 404 and totals 3×; renew exposed 3× (2 routes without ID validation). Only approve is atomic. The D1 `batch` path is untested. Radar, metrics, projects list totals, pay-all, backup and most auth endpoints have no tests. Spot check confirmed budget edit deletes and re-inserts milestones without a transaction (`budgets/index.ts:207-240`).
+- **L7 (2026-10-16):** Slice 01 (`refactor/arch-01-safety-net`) complete.
+  - Commits: `2988ae2` docs (CLAUDE.md CORS), `e2eda9c` T1, `da03958` T2.
+  - Gate: `npx vitest run` → 9 files / 74 tests passed. `npx tsc --noEmit` → OK. `npm run build` → client and server built. `npx playwright test` → 9 passed twice in a row.
+  - T1 detail: the first snapshot pass had an empty `recurringAlerts`, so a non-renewed monthly project was added to cover the radar. Snapshots pin current behavior, including re-paying a PAID milestone (open decision) and the renew month overflow for `2026-01-31`.
+  - T2 detail: besides the data isolation (port 3101, fresh temp DB, no server reuse), the two failing specs had broken locators: the outermost div matched by `hasText`, and `getByLabelText`, which is not a Playwright API. The app's `FormField` already injects the id into its child (`Input.tsx:114-115`).
+  - Out of scope, noted for T10: in create mode the `FormField` child is a wrapper `div`, so the "Cliente Asociado" `<select>` is not associated with its label.
+  - RDD assess (base `e592742`, committed-only, untracked `.claude/` excluded): risk medium, `review_due: false`, reason `under_budget`. The reviewed boundary stays at `e592742`.
+  - Authored lines: about 650; the remaining roughly 2,200 lines are a generated snapshot file.
+  - Risk: none (tests, test config and docs only; no production code).
+  - Next: push and PR #1 are the user's decision; T3 starts on `refactor/arch-02-server-infra` stacked on slice 01.
 - **L6 (2026-10-16):** User: "recuerda que no tengo CI CD en el repo de github". Every slice runs the full local gate before commit/PR: `npm test`, `npx tsc --noEmit`, `npm run build`, `npm run test:e2e`. Results are recorded here and in the PR body. Merging to `main` does not deploy unless Cloudflare Pages Git integration is enabled (unconfirmed).
 - **L5 (2026-10-16):** Branch `refactor/arch-01-safety-net` created. The pending `CLAUDE.md` fix (CORS removed from the middleware chain) rides in this slice as its own docs commit.
