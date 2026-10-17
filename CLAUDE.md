@@ -47,7 +47,7 @@ Los handlers siempre obtienen la BD con `getDb(c)` (`src/server/db/index.ts`), q
 **Capas por módulo** (refactor en curso, ver `odd/tasks/layered-architecture-refactor.md`; `budgets` es la referencia). Las dependencias van en un solo sentido:
 - `domain.ts`: reglas puras (cálculos, transiciones de estado). Sin Hono, Drizzle, reloj ni IDs.
 - `schemas.ts`: esquemas Zod de entrada.
-- `repository.ts`: `createXRepository(db)` con queries Drizzle; escrituras de varias filas o tablas vía `runAtomic`. Sobre la unión `D1Db | SqliteDb` siempre `await` a `.all()`, y `select()` sin argumentos.
+- `repository.ts`: `createXRepository(db)` con queries Drizzle; escrituras de varias filas o tablas vía `runAtomic`. Sobre la unión `D1Db | SqliteDb` siempre `await` a `.all()`, y `select()` sin argumentos; para proyecciones o joins (`select({...})`) usá `asQueryDb(db)` de `db/index.ts`, nunca `as SqliteDb`. Los totales de hitos (cobrado/pendiente) se calculan solo con `sumMilestones` (`modules/projects/domain.ts`).
 - `service.ts`: `createXService(repo, clock?)` con los casos de uso (`ServiceClock` de `shared/clock.ts`). No conoce HTTP: lanza `DomainError` (`invalid`/`notFound`/`conflict` de `shared/errors.ts`, que `app.onError` traduce a 400/404/409).
 - `routes.ts`: solo HTTP (`requireId`, `parseBody`, armar la respuesta).
 - `index.ts`: exporta las rutas como default y lo que otros módulos o tests necesiten.

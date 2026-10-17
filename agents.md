@@ -57,10 +57,10 @@ couvance-ops/
 │   │   │   └── sanitize.ts     # Rechazo de bytes nulos en URL, sanitizeString y validateAndSanitizeId
 │   │   ├── modules/
 │   │   │   ├── auth/           # Login PIN, preguntas secretas, reseteo, logout
-│   │   │   ├── clients/        # Gestión de clientes y protección 409
+│   │   │   ├── clients/        # Gestión de clientes y protección 409: domain, schemas, repository, service, routes
 │   │   │   ├── projects/       # Proyectos, showcase y cancelación en cascada: domain, schemas, repository, service, routes
 │   │   │   ├── budgets/        # Presupuestos e hitos: domain, schemas, repository, service, routes
-│   │   │   ├── finance/        # Radar de cobranzas WhatsApp, recurrentes y métricas
+│   │   │   ├── finance/        # Radar de cobranzas WhatsApp, recurrentes y métricas: domain, repository, service, routes
 │   │   │   └── backup/         # Exportación estructurada JSON (excluye AUTH_CONFIG)
 │   │   ├── app.ts              # Instancia central de Hono y enrutador API
 │   │   ├── node-entry.ts       # Entrypoint Node.js/Docker con migraciones y static serving

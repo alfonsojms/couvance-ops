@@ -110,35 +110,40 @@ export interface ProjectTotals {
   totalPending: number;
 }
 
+export interface MilestoneForTotals {
+  status: string;
+  amount: number;
+}
+
 export interface BudgetForTotals {
   status: string;
   totalAmount: number;
-  milestones: Array<{ status: string; amount: number }>;
+  milestones: MilestoneForTotals[];
+}
+
+/** Cobrado (hitos PAID) y pendiente (hitos PENDING); DRAFT y CANCELLED no suman. Única implementación de estos totales. */
+export function sumMilestones(items: MilestoneForTotals[]): { totalPaid: number; totalPending: number } {
+  let totalPaid = 0;
+  let totalPending = 0;
+  for (const m of items) {
+    if (m.status === 'PAID') {
+      totalPaid += m.amount;
+    } else if (m.status === 'PENDING') {
+      totalPending += m.amount;
+    }
+  }
+  return { totalPaid, totalPending };
 }
 
 /**
  * Totales de un proyecto: presupuestado (presupuestos DRAFT, SENT o APPROVED),
- * cobrado (hitos PAID) y pendiente (hitos PENDING).
+ * cobrado y pendiente (hitos de todos sus presupuestos, ver `sumMilestones`).
  */
 export function computeProjectTotals(projectBudgets: BudgetForTotals[]): ProjectTotals {
-  let totalBudgeted = 0;
-  let totalPaid = 0;
-  let totalPending = 0;
-
-  for (const b of projectBudgets) {
-    for (const m of b.milestones) {
-      if (m.status === 'PAID') {
-        totalPaid += m.amount;
-      } else if (m.status === 'PENDING') {
-        totalPending += m.amount;
-      }
-    }
-    if (b.status === 'APPROVED' || b.status === 'DRAFT' || b.status === 'SENT') {
-      totalBudgeted += b.totalAmount;
-    }
-  }
-
-  return { totalBudgeted, totalPaid, totalPending };
+  const totalBudgeted = projectBudgets
+    .filter((b) => b.status === 'APPROVED' || b.status === 'DRAFT' || b.status === 'SENT')
+    .reduce((acc, b) => acc + b.totalAmount, 0);
+  return { totalBudgeted, ...sumMilestones(projectBudgets.flatMap((b) => b.milestones)) };
 }
 
 /** RN-07: solo proyectos COMPLETED, en producción ACTIVE y con URL de producción no vacía. */
