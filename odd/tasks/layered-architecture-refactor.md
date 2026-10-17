@@ -15,7 +15,7 @@ Branch: one branch per slice, `refactor/arch-NN-<slug>` off `main`. Delivery: `a
 
 Assumptions (not user requirements): layer file names (`domain.ts`, `schemas.ts`, `repository.ts`, `service.ts`, `routes.ts`); `index.ts` keeps exporting the Hono sub-app so `app.ts` mounts stay stable.
 
-Open decision (ask when T4 starts): unchecked status transitions (paying an already PAID milestone again overwrites `paidAt`; approve/reject accept any status). Fixing them changes API behavior, so it needs the user's approval.
+- **S8 — Status transitions (authorized API change, L8).** User choice: "Corregir con reglas (Recommended)". The option they picked reads: "Aprobar/rechazar solo desde DRAFT o SENT (si no, 409). Pagar solo hitos PENDING (DRAFT o CANCELLED dan 409). Pagar un hito ya PAID responde 200 sin tocar la fecha original, así un doble toque en el celular no rompe nada. Cambia la API: los snapshots se actualizan a propósito." This is the only authorized contract change so far. The affected snapshots are regenerated deliberately in T4 and the diff is reviewed line by line.
 
 ## Tasks
 
@@ -23,8 +23,8 @@ Open decision (ask when T4 starts): unchecked status transitions (paying an alre
 |----|-------|-----------|-------|--------|----------|
 | T1 | S2 | 01 safety-net | inline | done | `e2eda9c`: 28 contract tests / 90 snapshots, deterministic on re-run |
 | T2 | S2 | 01 safety-net | inline | done | `da03958`: E2E 9/9 passed on two consecutive runs |
-| T3 | S4, S5 | 02 server-infra | inline | pending | |
-| T4 | S4, S5 | 03 budgets | inline | pending | |
+| T3 | S4, S5 | 02 server-infra | inline | done | `18bf098` D1 contract run, `0842675` helpers + runAtomic; verifier PASS S2/S4/S5 (217 probes, 0 diffs); RDD review approved (3 lenses, 0 findings) |
+| T4 | S4, S5, S8 | 03 budgets | inline | pending | |
 | T5 | S4, S5 | 04 projects | inline | pending | |
 | T6 | S4 | 05 finance-clients | inline | pending | |
 | T7 | S4 | 06 auth-backup | inline | pending | |
@@ -56,6 +56,18 @@ Route evidence: all tasks inline. No Writer-trigger reason holds yet. Each slice
 - **L2 (2026-10-16):** Scope answer: "Backend + frontend".
 - **L3 (2026-10-16):** Delivery answer: "Stacked a main (Recommended)". Forecast is well above 400 authored lines (about 1,700 backend and 2,500 frontend lines involved).
 - **L4 (2026-10-16):** Explorer map. Backend duplication: ID validation 14×; JSON parse, 404 and totals 3×; renew exposed 3× (2 routes without ID validation). Only approve is atomic. The D1 `batch` path is untested. Radar, metrics, projects list totals, pay-all, backup and most auth endpoints have no tests. Spot check confirmed budget edit deletes and re-inserts milestones without a transaction (`budgets/index.ts:207-240`).
+- **L10 (2026-10-16):** T3 verification and review closed.
+  - Independent verifier: baseline `18bf098` vs candidate `0842675`, 217 compared records (215 HTTP probes, a DB dump and a console capture), 0 diffs. It covered malformed bodies on 12 endpoints, 16 id routes × 5 ids, id-vs-body precedence, 401s, the rate-limit sequence, a closed DB (500 shape) and approval end to end. S2/S4/S5 PASS, no blockers. Advisories: the default `parseBody` fallback is never observable; the finance renew aliases skip `requireId` (pre-existing, scheduled for T5).
+  - Parent spot check: `npx vitest run test/server-infra.test.ts test/api-contract.test.ts` → 65 passed. The verifier's scratch junctions were removed before deleting the folder; the repo `node_modules` is intact.
+  - RDD: review on base `18bf098`, committed-only, untracked `.claude/` excluded, lenses risk/resilience/reliability. Consent granted by the user. Approved with 0 findings and acknowledged (lineage `review-c44743a698b1dec7`). Reviewed boundary is now `0842675`.
+  - Note: the reliability capture first failed to launch (my capture list had no trailing newline). It was relaunched only after the bound STATUS re-offered that exact slot.
+- **L8 (2026-10-16):** Status-transition decision. The user picked "Corregir con reglas (Recommended)", so S8 was added and T4 now covers it.
+- **L9 (2026-10-16):** Slice 02 progress (`refactor/arch-02-server-infra`, stacked on slice 01).
+  - `18bf098`: the contract suite now also runs on a real local D1 (wrangler `getPlatformProxy`). Its 90 snapshots are identical to SQLite and to the slice 01 baseline.
+  - `0842675` (T3): shared `HttpError`/`requireId`/`parseBody` adopted in auth, budgets, clients and projects; `runAtomic` replaces the approval duck typing, with commit and rollback tested on both drivers; crypto moved to `shared/`; `openSqliteDb` dedupe; dead sanitize helpers deleted; docs corrected (bodies never used `sanitizedText`).
+  - Gate: vitest 10 files / 111 tests passed; `tsc` OK; `npm run build` OK; E2E 9 passed. `wrangler pages functions build --compatibility-flags nodejs_compat` → exit 0 and the bundle has 0 `better-sqlite3` refs. Without the flag the build also fails on the baseline, so that failure is a tooling detail, not a regression.
+  - Gap noted: `tsc` does not typecheck `test/` (tsconfig `include`).
+  - Risk: item 3 (shared validation and error mapping used by every endpoint). RDD assess on base `18bf098`: high, `review_due: true`. An independent verifier was launched before the review.
 - **L7 (2026-10-16):** Slice 01 (`refactor/arch-01-safety-net`) complete.
   - Commits: `2988ae2` docs (CLAUDE.md CORS), `e2eda9c` T1, `da03958` T2.
   - Gate: `npx vitest run` → 9 files / 74 tests passed. `npx tsc --noEmit` → OK. `npm run build` → client and server built. `npx playwright test` → 9 passed twice in a row.
