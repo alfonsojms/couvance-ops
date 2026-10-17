@@ -1,214 +1,37 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Lock, KeyRound, ArrowRight, AlertCircle } from 'lucide-react';
-import { toast } from 'sonner';
+import React from 'react';
 import { NumericKeypad } from '../components/NumericKeypad';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '../components/ui/Dialog';
-import { FormField, Input } from '../components/ui/Input';
-import { Button } from '../components/ui/Button';
-import { authApi } from '../lib/resources';
-import type { SecurityQuestions } from '../lib/types';
+import { UnlockBrand, UnlockErrorAlert } from '../components/unlock/UnlockBrand';
+import { RecoveryDialog } from '../components/unlock/RecoveryDialog';
+import { useUnlockPin } from '../hooks/useUnlockPin';
+import { useUnlockRecovery } from '../hooks/useUnlockRecovery';
 
 interface UnlockProps {
   onUnlockSuccess: () => void;
 }
 
 export const Unlock: React.FC<UnlockProps> = ({ onUnlockSuccess }) => {
-  const [pin, setPin] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [isShaking, setIsShaking] = useState(false);
+  const recovery = useUnlockRecovery(onUnlockSuccess);
+  const pinEntry = useUnlockPin({ onUnlockSuccess, keyboardPaused: recovery.recoveryOpen });
 
-  // Estados del modal de recuperación
-  const [recoveryOpen, setRecoveryOpen] = useState(false);
-  const [questions, setQuestions] = useState<SecurityQuestions | null>(null);
-  const [a1, setA1] = useState('');
-  const [a2, setA2] = useState('');
-  const [resetToken, setResetToken] = useState<string | null>(null);
-  const [newPin, setNewPin] = useState('');
-  const [confirmPin, setConfirmPin] = useState('');
-  const [recoveryLoading, setRecoveryLoading] = useState(false);
-
-  const handleUnlock = useCallback(
-    async (pinToSubmit: string) => {
-      if (loading || pinToSubmit.length !== 8) return;
-      setLoading(true);
-      setErrorMsg(null);
-
-      try {
-        await authApi.unlock(pinToSubmit);
-        toast.success('Desbloqueado exitosamente');
-        onUnlockSuccess();
-      } catch (err: any) {
-        setErrorMsg(err.message || 'PIN incorrecto.');
-        setPin('');
-        setIsShaking(true);
-        setTimeout(() => setIsShaking(false), 400);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [loading, onUnlockSuccess]
-  );
-
-  // Escuchar eventos globales de teclado físico (0-9, Backspace, Escape, Enter)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignorar si el usuario está escribiendo en un input o textarea (ej. modal de recuperación)
-      const target = e.target as HTMLElement | null;
-      if (
-        recoveryOpen ||
-        loading ||
-        target?.tagName === 'INPUT' ||
-        target?.tagName === 'TEXTAREA' ||
-        target?.isContentEditable
-      ) {
-        return;
-      }
-
-      if (/^[0-9]$/.test(e.key)) {
-        e.preventDefault();
-        setPin((prev) => {
-          if (prev.length >= 8) return prev;
-          const next = prev + e.key;
-          if (next.length === 8) {
-            handleUnlock(next);
-          }
-          return next;
-        });
-      } else if (e.key === 'Backspace') {
-        e.preventDefault();
-        setPin((prev) => prev.slice(0, -1));
-      } else if (e.key === 'Escape') {
-        e.preventDefault();
-        setPin('');
-        setErrorMsg(null);
-      } else if (e.key === 'Enter') {
-        e.preventDefault();
-        if (pin.length === 8) {
-          handleUnlock(pin);
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [recoveryOpen, loading, pin, handleUnlock]);
-
-  const handleOpenRecovery = async () => {
-    setRecoveryOpen(true);
-    setErrorMsg(null);
-    setA1('');
-    setA2('');
-    setResetToken(null);
-    setNewPin('');
-    setConfirmPin('');
-
-    try {
-      const data = await authApi.questions();
-      setQuestions(data);
-    } catch (err: any) {
-      toast.error('Error al cargar preguntas de recuperación');
-    }
-  };
-
-  const handleVerifyQuestions = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!a1.trim() || !a2.trim()) {
-      toast.error('Por favor responda ambas preguntas');
-      return;
-    }
-
-    setRecoveryLoading(true);
-    try {
-      const res = await authApi.recover({
-        a1: a1.trim(),
-        a2: a2.trim(),
-      });
-      setResetToken(res.resetToken);
-      toast.success('Respuestas correctas. Configure su nuevo PIN.');
-    } catch (err: any) {
-      toast.error(err.message || 'Respuestas incorrectas');
-    } finally {
-      setRecoveryLoading(false);
-    }
-  };
-
-  const handleResetPin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newPin.length !== 8 || !/^\d{8}$/.test(newPin)) {
-      toast.error('El nuevo PIN debe tener exactamente 8 dígitos numéricos');
-      return;
-    }
-    if (newPin !== confirmPin) {
-      toast.error('Los PIN ingresados no coinciden');
-      return;
-    }
-
-    setRecoveryLoading(true);
-    try {
-      await authApi.resetPin({
-        token: resetToken,
-        newPin,
-      });
-      toast.success('Nuevo PIN configurado exitosamente.');
-      setRecoveryOpen(false);
-      onUnlockSuccess();
-    } catch (err: any) {
-      toast.error(err.message || 'Error al restablecer el PIN');
-    } finally {
-      setRecoveryLoading(false);
-    }
+  const handleOpenRecovery = () => {
+    pinEntry.clearError();
+    void recovery.openRecovery();
   };
 
   return (
     <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center p-4 py-8 overflow-y-auto">
       <div className="w-full max-w-sm flex flex-col items-center my-auto">
-        {/* Cabecera / Logo Couvance */}
-        <div className="relative mb-5 sm:mb-6">
-          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden border border-[#004BFF]/50 bg-[#004BFF] shadow-[0_0_24px_rgba(0,75,255,0.35)] flex items-center justify-center">
-            <img
-              src="/logo-couvance.png"
-              alt="Couvance Logo"
-              className="w-full h-full object-cover select-none pointer-events-none"
-            />
-          </div>
-          <div className="absolute -bottom-1.5 -right-1.5 w-6 h-6 rounded-full bg-neutral-950 border border-neutral-800 flex items-center justify-center shadow-md">
-            <Lock className="w-3 h-3 text-[#BDEF00]" />
-          </div>
-        </div>
+        <UnlockBrand />
 
-        <h1 className="text-xl font-bold tracking-tight text-white mb-1 text-center">
-          Couvance Ops
-        </h1>
-        <p className="text-xs text-neutral-400 mb-6 sm:mb-8 text-center">
-          Ingresa el PIN maestro de 8 dígitos para acceder
-        </p>
-
-        {/* Mensaje de error si falla el PIN */}
-        {errorMsg ? (
-          <div className="w-full mb-6 p-3 rounded-lg bg-rose-950/40 border border-rose-900/60 text-rose-300 text-xs flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
-            <span>{errorMsg}</span>
-          </div>
-        ) : null}
+        {pinEntry.errorMsg ? <UnlockErrorAlert message={pinEntry.errorMsg} /> : null}
 
         {/* Teclado Numérico con animación shake */}
         <NumericKeypad
-          pin={pin}
-          onChange={(newVal) => {
-            setErrorMsg(null);
-            setPin(newVal);
-          }}
-          onSubmit={handleUnlock}
-          disabled={loading}
-          isShaking={isShaking}
+          pin={pinEntry.pin}
+          onChange={pinEntry.changePin}
+          onSubmit={pinEntry.handleUnlock}
+          disabled={pinEntry.loading}
+          isShaking={pinEntry.isShaking}
         />
 
         {/* Botón de Recuperación */}
@@ -221,140 +44,7 @@ export const Unlock: React.FC<UnlockProps> = ({ onUnlockSuccess }) => {
         </button>
       </div>
 
-      {/* Modal de Recuperación con Preguntas Secretas */}
-      <Dialog open={recoveryOpen} onOpenChange={setRecoveryOpen}>
-        <DialogContent className="w-[calc(100%-1.5rem)] max-w-md p-4 sm:p-6">
-          <DialogHeader>
-            <div className="flex items-center gap-2 mb-1">
-              <KeyRound className="w-4 h-4 text-neutral-300" />
-              <DialogTitle>Recuperación de PIN</DialogTitle>
-            </div>
-            <DialogDescription>
-              {!resetToken
-                ? 'Responde las 2 preguntas de seguridad secretas para desbloquear el restablecimiento de PIN.'
-                : 'Respuestas verificadas. Ingresa y confirma tu nuevo PIN de 8 dígitos.'}
-            </DialogDescription>
-          </DialogHeader>
-
-          {!resetToken ? (
-            <form onSubmit={handleVerifyQuestions} className="space-y-4">
-              <FormField
-                id="recovery-a1"
-                label={questions?.q1 || 'Pregunta de seguridad 1'}
-                required
-              >
-                <Input
-                  required
-                  value={a1}
-                  onChange={(e) => setA1(e.target.value)}
-                  placeholder="Tu respuesta secreta..."
-                  autoFocus
-                />
-              </FormField>
-
-              <FormField
-                id="recovery-a2"
-                label={questions?.q2 || 'Pregunta de seguridad 2'}
-                required
-              >
-                <Input
-                  required
-                  value={a2}
-                  onChange={(e) => setA2(e.target.value)}
-                  placeholder="Tu respuesta secreta..."
-                />
-              </FormField>
-
-              <DialogFooter className="flex-col-reverse xs:flex-row gap-2 xs:gap-0">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  touchFriendly
-                  onClick={() => setRecoveryOpen(false)}
-                  className="w-full xs:w-auto"
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  type="submit"
-                  variant="primary"
-                  size="sm"
-                  touchFriendly
-                  isLoading={recoveryLoading}
-                  className="w-full xs:w-auto"
-                >
-                  <span>Validar respuestas</span>
-                  <ArrowRight className="w-3.5 h-3.5 ml-1" />
-                </Button>
-              </DialogFooter>
-            </form>
-          ) : (
-            <form onSubmit={handleResetPin} className="space-y-4">
-              <FormField
-                id="recovery-new-pin"
-                label="Nuevo PIN (8 dígitos numéricos)"
-                required
-              >
-                <Input
-                  type="password"
-                  inputMode="numeric"
-                  maxLength={8}
-                  pattern="\d{8}"
-                  required
-                  value={newPin}
-                  onChange={(e) => setNewPin(e.target.value)}
-                  placeholder="••••••••"
-                  className="font-mono tracking-widest text-center text-lg"
-                  autoFocus
-                />
-              </FormField>
-
-              <FormField
-                id="recovery-confirm-pin"
-                label="Confirmar Nuevo PIN"
-                required
-              >
-                <Input
-                  type="password"
-                  inputMode="numeric"
-                  maxLength={8}
-                  pattern="\d{8}"
-                  required
-                  value={confirmPin}
-                  onChange={(e) => setConfirmPin(e.target.value)}
-                  placeholder="••••••••"
-                  className="font-mono tracking-widest text-center text-lg"
-                />
-              </FormField>
-
-              <DialogFooter className="flex-col-reverse xs:flex-row gap-2 xs:gap-0">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  touchFriendly
-                  onClick={() => setRecoveryOpen(false)}
-                  className="w-full xs:w-auto"
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  type="submit"
-                  variant="primary"
-                  size="sm"
-                  touchFriendly
-                  isLoading={recoveryLoading}
-                  className="w-full xs:w-auto"
-                >
-                  <span>Guardar y Entrar</span>
-                  <ArrowRight className="w-3.5 h-3.5 ml-1" />
-                </Button>
-              </DialogFooter>
-            </form>
-          )}
-        </DialogContent>
-      </Dialog>
+      <RecoveryDialog recovery={recovery} />
     </div>
   );
 };
