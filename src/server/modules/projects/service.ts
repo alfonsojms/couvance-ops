@@ -1,4 +1,5 @@
 import { systemClock, type ServiceClock } from '../../shared/clock';
+import { groupBy } from '../../shared/collections';
 import { conflict, invalid, notFound } from '../../shared/errors';
 import {
   buildProjectUpdate,
@@ -16,16 +17,6 @@ import type { ProjectCategory, ProjectCreateInput, ProjectStatusFilter } from '.
 const PROJECT_NOT_FOUND = 'Proyecto no encontrado';
 
 export type ProjectListItem = ProjectRow & ProjectTotals & { client: ClientRow | null };
-
-function groupBy<T>(items: T[], key: (item: T) => string): Map<string, T[]> {
-  const groups = new Map<string, T[]>();
-  for (const item of items) {
-    const list = groups.get(key(item)) || [];
-    list.push(item);
-    groups.set(key(item), list);
-  }
-  return groups;
-}
 
 /** Casos de uso de proyectos y showcase. No conoce HTTP: lanza DomainError y devuelve datos. */
 export function createProjectsService(repo: ProjectsRepository, clock: ServiceClock = systemClock) {

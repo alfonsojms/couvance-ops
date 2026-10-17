@@ -1,4 +1,5 @@
 import { systemClock, type ServiceClock } from '../../shared/clock';
+import { groupBy } from '../../shared/collections';
 import { conflict, notFound } from '../../shared/errors';
 import { sumMilestones } from '../projects/domain';
 import { buildClientUpdate, clientDeletionBlocker, type ClientInput } from './domain';
@@ -21,12 +22,17 @@ export function createClientsService(repo: ClientsRepository, clock: ServiceCloc
     /** Listado con cantidad de proyectos y saldos cobrado/pendiente por cliente. */
     async listClients(): Promise<ClientListItem[]> {
       const sources = await repo.loadBalanceSources();
+      // Agrupado una sola vez: cada fila se visita una vez, no una vez por cliente.
+      const projectsByClient = groupBy(sources.projects, (p) => p.clientId);
+      const budgetsByProject = groupBy(sources.budgets, (b) => b.projectId);
+      const milestonesByBudget = groupBy(sources.milestones, (m) => m.budgetId);
 
       return sources.clients.map((client) => {
-        const clientProjectIds = new Set(sources.projects.filter((p) => p.clientId === client.id).map((p) => p.id));
-        const clientBudgetIds = new Set(sources.budgets.filter((b) => clientProjectIds.has(b.projectId)).map((b) => b.id));
-        const { totalPaid, totalPending } = sumMilestones(sources.milestones.filter((m) => clientBudgetIds.has(m.budgetId)));
-        return { ...client, projectsCount: clientProjectIds.size, totalPaid, totalPending };
+        const clientProjects = projectsByClient.get(client.id) || [];
+        const clientMilestones = clientProjects.flatMap((p) =>
+          (budgetsByProject.get(p.id) || []).flatMap((b) => milestonesByBudget.get(b.id) || [])
+        );
+        return { ...client, projectsCount: clientProjects.length, ...sumMilestones(clientMilestones) };
       });
     },
 
