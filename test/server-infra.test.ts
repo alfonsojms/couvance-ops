@@ -1,15 +1,9 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import Database from 'better-sqlite3';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
-import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
 import { eq } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { z } from 'zod';
-import fs from 'node:fs';
-import path from 'node:path';
-import { getPlatformProxy } from 'wrangler';
-import * as schema from '../src/server/db/schema';
-import { clients, createD1Db, type AppDatabase } from '../src/server/db';
+import { clients, type AppDatabase } from '../src/server/db';
+import { createTestDatabase, TEST_DRIVERS } from './helpers/db';
 import { runAtomic } from '../src/server/db/atomic';
 import { HttpError, handleHttpError, parseBody, requireId } from '../src/server/shared/http';
 
@@ -72,31 +66,12 @@ describe('shared/http', () => {
   });
 });
 
-describe.each(['sqlite', 'd1'] as const)('db/runAtomic [%s]', (driver) => {
+describe.each(TEST_DRIVERS)('db/runAtomic [%s]', (driver) => {
   let db: AppDatabase;
   let dispose: () => Promise<void> | void;
 
   beforeAll(async () => {
-    if (driver === 'd1') {
-      const proxy = await getPlatformProxy<{ DB: D1Database }>({ persist: false });
-      for (const file of fs.readdirSync('./drizzle').filter((f) => f.endsWith('.sql')).sort()) {
-        const statements = fs
-          .readFileSync(path.join('./drizzle', file), 'utf8')
-          .split('--> statement-breakpoint')
-          .map((s) => s.trim())
-          .filter(Boolean);
-        await proxy.env.DB.batch(statements.map((s) => proxy.env.DB.prepare(s)));
-      }
-      db = createD1Db(proxy.env.DB);
-      dispose = () => proxy.dispose();
-    } else {
-      const sqlite = new Database(':memory:');
-      sqlite.pragma('foreign_keys = ON');
-      const sqliteDb = drizzle(sqlite, { schema });
-      migrate(sqliteDb, { migrationsFolder: './drizzle' });
-      db = sqliteDb;
-      dispose = () => sqlite.close();
-    }
+    ({ db, dispose } = await createTestDatabase(driver));
   }, 60_000);
 
   afterAll(() => dispose());
