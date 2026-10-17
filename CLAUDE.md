@@ -14,7 +14,7 @@ npm run dev                 # Frontend Vite en :5173, proxy de /api -> 127.0.0.1
 npm test                                        # Vitest (solo test/**/*.test.ts(x))
 npx vitest run test/budgets.test.ts             # un archivo
 npx vitest run test/budgets.test.ts -t "texto"  # un caso por nombre
-npm run test:e2e                                # Playwright (e2e/), arranca node-entry solo vía webServer
+npm run test:e2e                                # Playwright (e2e/), arranca node-entry en :3101 con BD temporal
 npx playwright test e2e/unlock.spec.ts          # un spec e2e
 npx tsc --noEmit                                # typecheck (no hay script de lint)
 
@@ -42,7 +42,7 @@ Los handlers siempre obtienen la BD con `getDb(c)` (`src/server/db/index.ts`), q
 
 **Frontend**: SPA React en `src/client/src` (alias `@` → `src/client/src`, `@server` → `src/server`), cliente HTTP tipado en `lib/api.ts`, helpers de `wa.me`/portapapeles en `lib/utils.ts`, primitivas UI propias en `components/ui`. `index.html` y `vite.config.ts` están en la raíz.
 
-**Tests**: los de integración (`test/integration.test.ts`, `test/budgets.test.ts`) crean SQLite `:memory:`, migran `./drizzle`, hacen `setGlobalDb()` + `seedInitialAuthIfNeeded()` y llaman a `app.request(...)` directamente, sin servidor. Los `*.ui.test.tsx` usan Testing Library. Los e2e usan la BD real de `./data`.
+**Tests**: los de integración (`test/integration.test.ts`, `test/budgets.test.ts`) crean SQLite `:memory:`, migran `./drizzle`, hacen `setGlobalDb()` + `seedInitialAuthIfNeeded()` y llaman a `app.request(...)` directamente, sin servidor. `test/api-contract.test.ts` fija con snapshots el contrato HTTP completo (status + cuerpo) sobre un escenario de negocio, con reloj fijo y UUIDs normalizados (`test/helpers/contract.ts`): si un refactor cambia una respuesta, el snapshot falla. Solo regenerá snapshots (`-u`) cuando el cambio de contrato sea intencional. Los `*.ui.test.tsx` usan Testing Library. Los e2e levantan su propio servidor en `:3101` con una SQLite temporal nueva por corrida (no tocan `./data`).
 
 ## Reglas de negocio (invariantes)
 
