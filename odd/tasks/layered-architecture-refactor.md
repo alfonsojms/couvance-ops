@@ -25,7 +25,7 @@ Assumptions (not user requirements): layer file names (`domain.ts`, `schemas.ts`
 | T2 | S2 | 01 safety-net | inline | done | `da03958`: E2E 9/9 passed on two consecutive runs |
 | T3 | S4, S5 | 02 server-infra | inline | done | `18bf098` D1 contract run, `0842675` helpers + runAtomic; verifier PASS S2/S4/S5 (217 probes, 0 diffs); RDD review approved (3 lenses, 0 findings) |
 | T4 | S4, S5, S8 | 03 budgets | inline | done | `46217cf` test DB helper, `0de7f18` budgets layered + S8; gate green (L11); verifier PASS S2/S4/S5/S8 (142 probes × 2 drivers, only authorized S8 diffs); RDD review approved (3 lenses, 0 blockers) (L12) |
-| T5 | S4, S5 | 04 projects | inline | pending | |
+| T5 | S4, S5 | 04 projects | inline | done | `e784a82`: RED→GREEN `test/projects-cancel.test.ts` (atomic cancel, both drivers); contract snapshots unchanged; gate green (L14) |
 | T6 | S4 | 05 finance-clients | inline | pending | |
 | T7 | S4 | 06 auth-backup | inline | pending | |
 | T8 | S6 | 07 client-api | inline | pending | |
@@ -56,6 +56,17 @@ Route evidence: all tasks inline. No Writer-trigger reason holds yet. Each slice
 - **L2 (2026-10-16):** Scope answer: "Backend + frontend".
 - **L3 (2026-10-16):** Delivery answer: "Stacked a main (Recommended)". Forecast is well above 400 authored lines (about 1,700 backend and 2,500 frontend lines involved).
 - **L4 (2026-10-16):** Explorer map. Backend duplication: ID validation 14×; JSON parse, 404 and totals 3×; renew exposed 3× (2 routes without ID validation). Only approve is atomic. The D1 `batch` path is untested. Radar, metrics, projects list totals, pay-all, backup and most auth endpoints have no tests. Spot check confirmed budget edit deletes and re-inserts milestones without a transaction (`budgets/index.ts:207-240`).
+- **L14 (2026-10-17):** Slice 04 (`refactor/arch-04-projects`, stacked on slice 03), commit `e784a82` (T5).
+  - Projects split into `domain`/`schemas`/`repository`/`service`/`routes`. `showcase.ts` is HTTP only and reuses the projects service.
+  - One renew implementation (`renewProjectResponse`) serves `/api/projects/:id/renew` and both `/api/finance` aliases. The aliases keep their previous id handling (no `requireId`): adding it would turn their 404 into a 400, which S2 does not authorize.
+  - Cancellation goes through `runAtomic`. The project update and the PENDING→CANCELLED cascade run in one unit; the cascade is a single UPDATE with an SQL subquery, because `select({...})` with arguments does not typecheck on the `D1Db | SqliteDb` union.
+  - The project detail loads budgets with milestones through the budgets repository, so that loading exists once (S4). `ServiceClock` moved to `shared/clock.ts`.
+  - RED: `test/projects-cancel.test.ts` forces a cascade failure with a SQLite trigger. Before the fix the project stayed `CANCELLED` on both drivers; after it, it stays `IN_PROGRESS`. A second test pins RN-05: PAID milestones and their `paidAt` are untouched.
+  - Gate: vitest 13 files / 140 passed (contract snapshots unchanged on SQLite and D1); `tsc` OK; build OK; E2E 9 passed; wrangler Edge bundle exit 0, 0 `better-sqlite3` refs.
+  - Risk: none. The contract is unchanged, as the snapshots prove for every projects, renew and showcase endpoint on both drivers. The cascade's stored result is the same; it is only atomic now.
+  - RDD assess (base `0de7f18`, committed-only): medium, `review_due: false`, `under_budget`. The slice stays pending until a later commit reaches the budget.
+  - Deferred (L12 follow-up): the S8 check-then-act guards stay as they are. Closing the race needs the expected status in each UPDATE plus a way to detect 0 affected rows inside a batch. That is a behavior change under concurrency only, so it is not part of a contract-preserving refactor.
+- **L13 (2026-10-17):** User: "ah no hemos terminado? bueno pero termina todo el refactor de odd y al final nos organizamos para armar el ci cd y de ahi hacemos push que te parece?" Plan: finish T5–T12 as local stacked branches, then set up CI/CD together, then push and open the chained PRs in order.
 - **L12 (2026-10-17):** T4 verification and review closed.
   - Independent verifier: baseline `4ec5f13` vs candidate `0de7f18`. It sent 142 HTTP probes per driver, on SQLite and on local D1. S2/S4/S5/S8 PASS, no blockers.
     - Every diff is an authorized S8 change: approve/reject from APPROVED or REJECTED now returns 409; paying a DRAFT milestone returns 409 (it used to pay it); paying a CANCELLED one returns 409 (it used to be 400, same message); paying a PAID one keeps the original `paidAt`.
