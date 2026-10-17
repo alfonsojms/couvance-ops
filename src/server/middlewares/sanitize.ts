@@ -41,72 +41,8 @@ export function validateAndSanitizeId(rawId: string | undefined): string | null 
 }
 
 /**
- * Recorre recursivamente un objeto o array y sanitiza todas las cadenas de texto.
- */
-export function sanitizeDeep<T>(input: T): T {
-  if (input === null || input === undefined) {
-    return input;
-  }
-
-  if (typeof input === 'string') {
-    return sanitizeString(input) as unknown as T;
-  }
-
-  if (Array.isArray(input)) {
-    return input.map((item) => sanitizeDeep(item)) as unknown as T;
-  }
-
-  if (typeof input === 'object' && input.constructor === Object) {
-    const sanitizedObj: Record<string, any> = {};
-    for (const [key, value] of Object.entries(input)) {
-      // Sanitizar también la clave del objeto para prevenir inyección de propiedades maliciosas
-      const cleanKey = sanitizeString(key);
-      sanitizedObj[cleanKey] = sanitizeDeep(value);
-    }
-    return sanitizedObj as T;
-  }
-
-  return input;
-}
-
-/**
- * Patrones conocidos de inyección SQL destructiva o evasiva en entradas que deberían ser simples.
- */
-const SQL_INJECTION_PATTERNS = [
-  /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|ALTER|EXEC|UNION|TRUNCATE)\b\s+)/i,
-  /(--|\/\*|\*\/|;\s*$)/,
-  /('\s*OR\s*'\d+'\s*=\s*'\d+)/i,
-  /("\s*OR\s*"\d+"\s*=\s*"\d+)/i,
-  /('\s*OR\s*1\s*=\s*1)/i,
-  /("\s*OR\s*1\s*=\s*1)/i,
-];
-
-/**
- * Verifica si una cadena contiene patrones evidentes de inyección SQL.
- * Útil para campos restringidos como identificadores, códigos o parámetros de consulta.
- */
-export function hasSqlInjectionPattern(val: string): boolean {
-  if (typeof val !== 'string') return false;
-  return SQL_INJECTION_PATTERNS.some((pattern) => pattern.test(val));
-}
-
-/**
- * Helper Zod para cadenas de texto sanitizadas automáticamente con límites de longitud defensivos.
- */
-export const sanitizedText = (min: number = 0, max: number = 255) =>
-  z
-    .string()
-    .transform(sanitizeString)
-    .refine((val) => val.length >= min, {
-      message: `Debe contener al menos ${min} caracter(es)`,
-    })
-    .refine((val) => val.length <= max, {
-      message: `No puede superar los ${max} caracteres`,
-    });
-
-/**
- * Middleware central de Hono para sanitización global de inputs.
- * Sanitiza automáticamente los query params y el cuerpo JSON de cada solicitud.
+ * Middleware global: rechaza con 400 cualquier byte nulo en la URL o en los query params.
+ * No modifica el body; los textos del body se limpian con `sanitizeString` dentro de cada esquema Zod.
  */
 export async function sanitizeMiddleware(c: Context, next: Next) {
   // 1. Validar y rechazar caracteres nulos inmediatos en la URL y Query String

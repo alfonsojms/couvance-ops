@@ -54,14 +54,14 @@ couvance-ops/
 │   │   ├── middlewares/
 │   │   │   ├── auth.ts         # Validación de PIN y cookie de sesión
 │   │   │   ├── rate-limit.ts   # Rate limiting (5 intentos fallidos / 15 min en /api/auth/*)
-│   │   │   └── sanitize.ts     # Rechazo de bytes nulos en URL, helpers sanitizedText / validateAndSanitizeId
+│   │   │   └── sanitize.ts     # Rechazo de bytes nulos en URL, sanitizeString y validateAndSanitizeId
 │   │   ├── modules/
-│   │   │   ├── auth/           # Login PIN, preguntas secretas, reseteo, logout
-│   │   │   ├── clients/        # Gestión de clientes y protección 409
-│   │   │   ├── projects/       # Proyectos, showcase y cancelación en cascada
-│   │   │   ├── budgets/        # Presupuestos e hitos (cálculo de residuos, aprobación)
-│   │   │   ├── finance/        # Radar de cobranzas WhatsApp, recurrentes y métricas
-│   │   │   └── backup/         # Exportación estructurada JSON (excluye AUTH_CONFIG)
+│   │   │   ├── auth/           # Login PIN, preguntas secretas, reseteo, logout: schemas, repository (auth_config), service, routes
+│   │   │   ├── clients/        # Gestión de clientes y protección 409: domain, schemas, repository, service, routes
+│   │   │   ├── projects/       # Proyectos, showcase y cancelación en cascada: domain, schemas, repository, service, routes
+│   │   │   ├── budgets/        # Presupuestos e hitos: domain, schemas, repository, service, routes
+│   │   │   ├── finance/        # Radar de cobranzas WhatsApp, recurrentes y métricas: domain, repository, service, routes
+│   │   │   └── backup/         # Exportación estructurada JSON (excluye AUTH_CONFIG): repository, service, routes
 │   │   ├── app.ts              # Instancia central de Hono y enrutador API
 │   │   ├── node-entry.ts       # Entrypoint Node.js/Docker con migraciones y static serving
 │   │   └── index.ts            # Entrypoint export para Cloudflare
@@ -69,9 +69,10 @@ couvance-ops/
 │   └── client/                 # FRONTEND (React + Vite SPA)
 │       └── src/
 │           ├── components/     # Navbar, NumericKeypad, WhatsAppButton, diálogos de formulario, ui/ (primitivas)
-│           ├── hooks/
-│           │   └── useAuth.ts      # Estado de sesión y autenticación
-│           ├── pages/
+│           │   └── dashboard/, projects/, clients/, unlock/, security/, showcase/  # Componentes presentacionales por página (solo props)
+│           ├── hooks/          # useAuth (sesión) y un hook de datos/acciones por página (useDashboardData, useProjectsData, ...)
+│           ├── lib/            # api.ts (núcleo HTTP), resources/ (un cliente por recurso), types.ts (tipos compartidos), utils.ts
+│           ├── pages/          # Contenedores finos: conectan el hook de la página con sus componentes
 │           │   ├── Dashboard.tsx   # Radar de cobros, historial de cobranzas y métricas clave
 │           │   ├── Projects.tsx    # Gestión de proyectos y cotizaciones
 │           │   ├── Showcase.tsx    # Catálogo de ventas filtrable
@@ -186,7 +187,9 @@ Cualquier agente o desarrollador que modifique la lógica del sistema debe garan
      - Presupuesto pasa a `APPROVED`.
      - Proyecto pasa a `IN_PROGRESS`.
      - Todos los hitos asociados pasan de `DRAFT` a `PENDING`.
-     - Se ejecuta de manera atómica (usando `db.batch` en Cloudflare D1 o transacción en SQLite local).
+     - Se ejecuta de manera atómica con `runAtomic` (`db.batch` en Cloudflare D1, transacción en SQLite local).
+     - Solo es válido desde `DRAFT` o `SENT`; en cualquier otro estado responde `409 Conflict` sin modificar nada (lo mismo aplica a `reject`).
+   - Crear y editar un presupuesto junto con sus hitos también es atómico: una falla a mitad de camino no deja presupuestos sin hitos ni hitos huérfanos.
 
 4. **RN-04 (Operación Cobro Express "Cobrar Todo"):**
    - `POST /api/budgets/:id/pay-all` actualiza todos los hitos en estado `PENDING` del presupuesto a `PAID`, registrando `paid_at = new Date().toISOString()`.
@@ -196,6 +199,7 @@ Cualquier agente o desarrollador que modifique la lógica del sistema debe garan
      - Todos los hitos en estado `PENDING` se cancelan (`status = 'CANCELLED'`).
      - Los hitos con estado `PAID` se mantienen **intactos** para preservar el histórico de ingresos.
      - El proyecto no se borra de la BD; se marca tachado en la UI.
+     - El cambio de estado del proyecto y la cancelación de sus hitos se ejecutan de manera atómica con `runAtomic`: si una falla, no se aplica ninguna.
 
 6. **RN-06 (Integridad Referencial en Eliminación de Clientes):**
    - `DELETE /api/clients/:id` verifica `COUNT(projects) === 0`.
@@ -243,8 +247,8 @@ Cualquier agente o desarrollador que modifique la lógica del sistema debe garan
 
 4. **Sanitización de Entradas (`src/server/middlewares/sanitize.ts`):**
    - `sanitizeMiddleware` (global) rechaza con `400` cualquier byte nulo (`\0` / `%00`) en la URL o en los query params. **No modifica el body.**
-   - Los textos del body se limpian en los esquemas Zod con `sanitizedText(min, max)` (elimina caracteres de control, normaliza NFC, hace trim y limita longitud).
-   - Los parámetros de ruta (`:id`, `:projectId`) se validan con `validateAndSanitizeId` contra `/^[a-zA-Z0-9_-]{1,64}$/`.
+   - Los textos del body se limpian dentro de cada esquema Zod con `.transform(sanitizeString)` (elimina bytes nulos y caracteres de control, normaliza NFC y hace trim), seguido de los límites de longitud propios de cada campo.
+   - Los parámetros de ruta (`:id`, `:projectId`) se validan con `requireId` (`src/server/shared/http.ts`, sobre `validateAndSanitizeId`) contra `/^[a-zA-Z0-9_-]{1,64}$/`.
 
 5. **Middleware de Rutas (`pinAuthMiddleware`):**
    - Aplica a todas las rutas bajo `/api/*`.
@@ -289,9 +293,9 @@ Cualquier agente o desarrollador que modifique la lógica del sistema debe garan
 * `GET /api/projects/:id/budgets` — Historial de presupuestos del proyecto.
 * `GET /api/budgets/:id` — Detalle de un presupuesto con sus hitos.
 * `PUT /api/budgets/:id` — Edita presupuesto e hitos (solo en estado `DRAFT`).
-* `POST /api/budgets/:id/approve` — Aprobación en 1 clic: presupuesto a `APPROVED`, proyecto a `IN_PROGRESS`, hitos a `PENDING`.
-* `POST /api/budgets/:id/reject` — Marca presupuesto como `REJECTED`.
-* `PATCH /api/milestones/:id/pay` — Marca hito individual como `PAID` con `paid_at = now()`.
+* `POST /api/budgets/:id/approve` — Aprobación en 1 clic: presupuesto a `APPROVED`, proyecto a `IN_PROGRESS`, hitos a `PENDING`. Solo desde `DRAFT` o `SENT`; en otro estado responde `409 Conflict`.
+* `POST /api/budgets/:id/reject` — Marca presupuesto como `REJECTED`. Solo desde `DRAFT` o `SENT`; en otro estado responde `409 Conflict`.
+* `PATCH /api/milestones/:id/pay` — Marca un hito `PENDING` como `PAID` con `paid_at = now()`. Un hito `DRAFT` (presupuesto sin aprobar) o `CANCELLED` responde `409 Conflict`. Un hito ya `PAID` responde `200` sin modificar su `paid_at` original (idempotente ante doble toque).
 * `POST /api/budgets/:id/pay-all` — Marca todos los hitos pendientes del presupuesto como `PAID`.
 
 ### Finanzas & Radar (`/api/finance`)
@@ -370,7 +374,8 @@ docker compose logs -f couvance-ops
 Antes de generar o modificar código en este repositorio, verifica:
 - [ ] ¿El endpoint o función respeta el tipado estricto de TypeScript?
 - [ ] ¿Los esquemas de entrada y salida están validados con **Zod**?
-- [ ] ¿Los textos de entrada usan `sanitizedText` y los IDs de ruta `validateAndSanitizeId`?
+- [ ] ¿Los textos de entrada pasan por `sanitizeString` en el esquema Zod, los IDs de ruta por `requireId` y el body por `parseBody`?
+- [ ] ¿Los errores esperados se lanzan como `HttpError` (respuesta `{ error }`) en lugar de construir respuestas a mano?
 - [ ] ¿La BD se obtiene con `getDb(c)` y las escrituras multi-tabla son atómicas (`db.batch` en D1 / `db.transaction` en SQLite)?
 - [ ] ¿Se preservaron los montos de presupuestos e hitos como números enteros sin decimales?
 - [ ] ¿El último hito absorbe cualquier residuo fraccionario del porcentaje?

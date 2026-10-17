@@ -6,15 +6,11 @@ import * as schema from './schema';
 
 export type SqliteDb = BetterSQLite3Database<typeof schema>;
 
-let sqliteInstance: Database.Database | null = null;
-let dbInstance: SqliteDb | null = null;
-
-export function getSqliteDb(customPath?: string): { db: SqliteDb; sqlite: Database.Database } {
-  if (dbInstance && sqliteInstance && !customPath) {
-    return { db: dbInstance, sqlite: sqliteInstance };
-  }
-
-  const dbPath = customPath || process.env.DATABASE_URL?.replace('file:', '') || './data/couvance-ops.db';
+/**
+ * Abre (o crea) la base SQLite local del runtime Node/Docker con WAL y claves foráneas activas.
+ * Solo se importa desde node-entry: Cloudflare usa D1 y nunca carga este módulo en runtime.
+ */
+export function openSqliteDb(dbPath: string): { db: SqliteDb; sqlite: Database.Database } {
   const dbDir = path.dirname(dbPath);
   if (!fs.existsSync(dbDir)) {
     fs.mkdirSync(dbDir, { recursive: true });
@@ -24,13 +20,5 @@ export function getSqliteDb(customPath?: string): { db: SqliteDb; sqlite: Databa
   sqlite.pragma('journal_mode = WAL');
   sqlite.pragma('foreign_keys = ON');
 
-  const db = drizzle(sqlite, { schema });
-
-  if (!customPath) {
-    sqliteInstance = sqlite;
-    dbInstance = db;
-  }
-
-  return { db, sqlite };
+  return { db: drizzle(sqlite, { schema }), sqlite };
 }
-

@@ -10,31 +10,6 @@ export function getPinSecret(c: Context): string {
   return envSecret || processSecret || 'couvance_ops_default_insecure_secret_change_in_prod';
 }
 
-// SHA-256 nativo con Web Crypto para compatibilidad total Edge y Node
-export async function sha256(input: string, secret: string): Promise<string> {
-  const normalized = input.trim().toLowerCase() + secret;
-  const encoder = new TextEncoder();
-  const data = encoder.encode(normalized);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
-}
-
-// Comparación segura en tiempo constante para evitar ataques de temporización (timing attacks)
-export function timingSafeEqual(a: string, b: string): boolean {
-  const enc = new TextEncoder();
-  const aBytes = enc.encode(a);
-  const bBytes = enc.encode(b);
-  if (aBytes.byteLength !== bBytes.byteLength) {
-    return false;
-  }
-  let mismatch = 0;
-  for (let i = 0; i < aBytes.byteLength; i++) {
-    mismatch |= aBytes[i] ^ bBytes[i];
-  }
-  return mismatch === 0;
-}
-
 // Generación y verificación de tokens HMAC-SHA256 nativos
 async function getHmacKey(secret: string): Promise<CryptoKey> {
   const encoder = new TextEncoder();
@@ -73,6 +48,15 @@ export interface TokenPayload {
   sub: 'session' | 'reset';
   exp: number;
   iat: number;
+}
+
+const SESSION_TTL_MS = SESSION_MAX_AGE * 1000; // 30 días
+const RESET_TTL_MS = 10 * 60 * 1000; // 10 minutos
+
+/** Única forma de emitir tokens: `session` (30 días, cookie) o `reset` (10 minutos, recuperación de PIN). */
+export function issueToken(sub: TokenPayload['sub'], secret: string): Promise<string> {
+  const now = Date.now();
+  return signToken({ sub, exp: now + (sub === 'session' ? SESSION_TTL_MS : RESET_TTL_MS), iat: now }, secret);
 }
 
 export async function signToken(payload: TokenPayload, secret: string): Promise<string> {
@@ -148,6 +132,20 @@ export function getSessionCookie(c: Context): string | undefined {
   return getCookie(c, SESSION_COOKIE_NAME);
 }
 
+/** Token de la petición: la cookie de sesión o, si no hay, el header `Authorization: Bearer`. */
+export function getRequestToken(c: Context): string | undefined {
+  const cookieToken = getSessionCookie(c);
+  if (cookieToken) return cookieToken;
+  const authHeader = c.req.header('authorization');
+  return authHeader?.startsWith('Bearer ') ? authHeader.slice(7).trim() : undefined;
+}
+
+/** Una sesión es válida si el token está firmado con `secret`, no venció y es de tipo `session`. */
+export async function isValidSessionToken(token: string, secret: string): Promise<boolean> {
+  const payload = await verifyToken(token, secret);
+  return Boolean(payload && payload.sub === 'session');
+}
+
 // Lista de rutas públicas exentas del middleware de autenticación
 const PUBLIC_ROUTES = [
   { method: 'POST', path: '/api/auth/unlock' },
@@ -184,22 +182,12 @@ export async function pinAuthMiddleware(c: Context, next: Next) {
   }
 
   // 3. Verificación de cookie de sesión o Bearer header
-  let token = getSessionCookie(c);
-  if (!token) {
-    const authHeader = c.req.header('authorization');
-    if (authHeader?.startsWith('Bearer ')) {
-      token = authHeader.slice(7).trim();
-    }
-  }
-
+  const token = getRequestToken(c);
   if (!token) {
     return c.json({ error: 'No autenticado. Ingrese el PIN maestro.' }, 401);
   }
 
-  const secret = getPinSecret(c);
-  const payload = await verifyToken(token, secret);
-
-  if (!payload || payload.sub !== 'session') {
+  if (!(await isValidSessionToken(token, getPinSecret(c)))) {
     clearSessionCookie(c);
     return c.json({ error: 'Sesión expirada o inválida. Ingrese el PIN de nuevo.' }, 401);
   }

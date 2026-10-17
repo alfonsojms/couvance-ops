@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { LayoutDashboard, FolderKanban, Sparkles, Users, Download, Lock, Shield, History } from 'lucide-react';
 import { toast } from 'sonner';
+import { backupApi } from '../lib/resources';
 
 // Vercel React Best Practice: Dynamic import for heavy modal component
 const SecuritySettingsModal = React.lazy(() =>
@@ -40,10 +41,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onTabChange, onLock 
   const handleExportBackup = async () => {
     try {
       setDownloading(true);
-      const res = await fetch('/api/backup/export', { credentials: 'include' });
-      if (!res.ok) throw new Error('Error al generar respaldo');
-
-      const blob = await res.blob();
+      const blob = await backupApi.exportFile();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       const dateStr = new Date().toISOString().split('T')[0];

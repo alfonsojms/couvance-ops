@@ -1,16 +1,25 @@
 import { Context } from 'hono';
 import { eq } from 'drizzle-orm';
+import type { BaseSQLiteDatabase } from 'drizzle-orm/sqlite-core';
 import { createD1Db, D1Db } from './d1';
 import type { SqliteDb } from './sqlite';
 import * as schema from './schema';
 import { authConfig } from './schema';
-import { sha256 } from '../middlewares/auth';
+import { sha256 } from '../shared/crypto';
 
 export * from './schema';
 export { type SqliteDb } from './sqlite';
 export { createD1Db, type D1Db } from './d1';
 
 export type AppDatabase = D1Db | SqliteDb;
+
+/**
+ * Vista común de ambos drivers para consultas con proyección (`select({...})`) o joins, que no tipan
+ * sobre la unión `D1Db | SqliteDb`. Los query builders son los mismos en los dos drivers; solo cambia
+ * si `.all()` es síncrono o asíncrono, por eso el resultado siempre se espera con `await`.
+ */
+export type QueryDb = BaseSQLiteDatabase<'sync' | 'async', unknown, typeof schema>;
+export const asQueryDb = (db: AppDatabase): QueryDb => db as unknown as QueryDb;
 
 let globalDb: AppDatabase | null = null;
 
