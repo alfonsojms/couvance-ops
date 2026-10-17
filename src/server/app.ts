@@ -9,7 +9,8 @@ import budgetsApp from './modules/budgets';
 import financeApp from './modules/finance';
 import backupApp from './modules/backup';
 
-import { getGlobalDb } from './db';
+import { getGlobalDb, type AppDatabase } from './db';
+import { handleHttpError } from './shared/http';
 
 export type AppEnv = {
   Bindings: {
@@ -17,7 +18,7 @@ export type AppEnv = {
     PIN_SECRET?: string;
   };
   Variables: {
-    db?: any;
+    db?: AppDatabase;
   };
 };
 
@@ -80,6 +81,12 @@ app.notFound((c) => {
 
 // Manejador central de errores para diagnóstico y observabilidad
 app.onError((err, c) => {
+  // Errores esperados (validación, 404, conflictos): respuesta { error } con su status, sin log de error.
+  const httpResponse = handleHttpError(err, c);
+  if (httpResponse) {
+    return httpResponse;
+  }
+
   console.error(`🔥 [API Error] ${c.req.method} ${c.req.url}:`, err);
   return c.json(
     {

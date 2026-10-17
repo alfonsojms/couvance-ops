@@ -97,7 +97,7 @@ Las reglas que protegen el dinero están documentadas como invariantes (RN-01 a 
 - PIN y respuestas secretas guardados como SHA-256 con un secreto de servidor (`PIN_SECRET`), comparados en tiempo constante.
 - Sesión firmada con HMAC-SHA256 en una cookie `HttpOnly`, `SameSite=Lax` (necesario para volver desde WhatsApp sin perder la sesión) y 30 días de validez.
 - Límite de 5 intentos fallidos cada 15 minutos por IP en `/api/auth/*`.
-- Rechazo de bytes nulos en URL y query params, limpieza de textos en los esquemas Zod (`sanitizedText`) e IDs de ruta validados contra `^[a-zA-Z0-9_-]{1,64}$`.
+- Rechazo de bytes nulos en URL y query params, limpieza de textos en cada esquema Zod (`sanitizeString`) e IDs de ruta validados contra `^[a-zA-Z0-9_-]{1,64}$`.
 - Sin CORS: la SPA y la API comparten origen, así que ningún sitio externo puede hacer peticiones autenticadas ([`test/cors.test.ts`](test/cors.test.ts)).
 
 ---

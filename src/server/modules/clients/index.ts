@@ -2,7 +2,8 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { eq } from 'drizzle-orm';
 import { getDb, clients, projects, budgets, milestones } from '../../db';
-import { sanitizeString, validateAndSanitizeId } from '../../middlewares/sanitize';
+import { sanitizeString } from '../../middlewares/sanitize';
+import { parseBody, requireId } from '../../shared/http';
 
 const clientsApp = new Hono();
 
@@ -104,12 +105,7 @@ clientsApp.get('/', async (c) => {
 
 // 2. POST /api/clients — Crea nuevo cliente
 clientsApp.post('/', async (c) => {
-  const body = await c.req.json().catch(() => null);
-  const parsed = clientSchema.safeParse(body);
-
-  if (!parsed.success) {
-    return c.json({ error: parsed.error.issues[0].message }, 400);
-  }
+  const data = await parseBody(c, clientSchema);
 
   const db = getDb(c);
   const nowIso = new Date().toISOString();
@@ -117,11 +113,11 @@ clientsApp.post('/', async (c) => {
 
   const newClient = {
     id: newId,
-    name: parsed.data.name.trim(),
-    contactName: parsed.data.contactName?.trim() || null,
-    phone: parsed.data.phone?.trim() || null,
-    email: parsed.data.email?.trim() || null,
-    notes: parsed.data.notes?.trim() || null,
+    name: data.name.trim(),
+    contactName: data.contactName?.trim() || null,
+    phone: data.phone?.trim() || null,
+    email: data.email?.trim() || null,
+    notes: data.notes?.trim() || null,
     createdAt: nowIso,
     updatedAt: nowIso,
   };
@@ -133,17 +129,9 @@ clientsApp.post('/', async (c) => {
 // 3. PUT /api/clients/:id — Actualiza cliente
 clientsApp.put('/:id', async (c) => {
   const rawId = c.req.param('id');
-  const id = validateAndSanitizeId(rawId);
-  if (!id) {
-    return c.json({ error: 'Identificador de cliente inválido o malformado.' }, 400);
-  }
+  const id = requireId(rawId, 'Identificador de cliente inválido o malformado.');
 
-  const body = await c.req.json().catch(() => null);
-  const parsed = clientUpdateSchema.safeParse(body);
-
-  if (!parsed.success) {
-    return c.json({ error: parsed.error.issues[0]?.message || 'Datos de cliente inválidos' }, 400);
-  }
+  const data = await parseBody(c, clientUpdateSchema, 'Datos de cliente inválidos');
 
   const db = getDb(c);
   const [existing] = await db.select().from(clients).where(eq(clients.id, id)).all();
@@ -156,11 +144,11 @@ clientsApp.put('/:id', async (c) => {
     updatedAt: nowIso,
   };
 
-  if (parsed.data.name !== undefined) updateData.name = parsed.data.name;
-  if (parsed.data.contactName !== undefined) updateData.contactName = parsed.data.contactName || null;
-  if (parsed.data.phone !== undefined) updateData.phone = parsed.data.phone || null;
-  if (parsed.data.email !== undefined) updateData.email = parsed.data.email || null;
-  if (parsed.data.notes !== undefined) updateData.notes = parsed.data.notes || null;
+  if (data.name !== undefined) updateData.name = data.name;
+  if (data.contactName !== undefined) updateData.contactName = data.contactName || null;
+  if (data.phone !== undefined) updateData.phone = data.phone || null;
+  if (data.email !== undefined) updateData.email = data.email || null;
+  if (data.notes !== undefined) updateData.notes = data.notes || null;
 
   await db.update(clients).set(updateData).where(eq(clients.id, id));
 
@@ -171,10 +159,7 @@ clientsApp.put('/:id', async (c) => {
 // 4. DELETE /api/clients/:id — Eliminación con protección 409 (RN-06)
 clientsApp.delete('/:id', async (c) => {
   const rawId = c.req.param('id');
-  const id = validateAndSanitizeId(rawId);
-  if (!id) {
-    return c.json({ error: 'Identificador de cliente inválido o malformado.' }, 400);
-  }
+  const id = requireId(rawId, 'Identificador de cliente inválido o malformado.');
 
   const db = getDb(c);
 

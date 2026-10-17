@@ -1,25 +1,14 @@
 import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
-import Database from 'better-sqlite3';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
 import fs from 'node:fs';
-import path from 'node:path';
 import app from './app';
-import * as schema from './db/schema';
 import { seedInitialAuthIfNeeded, setGlobalDb } from './db';
+import { openSqliteDb } from './db/sqlite';
 
 // 1. Inicialización y conexión de SQLite local (better-sqlite3)
 const dbPath = process.env.DATABASE_URL?.replace('file:', '') || './data/couvance-ops.db';
-const dbDir = path.dirname(dbPath);
-if (!fs.existsSync(dbDir)) {
-  fs.mkdirSync(dbDir, { recursive: true });
-}
-
-const sqlite = new Database(dbPath);
-sqlite.pragma('journal_mode = WAL');
-sqlite.pragma('foreign_keys = ON');
-const db = drizzle(sqlite, { schema });
+const { db } = openSqliteDb(dbPath);
 
 // Inyección de la base de datos en el contexto global de Node
 setGlobalDb(db);

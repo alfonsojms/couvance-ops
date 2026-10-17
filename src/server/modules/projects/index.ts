@@ -2,7 +2,8 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { eq, and } from 'drizzle-orm';
 import { getDb, projects, clients, budgets, milestones } from '../../db';
-import { sanitizeString, validateAndSanitizeId, idParamSchema } from '../../middlewares/sanitize';
+import { sanitizeString, idParamSchema } from '../../middlewares/sanitize';
+import { parseBody, requireId } from '../../shared/http';
 
 const projectsApp = new Hono();
 
@@ -192,10 +193,7 @@ projectsApp.get('/', async (c) => {
 // 2. GET /api/projects/:id — Detalle completo del proyecto con cliente, presupuestos e hitos
 projectsApp.get('/:id', async (c) => {
   const rawId = c.req.param('id');
-  const id = validateAndSanitizeId(rawId);
-  if (!id) {
-    return c.json({ error: 'Identificador de proyecto inválido o malformado.' }, 400);
-  }
+  const id = requireId(rawId, 'Identificador de proyecto inválido o malformado.');
 
   const db = getDb(c);
 
@@ -226,25 +224,20 @@ projectsApp.get('/:id', async (c) => {
 
 // 3. POST /api/projects — Crea proyecto
 projectsApp.post('/', async (c) => {
-  const body = await c.req.json().catch(() => null);
-  const parsed = projectCreateSchema.safeParse(body);
-
-  if (!parsed.success) {
-    return c.json({ error: parsed.error.issues[0].message }, 400);
-  }
+  const data = await parseBody(c, projectCreateSchema);
 
   const db = getDb(c);
   // Validar cliente existente
-  const [clientExists] = await db.select().from(clients).where(eq(clients.id, parsed.data.clientId)).all();
+  const [clientExists] = await db.select().from(clients).where(eq(clients.id, data.clientId)).all();
   if (!clientExists) {
     return c.json({ error: 'El cliente especificado no existe' }, 400);
   }
 
-  if (parsed.data.hasRecurring === 1) {
-    if (!parsed.data.recurringRenewalDate || parsed.data.recurringRenewalDate.trim() === '') {
+  if (data.hasRecurring === 1) {
+    if (!data.recurringRenewalDate || data.recurringRenewalDate.trim() === '') {
       return c.json({ error: 'La fecha de renovación es obligatoria cuando el servicio recurrente está activo' }, 400);
     }
-    if (parsed.data.recurringAmount === undefined || parsed.data.recurringAmount === null || parsed.data.recurringAmount <= 0) {
+    if (data.recurringAmount === undefined || data.recurringAmount === null || data.recurringAmount <= 0) {
       return c.json({ error: 'El monto recurrente es obligatorio cuando el servicio recurrente está activo' }, 400);
     }
   }
@@ -254,19 +247,19 @@ projectsApp.post('/', async (c) => {
 
   const newProject = {
     id: newId,
-    clientId: parsed.data.clientId,
-    title: parsed.data.title,
-    category: parsed.data.category,
-    status: parsed.data.status,
-    productionUrl: parsed.data.productionUrl || null,
-    productionStatus: parsed.data.productionStatus,
-    codeRepoUrl: parsed.data.codeRepoUrl || null,
-    resourcesUrl: parsed.data.resourcesUrl || null,
-    hasRecurring: parsed.data.hasRecurring,
-    recurringAmount: parsed.data.hasRecurring ? parsed.data.recurringAmount || null : null,
-    recurringCurrency: parsed.data.recurringCurrency,
-    recurringPeriod: parsed.data.recurringPeriod,
-    recurringRenewalDate: parsed.data.hasRecurring ? parsed.data.recurringRenewalDate || null : null,
+    clientId: data.clientId,
+    title: data.title,
+    category: data.category,
+    status: data.status,
+    productionUrl: data.productionUrl || null,
+    productionStatus: data.productionStatus,
+    codeRepoUrl: data.codeRepoUrl || null,
+    resourcesUrl: data.resourcesUrl || null,
+    hasRecurring: data.hasRecurring,
+    recurringAmount: data.hasRecurring ? data.recurringAmount || null : null,
+    recurringCurrency: data.recurringCurrency,
+    recurringPeriod: data.recurringPeriod,
+    recurringRenewalDate: data.hasRecurring ? data.recurringRenewalDate || null : null,
     createdAt: nowIso,
     updatedAt: nowIso,
   };
@@ -278,17 +271,9 @@ projectsApp.post('/', async (c) => {
 // 4. PUT /api/projects/:id — Actualización y Cancelación No Destructiva (RN-05)
 projectsApp.put('/:id', async (c) => {
   const rawId = c.req.param('id');
-  const id = validateAndSanitizeId(rawId);
-  if (!id) {
-    return c.json({ error: 'Identificador de proyecto inválido o malformado.' }, 400);
-  }
+  const id = requireId(rawId, 'Identificador de proyecto inválido o malformado.');
 
-  const body = await c.req.json().catch(() => null);
-  const parsed = projectUpdateSchema.safeParse(body);
-
-  if (!parsed.success) {
-    return c.json({ error: parsed.error.issues[0].message }, 400);
-  }
+  const data = await parseBody(c, projectUpdateSchema);
 
   const db = getDb(c);
   const [existing] = await db.select().from(projects).where(eq(projects.id, id)).all();
@@ -297,12 +282,12 @@ projectsApp.put('/:id', async (c) => {
   }
 
   const nowIso = new Date().toISOString();
-  const updateData = buildProjectUpdate(parsed.data, existing, nowIso);
+  const updateData = buildProjectUpdate(data, existing, nowIso);
 
   await db.update(projects).set(updateData).where(eq(projects.id, id));
 
   // RN-05: Si el estado cambia a CANCELLED, cancelar hitos PENDING preservando los PAID
-  if (parsed.data.status === 'CANCELLED') {
+  if (data.status === 'CANCELLED') {
     const projBudgets = await db.select().from(budgets).where(eq(budgets.projectId, id)).all();
     for (const b of projBudgets) {
       await db
@@ -322,17 +307,9 @@ projectsApp.put('/:id', async (c) => {
 // 4b. PATCH /api/projects/:id — Soft edit de metadatos (RN-07, RN-08)
 projectsApp.patch('/:id', async (c) => {
   const rawId = c.req.param('id');
-  const id = validateAndSanitizeId(rawId);
-  if (!id) {
-    return c.json({ error: 'Identificador de proyecto inválido o malformado.' }, 400);
-  }
+  const id = requireId(rawId, 'Identificador de proyecto inválido o malformado.');
 
-  const body = await c.req.json().catch(() => null);
-  const parsed = projectSoftEditSchema.safeParse(body);
-
-  if (!parsed.success) {
-    return c.json({ error: parsed.error.issues[0].message }, 400);
-  }
+  const data = await parseBody(c, projectSoftEditSchema);
 
   const db = getDb(c);
   const [existing] = await db.select().from(projects).where(eq(projects.id, id)).all();
@@ -344,20 +321,20 @@ projectsApp.patch('/:id', async (c) => {
     return c.json({ error: 'Un proyecto cancelado no se puede editar' }, 409);
   }
 
-  const effectiveHasRecurring = parsed.data.hasRecurring !== undefined ? parsed.data.hasRecurring : existing.hasRecurring;
+  const effectiveHasRecurring = data.hasRecurring !== undefined ? data.hasRecurring : existing.hasRecurring;
   if (effectiveHasRecurring === 1) {
-    const effectiveRenewalDate = parsed.data.recurringRenewalDate !== undefined ? parsed.data.recurringRenewalDate : existing.recurringRenewalDate;
+    const effectiveRenewalDate = data.recurringRenewalDate !== undefined ? data.recurringRenewalDate : existing.recurringRenewalDate;
     if (!effectiveRenewalDate || effectiveRenewalDate.trim() === '') {
       return c.json({ error: 'La fecha de renovación es obligatoria cuando el servicio recurrente está activo' }, 400);
     }
-    const effectiveAmount = parsed.data.recurringAmount !== undefined ? parsed.data.recurringAmount : existing.recurringAmount;
+    const effectiveAmount = data.recurringAmount !== undefined ? data.recurringAmount : existing.recurringAmount;
     if (effectiveAmount === undefined || effectiveAmount === null || effectiveAmount <= 0) {
       return c.json({ error: 'El monto recurrente es obligatorio cuando el servicio recurrente está activo' }, 400);
     }
   }
 
   const nowIso = new Date().toISOString();
-  const updateData = buildProjectUpdate(parsed.data, existing, nowIso);
+  const updateData = buildProjectUpdate(data, existing, nowIso);
 
   await db.update(projects).set(updateData).where(eq(projects.id, id));
 
@@ -412,10 +389,7 @@ export async function handleProjectRenewal(c: any, projectId: string) {
 // 5. POST /api/projects/:id/renew — Suma un período de renovación (+1 mes o +1 año) (RN-08)
 projectsApp.post('/:id/renew', async (c) => {
   const rawId = c.req.param('id');
-  const id = validateAndSanitizeId(rawId);
-  if (!id) {
-    return c.json({ error: 'Identificador de proyecto inválido o malformado.' }, 400);
-  }
+  const id = requireId(rawId, 'Identificador de proyecto inválido o malformado.');
   return handleProjectRenewal(c, id);
 });
 

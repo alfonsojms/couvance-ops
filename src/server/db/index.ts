@@ -4,7 +4,7 @@ import { createD1Db, D1Db } from './d1';
 import type { SqliteDb } from './sqlite';
 import * as schema from './schema';
 import { authConfig } from './schema';
-import { sha256 } from '../middlewares/auth';
+import { sha256 } from '../shared/crypto';
 
 export * from './schema';
 export { type SqliteDb } from './sqlite';

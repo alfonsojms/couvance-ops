@@ -16,7 +16,9 @@ npx vitest run test/budgets.test.ts             # un archivo
 npx vitest run test/budgets.test.ts -t "texto"  # un caso por nombre
 npm run test:e2e                                # Playwright (e2e/), arranca node-entry en :3101 con BD temporal
 npx playwright test e2e/unlock.spec.ts          # un spec e2e
-npx tsc --noEmit                                # typecheck (no hay script de lint)
+npx tsc --noEmit                                # typecheck de src/ y functions/ (no incluye test/; no hay script de lint)
+npx wrangler pages functions build --outdir <tmp> --compatibility-flags nodejs_compat --compatibility-date 2024-09-23
+                                                # bundle Edge de producción (npm run build no lo cubre)
 
 npm run build               # build:client (Vite -> dist/client) + build:server (tsup -> dist/server)
 npm run db:generate         # drizzle-kit generate tras cambiar src/server/db/schema.ts
@@ -34,9 +36,11 @@ PIN sembrado por defecto: `12345678` (sobrescribible con `INITIAL_PIN`, `SECURIT
 
 Los handlers siempre obtienen la BD con `getDb(c)` (`src/server/db/index.ts`), que resuelve en orden: `c.env.DB` (D1) → `c.get('db')` → instancia global de Node. Nunca importes un driver concreto dentro de un módulo.
 
-**Operaciones atómicas** (p. ej. aprobación de presupuesto en `modules/budgets`): se detecta el driver por duck-typing — `db.batch([...])` en D1, `db.transaction(tx => ...)` en better-sqlite3 (síncrono, sin `await` dentro). Seguí ese mismo patrón para cualquier escritura multi-tabla nueva.
+**Operaciones atómicas**: toda escritura multi-tabla usa `runAtomic(db, [stmt1, stmt2, ...])` (`src/server/db/atomic.ts`), pasando las sentencias Drizzle **sin `await`**. En D1 corre como `db.batch`, en better-sqlite3 como `db.transaction` síncrona; ambos caminos (incluido el rollback) están testeados en `test/server-infra.test.ts`.
 
-**Cadena de middlewares** (en `app.ts`): inyección de BD → `sanitizeMiddleware` (solo rechaza bytes nulos en URL/query con 400; **no toca el body**: los textos se limpian en los esquemas Zod con `sanitizedText()` y los IDs de ruta con `validateAndSanitizeId`) → `pinAuthMiddleware` en `/api/*`, que exime `POST /api/auth/unlock`, `GET /api/auth/questions`, `POST /api/auth/recover`, `POST /api/auth/reset-pin` y `GET /api/health`. Cookie `couvance_session` (HttpOnly, `SameSite=Lax` obligatorio para abrir links desde WhatsApp, 30 días), firmada con `PIN_SECRET`. Rate limit en memoria de 5 fallos / 15 min por IP en `/api/auth/*`. **No hay middleware CORS a propósito**: SPA y API comparten origen en todos los entornos (ver `test/cors.test.ts`); no lo reintroduzcas.
+**Errores y validación HTTP** (`src/server/shared/http.ts`): `requireId(c.req.param('id'), mensaje)` y `parseBody(c, schema, fallback?)` lanzan `HttpError(400, mensaje)`; para 404/409 lanzá `new HttpError(status, mensaje)`. `app.onError` lo convierte en `{ error: mensaje }` con su status, que es el contrato de errores de la SPA. Los mensajes de error son parte del contrato: no los cambies sin actualizar los snapshots a propósito.
+
+**Cadena de middlewares** (en `app.ts`): inyección de BD → `sanitizeMiddleware` (solo rechaza bytes nulos en URL/query con 400; **no toca el body**: los textos se limpian con `.transform(sanitizeString)` dentro de cada esquema Zod y los IDs de ruta con `requireId`) → `pinAuthMiddleware` en `/api/*`, que exime `POST /api/auth/unlock`, `GET /api/auth/questions`, `POST /api/auth/recover`, `POST /api/auth/reset-pin` y `GET /api/health`. Cookie `couvance_session` (HttpOnly, `SameSite=Lax` obligatorio para abrir links desde WhatsApp, 30 días), firmada con `PIN_SECRET`. Rate limit en memoria de 5 fallos / 15 min por IP en `/api/auth/*`. **No hay middleware CORS a propósito**: SPA y API comparten origen en todos los entornos (ver `test/cors.test.ts`); no lo reintroduzcas.
 
 **Módulos** en `src/server/modules/<dominio>/index.ts`, cada uno un sub-app Hono montado en `app.ts` (`budgets` se monta en `/api` porque expone rutas `/projects/:id/budgets`, `/budgets/:id/*` y `/milestones/:id/pay`). El esquema Drizzle (`src/server/db/schema.ts`) usa propiedades camelCase mapeadas a columnas snake_case.
 

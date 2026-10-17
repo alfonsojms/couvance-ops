@@ -2,9 +2,8 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { eq } from 'drizzle-orm';
 import { getDb, authConfig, seedInitialAuthIfNeeded } from '../../db';
+import { sha256, timingSafeEqual } from '../../shared/crypto';
 import {
-  sha256,
-  timingSafeEqual,
   signToken,
   verifyToken,
   setSessionCookie,
@@ -19,6 +18,7 @@ import {
   getClientIp,
 } from '../../middlewares/rate-limit';
 import { sanitizeString } from '../../middlewares/sanitize';
+import { parseBody } from '../../shared/http';
 
 const authApp = new Hono();
 
@@ -102,12 +102,7 @@ export type UpdateQuestionsInput = z.infer<typeof updateQuestionsSchema>;
 // 1. POST /api/auth/unlock — Valida el PIN de 8 dígitos
 authApp.post('/unlock', rateLimitMiddleware, async (c) => {
   const ip = getClientIp(c);
-  const body = await c.req.json().catch(() => null);
-  const parsed = unlockSchema.safeParse(body);
-
-  if (!parsed.success) {
-    return c.json({ error: parsed.error.issues[0]?.message || 'El PIN debe tener 8 dígitos numéricos.' }, 400);
-  }
+  const data = await parseBody(c, unlockSchema, 'El PIN debe tener 8 dígitos numéricos.');
 
   const db = getDb(c);
   const secret = getPinSecret(c);
@@ -123,7 +118,7 @@ authApp.post('/unlock', rateLimitMiddleware, async (c) => {
     return c.json({ error: 'Sistema no configurado o credenciales no sembradas.' }, 500);
   }
 
-  const inputHash = await sha256(parsed.data.pin, secret);
+  const inputHash = await sha256(data.pin, secret);
   if (!timingSafeEqual(inputHash, auth.pinHash)) {
     recordFailedAttempt(ip);
     return c.json({ error: 'PIN incorrecto. Intente nuevamente.' }, 401);
@@ -173,12 +168,7 @@ authApp.get('/questions', async (c) => {
 // 3. POST /api/auth/recover — Valida respuestas secretas y entrega token temporal de 10 min
 authApp.post('/recover', rateLimitMiddleware, async (c) => {
   const ip = getClientIp(c);
-  const body = await c.req.json().catch(() => null);
-  const parsed = recoverSchema.safeParse(body);
-
-  if (!parsed.success) {
-    return c.json({ error: parsed.error.issues[0]?.message || 'Respuestas requeridas inválidas.' }, 400);
-  }
+  const data = await parseBody(c, recoverSchema, 'Respuestas requeridas inválidas.');
 
   const db = getDb(c);
   const secret = getPinSecret(c);
@@ -188,8 +178,8 @@ authApp.post('/recover', rateLimitMiddleware, async (c) => {
     return c.json({ error: 'Sistema no configurado.' }, 500);
   }
 
-  const inputA1Hash = await sha256(parsed.data.a1, secret);
-  const inputA2Hash = await sha256(parsed.data.a2, secret);
+  const inputA1Hash = await sha256(data.a1, secret);
+  const inputA2Hash = await sha256(data.a2, secret);
 
   const match1 = timingSafeEqual(inputA1Hash, auth.a1Hash);
   const match2 = timingSafeEqual(inputA2Hash, auth.a2Hash);
@@ -214,22 +204,17 @@ authApp.post('/recover', rateLimitMiddleware, async (c) => {
 
 // 4. POST /api/auth/reset-pin — Valida token temporal y actualiza el PIN
 authApp.post('/reset-pin', async (c) => {
-  const body = await c.req.json().catch(() => null);
-  const parsed = resetPinSchema.safeParse(body);
-
-  if (!parsed.success) {
-    return c.json({ error: parsed.error.issues[0]?.message || 'Datos de nuevo PIN inválidos.' }, 400);
-  }
+  const data = await parseBody(c, resetPinSchema, 'Datos de nuevo PIN inválidos.');
 
   const secret = getPinSecret(c);
-  const payload = await verifyToken(parsed.data.token, secret);
+  const payload = await verifyToken(data.token, secret);
 
   if (!payload || payload.sub !== 'reset') {
     return c.json({ error: 'Token de recuperación inválido o vencido.' }, 401);
   }
 
   const db = getDb(c);
-  const newPinHash = await sha256(parsed.data.newPin, secret);
+  const newPinHash = await sha256(data.newPin, secret);
   const nowIso = new Date().toISOString();
 
   await db
@@ -303,12 +288,7 @@ authApp.get('/settings', async (c) => {
 
 // 8. POST /api/auth/change-pin — Cambia el PIN maestro tras validar el PIN actual
 authApp.post('/change-pin', async (c) => {
-  const body = await c.req.json().catch(() => null);
-  const parsed = changePinSchema.safeParse(body);
-
-  if (!parsed.success) {
-    return c.json({ error: parsed.error.issues[0]?.message || 'Datos de PIN inválidos.' }, 400);
-  }
+  const data = await parseBody(c, changePinSchema, 'Datos de PIN inválidos.');
 
   const db = getDb(c);
   const secret = getPinSecret(c);
@@ -318,12 +298,12 @@ authApp.post('/change-pin', async (c) => {
   }
 
   // Verificar PIN actual
-  const currentHash = await sha256(parsed.data.currentPin, secret);
+  const currentHash = await sha256(data.currentPin, secret);
   if (!timingSafeEqual(currentHash, auth.pinHash)) {
     return c.json({ error: 'El PIN actual ingresado es incorrecto.' }, 401);
   }
 
-  const newPinHash = await sha256(parsed.data.newPin, secret);
+  const newPinHash = await sha256(data.newPin, secret);
   const nowIso = new Date().toISOString();
 
   await db
@@ -350,12 +330,7 @@ authApp.post('/change-pin', async (c) => {
 
 // 9. POST /api/auth/update-questions — Actualiza las preguntas y respuestas secretas tras validar el PIN actual
 authApp.post('/update-questions', async (c) => {
-  const body = await c.req.json().catch(() => null);
-  const parsed = updateQuestionsSchema.safeParse(body);
-
-  if (!parsed.success) {
-    return c.json({ error: parsed.error.issues[0]?.message || 'Datos de preguntas inválidos.' }, 400);
-  }
+  const data = await parseBody(c, updateQuestionsSchema, 'Datos de preguntas inválidos.');
 
   const db = getDb(c);
   const secret = getPinSecret(c);
@@ -365,21 +340,21 @@ authApp.post('/update-questions', async (c) => {
   }
 
   // Verificar PIN actual para autorizar el cambio
-  const currentHash = await sha256(parsed.data.currentPin, secret);
+  const currentHash = await sha256(data.currentPin, secret);
   if (!timingSafeEqual(currentHash, auth.pinHash)) {
     return c.json({ error: 'El PIN actual ingresado es incorrecto. No se autorizó el cambio.' }, 401);
   }
 
-  const a1Hash = await sha256(parsed.data.a1, secret);
-  const a2Hash = await sha256(parsed.data.a2, secret);
+  const a1Hash = await sha256(data.a1, secret);
+  const a2Hash = await sha256(data.a2, secret);
   const nowIso = new Date().toISOString();
 
   await db
     .update(authConfig)
     .set({
-      q1: parsed.data.q1.trim(),
+      q1: data.q1.trim(),
       a1Hash,
-      q2: parsed.data.q2.trim(),
+      q2: data.q2.trim(),
       a2Hash,
       updatedAt: nowIso,
     })

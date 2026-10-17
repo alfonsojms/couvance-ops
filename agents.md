@@ -54,7 +54,7 @@ couvance-ops/
 │   │   ├── middlewares/
 │   │   │   ├── auth.ts         # Validación de PIN y cookie de sesión
 │   │   │   ├── rate-limit.ts   # Rate limiting (5 intentos fallidos / 15 min en /api/auth/*)
-│   │   │   └── sanitize.ts     # Rechazo de bytes nulos en URL, helpers sanitizedText / validateAndSanitizeId
+│   │   │   └── sanitize.ts     # Rechazo de bytes nulos en URL, sanitizeString y validateAndSanitizeId
 │   │   ├── modules/
 │   │   │   ├── auth/           # Login PIN, preguntas secretas, reseteo, logout
 │   │   │   ├── clients/        # Gestión de clientes y protección 409
@@ -243,8 +243,8 @@ Cualquier agente o desarrollador que modifique la lógica del sistema debe garan
 
 4. **Sanitización de Entradas (`src/server/middlewares/sanitize.ts`):**
    - `sanitizeMiddleware` (global) rechaza con `400` cualquier byte nulo (`\0` / `%00`) en la URL o en los query params. **No modifica el body.**
-   - Los textos del body se limpian en los esquemas Zod con `sanitizedText(min, max)` (elimina caracteres de control, normaliza NFC, hace trim y limita longitud).
-   - Los parámetros de ruta (`:id`, `:projectId`) se validan con `validateAndSanitizeId` contra `/^[a-zA-Z0-9_-]{1,64}$/`.
+   - Los textos del body se limpian dentro de cada esquema Zod con `.transform(sanitizeString)` (elimina bytes nulos y caracteres de control, normaliza NFC y hace trim), seguido de los límites de longitud propios de cada campo.
+   - Los parámetros de ruta (`:id`, `:projectId`) se validan con `requireId` (`src/server/shared/http.ts`, sobre `validateAndSanitizeId`) contra `/^[a-zA-Z0-9_-]{1,64}$/`.
 
 5. **Middleware de Rutas (`pinAuthMiddleware`):**
    - Aplica a todas las rutas bajo `/api/*`.
@@ -370,7 +370,8 @@ docker compose logs -f couvance-ops
 Antes de generar o modificar código en este repositorio, verifica:
 - [ ] ¿El endpoint o función respeta el tipado estricto de TypeScript?
 - [ ] ¿Los esquemas de entrada y salida están validados con **Zod**?
-- [ ] ¿Los textos de entrada usan `sanitizedText` y los IDs de ruta `validateAndSanitizeId`?
+- [ ] ¿Los textos de entrada pasan por `sanitizeString` en el esquema Zod, los IDs de ruta por `requireId` y el body por `parseBody`?
+- [ ] ¿Los errores esperados se lanzan como `HttpError` (respuesta `{ error }`) en lugar de construir respuestas a mano?
 - [ ] ¿La BD se obtiene con `getDb(c)` y las escrituras multi-tabla son atómicas (`db.batch` en D1 / `db.transaction` en SQLite)?
 - [ ] ¿Se preservaron los montos de presupuestos e hitos como números enteros sin decimales?
 - [ ] ¿El último hito absorbe cualquier residuo fraccionario del porcentaje?

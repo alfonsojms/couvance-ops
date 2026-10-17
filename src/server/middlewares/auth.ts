@@ -10,31 +10,6 @@ export function getPinSecret(c: Context): string {
   return envSecret || processSecret || 'couvance_ops_default_insecure_secret_change_in_prod';
 }
 
-// SHA-256 nativo con Web Crypto para compatibilidad total Edge y Node
-export async function sha256(input: string, secret: string): Promise<string> {
-  const normalized = input.trim().toLowerCase() + secret;
-  const encoder = new TextEncoder();
-  const data = encoder.encode(normalized);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
-}
-
-// Comparación segura en tiempo constante para evitar ataques de temporización (timing attacks)
-export function timingSafeEqual(a: string, b: string): boolean {
-  const enc = new TextEncoder();
-  const aBytes = enc.encode(a);
-  const bBytes = enc.encode(b);
-  if (aBytes.byteLength !== bBytes.byteLength) {
-    return false;
-  }
-  let mismatch = 0;
-  for (let i = 0; i < aBytes.byteLength; i++) {
-    mismatch |= aBytes[i] ^ bBytes[i];
-  }
-  return mismatch === 0;
-}
-
 // Generación y verificación de tokens HMAC-SHA256 nativos
 async function getHmacKey(secret: string): Promise<CryptoKey> {
   const encoder = new TextEncoder();

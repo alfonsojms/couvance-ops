@@ -2,7 +2,9 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { eq, and } from 'drizzle-orm';
 import { getDb, budgets, milestones, projects } from '../../db';
-import { sanitizeString, validateAndSanitizeId } from '../../middlewares/sanitize';
+import { runAtomic } from '../../db/atomic';
+import { sanitizeString } from '../../middlewares/sanitize';
+import { parseBody, requireId } from '../../shared/http';
 
 const budgetsApp = new Hono();
 
@@ -88,17 +90,9 @@ export function calculateMilestonesAmounts(
 // 1. POST /api/projects/:projectId/budgets — Crea presupuesto e hitos en estado DRAFT
 budgetsApp.post('/projects/:projectId/budgets', async (c) => {
   const rawProjectId = c.req.param('projectId');
-  const projectId = validateAndSanitizeId(rawProjectId);
-  if (!projectId) {
-    return c.json({ error: 'Identificador de proyecto inválido o malformado.' }, 400);
-  }
+  const projectId = requireId(rawProjectId, 'Identificador de proyecto inválido o malformado.');
 
-  const body = await c.req.json().catch(() => null);
-  const parsed = budgetCreateSchema.safeParse(body);
-
-  if (!parsed.success) {
-    return c.json({ error: parsed.error.issues[0].message }, 400);
-  }
+  const data = await parseBody(c, budgetCreateSchema);
 
   const db = getDb(c);
   const [proj] = await db.select().from(projects).where(eq(projects.id, projectId)).all();
@@ -111,16 +105,16 @@ budgetsApp.post('/projects/:projectId/budgets', async (c) => {
 
   // Calcular hitos enteros con conciliación de residuo (RN-01)
   const computedMilestones = calculateMilestonesAmounts(
-    parsed.data.totalAmount,
-    parsed.data.milestones
+    data.totalAmount,
+    data.milestones
   );
 
   const newBudget = {
     id: budgetId,
     projectId,
-    title: parsed.data.title.trim(),
-    totalAmount: parsed.data.totalAmount,
-    currency: parsed.data.currency,
+    title: data.title.trim(),
+    totalAmount: data.totalAmount,
+    currency: data.currency,
     status: 'DRAFT' as const,
     createdAt: nowIso,
     updatedAt: nowIso,
@@ -157,10 +151,7 @@ budgetsApp.post('/projects/:projectId/budgets', async (c) => {
 // 2. GET /api/projects/:projectId/budgets — Historial de presupuestos del proyecto
 budgetsApp.get('/projects/:projectId/budgets', async (c) => {
   const rawProjectId = c.req.param('projectId');
-  const projectId = validateAndSanitizeId(rawProjectId);
-  if (!projectId) {
-    return c.json({ error: 'Identificador de proyecto inválido o malformado.' }, 400);
-  }
+  const projectId = requireId(rawProjectId, 'Identificador de proyecto inválido o malformado.');
   const db = getDb(c);
 
   const projBudgets = await db.select().from(budgets).where(eq(budgets.projectId, projectId)).all();
@@ -181,17 +172,9 @@ budgetsApp.get('/projects/:projectId/budgets', async (c) => {
 // 3. PUT /api/budgets/:id — Edición de presupuesto (solo en estado DRAFT)
 budgetsApp.put('/budgets/:id', async (c) => {
   const rawId = c.req.param('id');
-  const id = validateAndSanitizeId(rawId);
-  if (!id) {
-    return c.json({ error: 'Identificador de presupuesto inválido o malformado.' }, 400);
-  }
+  const id = requireId(rawId, 'Identificador de presupuesto inválido o malformado.');
 
-  const body = await c.req.json().catch(() => null);
-  const parsed = budgetCreateSchema.safeParse(body);
-
-  if (!parsed.success) {
-    return c.json({ error: parsed.error.issues[0].message }, 400);
-  }
+  const data = await parseBody(c, budgetCreateSchema);
 
   const db = getDb(c);
   const [existing] = await db.select().from(budgets).where(eq(budgets.id, id)).all();
@@ -207,9 +190,9 @@ budgetsApp.put('/budgets/:id', async (c) => {
   await db
     .update(budgets)
     .set({
-      title: parsed.data.title,
-      totalAmount: parsed.data.totalAmount,
-      currency: parsed.data.currency,
+      title: data.title,
+      totalAmount: data.totalAmount,
+      currency: data.currency,
       updatedAt: nowIso,
     })
     .where(eq(budgets.id, id));
@@ -218,8 +201,8 @@ budgetsApp.put('/budgets/:id', async (c) => {
   await db.delete(milestones).where(eq(milestones.budgetId, id));
 
   const computedMilestones = calculateMilestonesAmounts(
-    parsed.data.totalAmount,
-    parsed.data.milestones
+    data.totalAmount,
+    data.milestones
   );
 
   const milestoneRows = computedMilestones.map((m) => ({
@@ -241,9 +224,9 @@ budgetsApp.put('/budgets/:id', async (c) => {
 
   return c.json({
     ...existing,
-    title: parsed.data.title,
-    totalAmount: parsed.data.totalAmount,
-    currency: parsed.data.currency,
+    title: data.title,
+    totalAmount: data.totalAmount,
+    currency: data.currency,
     updatedAt: nowIso,
     milestones: milestoneRows,
   });
@@ -252,10 +235,7 @@ budgetsApp.put('/budgets/:id', async (c) => {
 // GET /api/budgets/:id — Detalle del presupuesto con sus hitos
 budgetsApp.get('/budgets/:id', async (c) => {
   const rawId = c.req.param('id');
-  const id = validateAndSanitizeId(rawId);
-  if (!id) {
-    return c.json({ error: 'Identificador de presupuesto inválido o malformado.' }, 400);
-  }
+  const id = requireId(rawId, 'Identificador de presupuesto inválido o malformado.');
   const db = getDb(c);
 
   const [budget] = await db.select().from(budgets).where(eq(budgets.id, id)).all();
@@ -273,10 +253,7 @@ budgetsApp.get('/budgets/:id', async (c) => {
 // 4. POST /api/budgets/:id/approve — Aprobación en 1 Clic (RN-03)
 budgetsApp.post('/budgets/:id/approve', async (c) => {
   const rawId = c.req.param('id');
-  const id = validateAndSanitizeId(rawId);
-  if (!id) {
-    return c.json({ error: 'Identificador de presupuesto inválido o malformado.' }, 400);
-  }
+  const id = requireId(rawId, 'Identificador de presupuesto inválido o malformado.');
   const db = getDb(c);
 
   const [budget] = await db.select().from(budgets).where(eq(budgets.id, id)).all();
@@ -286,24 +263,11 @@ budgetsApp.post('/budgets/:id/approve', async (c) => {
 
   const nowIso = new Date().toISOString();
 
-  // Ejecución atómica: D1 batch, SQLite transaction, o fallback
-  if ('batch' in db && typeof (db as any).batch === 'function') {
-    await (db as any).batch([
-      db.update(budgets).set({ status: 'APPROVED', updatedAt: nowIso }).where(eq(budgets.id, id)),
-      db.update(projects).set({ status: 'IN_PROGRESS', updatedAt: nowIso }).where(eq(projects.id, budget.projectId)),
-      db.update(milestones).set({ status: 'PENDING', updatedAt: nowIso }).where(and(eq(milestones.budgetId, id), eq(milestones.status, 'DRAFT'))),
-    ]);
-  } else if ('transaction' in db && typeof (db as any).transaction === 'function') {
-    (db as any).transaction((tx: any) => {
-      tx.update(budgets).set({ status: 'APPROVED', updatedAt: nowIso }).where(eq(budgets.id, id)).run();
-      tx.update(projects).set({ status: 'IN_PROGRESS', updatedAt: nowIso }).where(eq(projects.id, budget.projectId)).run();
-      tx.update(milestones).set({ status: 'PENDING', updatedAt: nowIso }).where(and(eq(milestones.budgetId, id), eq(milestones.status, 'DRAFT'))).run();
-    });
-  } else {
-    await db.update(budgets).set({ status: 'APPROVED', updatedAt: nowIso }).where(eq(budgets.id, id));
-    await db.update(projects).set({ status: 'IN_PROGRESS', updatedAt: nowIso }).where(eq(projects.id, budget.projectId));
-    await db.update(milestones).set({ status: 'PENDING', updatedAt: nowIso }).where(and(eq(milestones.budgetId, id), eq(milestones.status, 'DRAFT')));
-  }
+  await runAtomic(db, [
+    db.update(budgets).set({ status: 'APPROVED', updatedAt: nowIso }).where(eq(budgets.id, id)),
+    db.update(projects).set({ status: 'IN_PROGRESS', updatedAt: nowIso }).where(eq(projects.id, budget.projectId)),
+    db.update(milestones).set({ status: 'PENDING', updatedAt: nowIso }).where(and(eq(milestones.budgetId, id), eq(milestones.status, 'DRAFT'))),
+  ]);
 
   const [updatedBudget] = await db.select().from(budgets).where(eq(budgets.id, id)).all();
   const updatedMilestones = await db.select().from(milestones).where(eq(milestones.budgetId, id)).all();
@@ -319,10 +283,7 @@ budgetsApp.post('/budgets/:id/approve', async (c) => {
 // 5. POST /api/budgets/:id/reject — Marca presupuesto como REJECTED
 budgetsApp.post('/budgets/:id/reject', async (c) => {
   const rawId = c.req.param('id');
-  const id = validateAndSanitizeId(rawId);
-  if (!id) {
-    return c.json({ error: 'Identificador de presupuesto inválido o malformado.' }, 400);
-  }
+  const id = requireId(rawId, 'Identificador de presupuesto inválido o malformado.');
   const db = getDb(c);
 
   const [budget] = await db.select().from(budgets).where(eq(budgets.id, id)).all();
@@ -350,10 +311,7 @@ budgetsApp.post('/budgets/:id/reject', async (c) => {
 // 6. PATCH /api/milestones/:id/pay — Marca hito individual como PAID
 budgetsApp.patch('/milestones/:id/pay', async (c) => {
   const rawId = c.req.param('id');
-  const id = validateAndSanitizeId(rawId);
-  if (!id) {
-    return c.json({ error: 'Identificador de hito inválido o malformado.' }, 400);
-  }
+  const id = requireId(rawId, 'Identificador de hito inválido o malformado.');
   const db = getDb(c);
 
   const [milestone] = await db.select().from(milestones).where(eq(milestones.id, id)).all();
@@ -382,10 +340,7 @@ budgetsApp.patch('/milestones/:id/pay', async (c) => {
 // 7. POST /api/budgets/:id/pay-all — Operación Cobro Express "Cobrar Todo" (RN-04)
 budgetsApp.post('/budgets/:id/pay-all', async (c) => {
   const rawId = c.req.param('id');
-  const id = validateAndSanitizeId(rawId);
-  if (!id) {
-    return c.json({ error: 'Identificador de presupuesto inválido o malformado.' }, 400);
-  }
+  const id = requireId(rawId, 'Identificador de presupuesto inválido o malformado.');
   const db = getDb(c);
 
   const [budget] = await db.select().from(budgets).where(eq(budgets.id, id)).all();
