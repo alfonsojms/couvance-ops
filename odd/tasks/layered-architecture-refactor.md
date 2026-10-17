@@ -26,7 +26,7 @@ Assumptions (not user requirements): layer file names (`domain.ts`, `schemas.ts`
 | T3 | S4, S5 | 02 server-infra | inline | done | `18bf098` D1 contract run, `0842675` helpers + runAtomic; verifier PASS S2/S4/S5 (217 probes, 0 diffs); RDD review approved (3 lenses, 0 findings) |
 | T4 | S4, S5, S8 | 03 budgets | inline | done | `46217cf` test DB helper, `0de7f18` budgets layered + S8; gate green (L11); verifier PASS S2/S4/S5/S8 (142 probes × 2 drivers, only authorized S8 diffs); RDD review approved (3 lenses, 0 blockers) (L12) |
 | T5 | S4, S5 | 04 projects | inline | done | `e784a82`: RED→GREEN `test/projects-cancel.test.ts` (atomic cancel, both drivers); contract snapshots unchanged; gate green (L14) |
-| T6 | S4 | 05 finance-clients | inline | pending | |
+| T6 | S4 | 05 finance-clients | inline | done | `a626176`: contract snapshots unchanged on both drivers; gate green (L15) |
 | T7 | S4 | 06 auth-backup | inline | pending | |
 | T8 | S6 | 07 client-api | inline | pending | |
 | T9 | S6 | 08 dashboard | inline | pending | |
@@ -56,6 +56,14 @@ Route evidence: all tasks inline. No Writer-trigger reason holds yet. Each slice
 - **L2 (2026-10-16):** Scope answer: "Backend + frontend".
 - **L3 (2026-10-16):** Delivery answer: "Stacked a main (Recommended)". Forecast is well above 400 authored lines (about 1,700 backend and 2,500 frontend lines involved).
 - **L4 (2026-10-16):** Explorer map. Backend duplication: ID validation 14×; JSON parse, 404 and totals 3×; renew exposed 3× (2 routes without ID validation). Only approve is atomic. The D1 `batch` path is untested. Radar, metrics, projects list totals, pay-all, backup and most auth endpoints have no tests. Spot check confirmed budget edit deletes and re-inserts milestones without a transaction (`budgets/index.ts:207-240`).
+- **L15 (2026-10-17):** Slice 05 (`refactor/arch-05-finance-clients`, stacked on slice 04), commit `a626176` (T6).
+  - Clients and finance split into layers. `sumMilestones` (in `projects/domain.ts`) is now the only PAID/PENDING total; project totals, client balances and finance metrics all reuse it.
+  - `asQueryDb` (`db/index.ts`) types projected and joined queries on both drivers and replaces the `as SqliteDb` casts.
+  - `getDaysUntil` now receives "today" from the service clock.
+  - Finance handlers dropped their local try/catch. A 500 keeps its status and `error` message (the global handler uses the same `err.message`) and now also carries `stack` outside production, like every other endpoint. That stack exposure is pre-existing elsewhere (L12) and is still an open follow-up.
+  - Gate: vitest 13 files / 140 passed (contract snapshots unchanged on both drivers); `tsc` OK; build OK; E2E 9 passed; wrangler exit 0, 0 `better-sqlite3` refs.
+  - Risk: none (contract unchanged, pinned by the snapshots; read paths only, apart from the clients CRUD moved as is).
+  - RDD assess (base `0de7f18`): medium, `under_budget`; still pending in the slice.
 - **L14 (2026-10-17):** Slice 04 (`refactor/arch-04-projects`, stacked on slice 03), commit `e784a82` (T5).
   - Projects split into `domain`/`schemas`/`repository`/`service`/`routes`. `showcase.ts` is HTTP only and reuses the projects service.
   - One renew implementation (`renewProjectResponse`) serves `/api/projects/:id/renew` and both `/api/finance` aliases. The aliases keep their previous id handling (no `requireId`): adding it would turn their 404 into a 400, which S2 does not authorize.
