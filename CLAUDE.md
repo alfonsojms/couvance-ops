@@ -48,7 +48,7 @@ Los handlers siempre obtienen la BD con `getDb(c)` (`src/server/db/index.ts`), q
 - `domain.ts`: reglas puras (cálculos, transiciones de estado). Sin Hono, Drizzle, reloj ni IDs.
 - `schemas.ts`: esquemas Zod de entrada.
 - `repository.ts`: `createXRepository(db)` con queries Drizzle; escrituras de varias filas o tablas vía `runAtomic`. Sobre la unión `D1Db | SqliteDb` siempre `await` a `.all()`, y `select()` sin argumentos.
-- `service.ts`: `createXService(repo, clock?)` con los casos de uso. No conoce HTTP: lanza `DomainError` (`invalid`/`notFound`/`conflict` de `shared/errors.ts`, que `app.onError` traduce a 400/404/409).
+- `service.ts`: `createXService(repo, clock?)` con los casos de uso (`ServiceClock` de `shared/clock.ts`). No conoce HTTP: lanza `DomainError` (`invalid`/`notFound`/`conflict` de `shared/errors.ts`, que `app.onError` traduce a 400/404/409).
 - `routes.ts`: solo HTTP (`requireId`, `parseBody`, armar la respuesta).
 - `index.ts`: exporta las rutas como default y lo que otros módulos o tests necesiten.
 
@@ -63,7 +63,7 @@ Los handlers siempre obtienen la BD con `getDb(c)` (`src/server/db/index.ts`), q
 - **RN-03** `POST /api/budgets/:id/approve` es atómico: presupuesto `APPROVED`, proyecto `IN_PROGRESS`, hitos `DRAFT` → `PENDING`. Presupuestos solo editables en `DRAFT`. Crear y editar un presupuesto (con sus hitos) también son atómicos.
 - **RN-04** `POST /api/budgets/:id/pay-all`: todos los hitos `PENDING` → `PAID` con `paid_at`.
 - **Transiciones de estado**: aprobar o rechazar solo desde `DRAFT` o `SENT`; si no, 409. Cobrar un hito solo si está `PENDING` (`DRAFT` o `CANCELLED` → 409). Cobrar un hito ya `PAID` responde 200 sin tocar el `paid_at` original, para que un doble toque sea inofensivo. Las reglas están en `modules/budgets/domain.ts` y los tests en `test/budgets-transitions.test.ts`.
-- **RN-05** Cancelar un proyecto cancela hitos `PENDING` pero **nunca toca los `PAID`**; el proyecto no se borra. `PATCH /api/projects/:id` rechaza `clientId`/`status` (400) y devuelve 409 si está `CANCELLED`.
+- **RN-05** Cancelar un proyecto cancela hitos `PENDING` pero **nunca toca los `PAID`**; el proyecto no se borra. Proyecto e hitos se actualizan en una sola unidad atómica (`test/projects-cancel.test.ts`). `PATCH /api/projects/:id` rechaza `clientId`/`status` (400) y devuelve 409 si está `CANCELLED`.
 - **RN-06** `DELETE /api/clients/:id` → `409` si el cliente tiene cualquier proyecto.
 - **RN-07** Showcase: solo `COMPLETED` + `production_status = 'ACTIVE'` + `production_url` no vacío.
 - **RN-08** Radar: hitos `PENDING` por `due_date ASC` + recurrentes que vencen en < 30 días; `POST /api/projects/:id/renew` suma 1 mes o 1 año.

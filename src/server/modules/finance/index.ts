@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { eq, desc, sql, and, ne, isNotNull } from 'drizzle-orm';
 import { getDb, milestones, budgets, projects, clients, type SqliteDb } from '../../db';
-import { handleProjectRenewal } from '../projects';
+import { renewProjectResponse } from '../projects';
 
 const financeApp = new Hono();
 
@@ -162,16 +162,10 @@ financeApp.get('/history', async (c) => {
   }
 });
 
-// 3. POST /api/finance/projects/:id/renew y POST /api/finance/:id/renew — Suma un período (+1 mes o +1 año)
-financeApp.post('/projects/:id/renew', async (c) => {
-  const id = c.req.param('id');
-  return handleProjectRenewal(c, id);
-});
+// 3. POST /api/finance/projects/:id/renew y POST /api/finance/:id/renew — Alias de la renovación de proyectos (RN-08)
+financeApp.post('/projects/:id/renew', async (c) => renewProjectResponse(c, c.req.param('id')));
 
-financeApp.post('/:id/renew', async (c) => {
-  const id = c.req.param('id');
-  return handleProjectRenewal(c, id);
-});
+financeApp.post('/:id/renew', async (c) => renewProjectResponse(c, c.req.param('id')));
 
 // 3. GET /api/finance/metrics — Métricas globales de caja (RN-08)
 financeApp.get('/metrics', async (c) => {

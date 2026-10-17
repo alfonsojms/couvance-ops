@@ -1,3 +1,4 @@
+import { systemClock, type ServiceClock } from '../../shared/clock';
 import { conflict, invalid, notFound } from '../../shared/errors';
 import {
   calculateMilestonesAmounts,
@@ -8,16 +9,6 @@ import {
 } from './domain';
 import type { BudgetRow, BudgetsRepository, BudgetWithMilestones, MilestoneRow } from './repository';
 import type { BudgetCreateInput } from './schemas';
-
-export interface ServiceClock {
-  now: () => string;
-  newId: () => string;
-}
-
-const systemClock: ServiceClock = {
-  now: () => new Date().toISOString(),
-  newId: () => crypto.randomUUID(),
-};
 
 const BUDGET_NOT_FOUND = 'Presupuesto no encontrado';
 

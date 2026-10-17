@@ -58,7 +58,7 @@ couvance-ops/
 │   │   ├── modules/
 │   │   │   ├── auth/           # Login PIN, preguntas secretas, reseteo, logout
 │   │   │   ├── clients/        # Gestión de clientes y protección 409
-│   │   │   ├── projects/       # Proyectos, showcase y cancelación en cascada
+│   │   │   ├── projects/       # Proyectos, showcase y cancelación en cascada: domain, schemas, repository, service, routes
 │   │   │   ├── budgets/        # Presupuestos e hitos: domain, schemas, repository, service, routes
 │   │   │   ├── finance/        # Radar de cobranzas WhatsApp, recurrentes y métricas
 │   │   │   └── backup/         # Exportación estructurada JSON (excluye AUTH_CONFIG)
@@ -198,6 +198,7 @@ Cualquier agente o desarrollador que modifique la lógica del sistema debe garan
      - Todos los hitos en estado `PENDING` se cancelan (`status = 'CANCELLED'`).
      - Los hitos con estado `PAID` se mantienen **intactos** para preservar el histórico de ingresos.
      - El proyecto no se borra de la BD; se marca tachado en la UI.
+     - El cambio de estado del proyecto y la cancelación de sus hitos se ejecutan de manera atómica con `runAtomic`: si una falla, no se aplica ninguna.
 
 6. **RN-06 (Integridad Referencial en Eliminación de Clientes):**
    - `DELETE /api/clients/:id` verifica `COUNT(projects) === 0`.

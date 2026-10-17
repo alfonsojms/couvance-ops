@@ -89,6 +89,8 @@ export async function createContractHarness(driver: ContractDriver = 'sqlite') {
   }
 
   return {
+    /** Acceso directo a la BD del harness (p. ej. para instalar triggers que fuercen fallos). */
+    db: testDb.db,
     raw,
     call,
     normalize,
