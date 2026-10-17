@@ -56,12 +56,12 @@ couvance-ops/
 │   │   │   ├── rate-limit.ts   # Rate limiting (5 intentos fallidos / 15 min en /api/auth/*)
 │   │   │   └── sanitize.ts     # Rechazo de bytes nulos en URL, sanitizeString y validateAndSanitizeId
 │   │   ├── modules/
-│   │   │   ├── auth/           # Login PIN, preguntas secretas, reseteo, logout
+│   │   │   ├── auth/           # Login PIN, preguntas secretas, reseteo, logout: schemas, repository (auth_config), service, routes
 │   │   │   ├── clients/        # Gestión de clientes y protección 409: domain, schemas, repository, service, routes
 │   │   │   ├── projects/       # Proyectos, showcase y cancelación en cascada: domain, schemas, repository, service, routes
 │   │   │   ├── budgets/        # Presupuestos e hitos: domain, schemas, repository, service, routes
 │   │   │   ├── finance/        # Radar de cobranzas WhatsApp, recurrentes y métricas: domain, repository, service, routes
-│   │   │   └── backup/         # Exportación estructurada JSON (excluye AUTH_CONFIG)
+│   │   │   └── backup/         # Exportación estructurada JSON (excluye AUTH_CONFIG): repository, service, routes
 │   │   ├── app.ts              # Instancia central de Hono y enrutador API
 │   │   ├── node-entry.ts       # Entrypoint Node.js/Docker con migraciones y static serving
 │   │   └── index.ts            # Entrypoint export para Cloudflare

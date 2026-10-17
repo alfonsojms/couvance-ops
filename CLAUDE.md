@@ -44,11 +44,11 @@ Los handlers siempre obtienen la BD con `getDb(c)` (`src/server/db/index.ts`), q
 
 **Módulos** en `src/server/modules/<dominio>/`, cada uno un sub-app Hono montado en `app.ts` (`budgets` se monta en `/api` porque expone rutas `/projects/:id/budgets`, `/budgets/:id/*` y `/milestones/:id/pay`). El esquema Drizzle (`src/server/db/schema.ts`) usa propiedades camelCase mapeadas a columnas snake_case.
 
-**Capas por módulo** (refactor en curso, ver `odd/tasks/layered-architecture-refactor.md`; `budgets` es la referencia). Las dependencias van en un solo sentido:
+**Capas por módulo** (todos los módulos del backend; ver `odd/tasks/layered-architecture-refactor.md`). Las dependencias van en un solo sentido:
 - `domain.ts`: reglas puras (cálculos, transiciones de estado). Sin Hono, Drizzle, reloj ni IDs.
 - `schemas.ts`: esquemas Zod de entrada.
 - `repository.ts`: `createXRepository(db)` con queries Drizzle; escrituras de varias filas o tablas vía `runAtomic`. Sobre la unión `D1Db | SqliteDb` siempre `await` a `.all()`, y `select()` sin argumentos; para proyecciones o joins (`select({...})`) usá `asQueryDb(db)` de `db/index.ts`, nunca `as SqliteDb`. Los totales de hitos (cobrado/pendiente) se calculan solo con `sumMilestones` (`modules/projects/domain.ts`).
-- `service.ts`: `createXService(repo, clock?)` con los casos de uso (`ServiceClock` de `shared/clock.ts`). No conoce HTTP: lanza `DomainError` (`invalid`/`notFound`/`conflict` de `shared/errors.ts`, que `app.onError` traduce a 400/404/409).
+- `service.ts`: `createXService(repo, clock?)` con los casos de uso (`ServiceClock` de `shared/clock.ts`). No conoce HTTP: lanza `DomainError` (`invalid`/`unauthorized`/`notFound`/`conflict`/`internal` de `shared/errors.ts`, que `app.onError` traduce a 400/401/404/409/500, siempre como `{ error }` sin stack). Los tokens se emiten solo con `issueToken` y se leen con `getRequestToken` (`middlewares/auth.ts`).
 - `routes.ts`: solo HTTP (`requireId`, `parseBody`, armar la respuesta).
 - `index.ts`: exporta las rutas como default y lo que otros módulos o tests necesiten.
 

@@ -6,8 +6,10 @@ import { DomainError, type DomainErrorKind } from './errors';
 
 const DOMAIN_ERROR_STATUS: Record<DomainErrorKind, ContentfulStatusCode> = {
   invalid: 400,
+  unauthorized: 401,
   not_found: 404,
   conflict: 409,
+  internal: 500,
 };
 
 /**

@@ -6,6 +6,7 @@ import { clients, type AppDatabase } from '../src/server/db';
 import { createTestDatabase, TEST_DRIVERS } from './helpers/db';
 import { runAtomic } from '../src/server/db/atomic';
 import { HttpError, handleHttpError, parseBody, requireId } from '../src/server/shared/http';
+import { conflict, internal, invalid, notFound, unauthorized } from '../src/server/shared/errors';
 
 describe('shared/http', () => {
   const schemaWithMessage = z.object({ name: z.string().min(1, 'El nombre es obligatorio') });
@@ -63,6 +64,29 @@ describe('shared/http', () => {
     const boom = await app.request('/boom');
     expect(boom.status).toBe(500);
     expect(await boom.json()).toEqual({ error: 'unhandled' });
+  });
+
+  it('mapea cada DomainError a su status con solo { error } (sin stack)', async () => {
+    const app = new Hono();
+    const cases = [
+      [invalid('dato inválido'), 400],
+      [unauthorized('PIN incorrecto'), 401],
+      [notFound('no existe'), 404],
+      [conflict('en conflicto'), 409],
+      [internal('sin configurar'), 500],
+    ] as const;
+    cases.forEach(([error], i) =>
+      app.get(`/domain/${i}`, () => {
+        throw error;
+      })
+    );
+    app.onError((err, c) => handleHttpError(err, c) ?? c.json({ error: 'unhandled' }, 500));
+
+    for (const [i, [error, status]] of cases.entries()) {
+      const res = await app.request(`/domain/${i}`);
+      expect(res.status).toBe(status);
+      expect(await res.json()).toEqual({ error: error.message });
+    }
   });
 });
 
