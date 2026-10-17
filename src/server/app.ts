@@ -1,5 +1,4 @@
 import { Hono } from 'hono';
-import { cors } from 'hono/cors';
 import { pinAuthMiddleware } from './middlewares/auth';
 import { sanitizeMiddleware } from './middlewares/sanitize';
 import authApp from './modules/auth';
@@ -36,14 +35,9 @@ app.use('*', async (c, next) => {
 // Middleware global de sanitización contra inyecciones SQL y bytes nulos
 app.use('*', sanitizeMiddleware);
 
-// Middleware CORS para desarrollo
-app.use(
-  '*',
-  cors({
-    origin: (origin) => origin || '*',
-    credentials: true,
-  })
-);
+// Sin middleware CORS: la SPA y la API comparten origen en todos los entornos
+// (Cloudflare Pages, Docker y proxy /api de Vite en desarrollo), así que el navegador
+// bloquea cualquier lectura cross-origin por defecto.
 
 // Middleware central de autenticación PIN (excluye automáticamente rutas públicas)
 app.use('/api/*', pinAuthMiddleware);
