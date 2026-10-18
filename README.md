@@ -1,6 +1,6 @@
 # Couvance Ops
 
-**Cobra a tiempo sin abrir un ERP.** Radar de pagos pendientes, aviso por WhatsApp en un toque y presupuestos que siempre cuadran al centavo.
+**Get paid on time without opening an ERP.** A radar of pending payments, a one-tap WhatsApp reminder, and budgets that always add up to the cent.
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](tsconfig.json)
 [![Hono](https://img.shields.io/badge/Hono-API-E36002?logo=hono&logoColor=white)](src/server/app.ts)
@@ -8,60 +8,81 @@
 [![Cloudflare](https://img.shields.io/badge/Cloudflare-Pages_+_D1-F38020?logo=cloudflare&logoColor=white)](wrangler.toml)
 [![Tests](https://img.shields.io/badge/Tests-Vitest_+_Playwright-6E9F18?logo=vitest&logoColor=white)](test/)
 
-Couvance Ops está en producción: la usamos a diario los dos socios de Couvance, una agencia digital, para saber quién nos debe, avisarle y registrar el cobro desde el móvil. Corre gratis en Cloudflare Pages + D1, y el mismo código funciona en Docker con SQLite.
+Couvance Ops is in production: the two partners of Couvance, a digital agency, use it every day to see who owes us money, nudge them, and record the payment from a phone. It runs for free on Cloudflare Pages + D1, and the same code runs on Docker with SQLite.
 
-> **¿Por qué no hay demo pública?** La instancia en producción guarda datos reales de clientes. Las capturas usan datos ficticios y puedes levantar la app en local en un par de minutos ([Puesta en marcha](#puesta-en-marcha)).
+> **Why is there no public demo?** The production instance holds real client data. All screenshots use fictional data, and you can run the app locally in a couple of minutes ([Getting started](#getting-started)).
 
 <p align="center">
-  <img src="docs/screenshots/desktop-radar.png" alt="Radar de cobranzas en escritorio: totales pendientes y cobrados, renovaciones próximas e hitos ordenados por vencimiento" width="100%">
+  <img src="docs/screenshots/desktop-radar.png" alt="Collections radar on desktop: pending and collected totals, upcoming renewals and milestones sorted by due date" width="100%">
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/mobile-unlock.png" alt="Pantalla de desbloqueo con teclado numérico de PIN" width="260">
+  <img src="docs/screenshots/mobile-unlock.png" alt="Unlock screen with a numeric PIN keypad" width="260">
   &nbsp;&nbsp;
-  <img src="docs/screenshots/mobile-pending.png" alt="Hitos pendientes en móvil con botones Cobrar por WhatsApp, Cobrado y Cobrar Todo" width="260">
+  <img src="docs/screenshots/mobile-pending.png" alt="Pending milestones on mobile with WhatsApp charge, Paid and Pay All buttons" width="260">
 </p>
 
 ---
 
-## El problema
+## The problem
 
-En una agencia pequeña el dinero no se pierde por falta de clientes, se pierde por cobros que se postergan:
+In a small agency, money is rarely lost for lack of clients. It is lost to payments that keep getting postponed:
 
-- **Hitos entregados que nadie cobra.** El trabajo está publicado, pero mandar el recordatorio exige buscar el monto, el proyecto y el teléfono del cliente.
-- **Renovaciones que vencen en silencio.** Hosting y mantenimiento que expiran sin facturarse y que termina pagando la agencia.
-- **Cobrar desde la calle es incómodo.** Entre reuniones nadie redacta un mensaje de cobro, así que queda para "luego".
+- **Delivered milestones nobody charges for.** The work is live, but sending a reminder means digging up the amount, the project and the client's phone number.
+- **Renewals that expire silently.** Hosting and maintenance lapse without being invoiced, and the agency ends up paying for them.
+- **Chasing payments on the go is awkward.** Between meetings nobody writes a payment message, so it slips to "later".
 
-## Qué hace
+## What it does
 
-- **Radar de cobranzas.** Una pantalla con lo pendiente ordenado por vencimiento (vencido, vence en ≤ 2 días, futuro) y los servicios recurrentes que renuevan en los próximos 30 días.
-- **Cobro por WhatsApp en un toque.** Abre `wa.me` con el monto, el proyecto y un mensaje cordial listo. Si el cliente no tiene teléfono, copia el mensaje al portapapeles y avisa con un toast.
-- **Presupuestos que cuadran.** Esquemas 50/50 o 40/30/30 con montos enteros; el último hito absorbe el redondeo para que la suma sea exactamente el total.
-- **Aprobar y cobrar sin pasos extra.** Aprobar un presupuesto activa el proyecto y deja sus hitos listos para cobrar en una sola operación atómica. *Cobrar Todo* liquida los pendientes de un presupuesto de una vez.
-- **Showcase para vender.** Catálogo de proyectos terminados y online, con una ficha lista para enviar por WhatsApp a un prospecto.
+- **Collections radar.** One screen with everything pending, sorted by due date (overdue, due within 2 days, future), plus the recurring services renewing in the next 30 days.
+- **One-tap WhatsApp collection.** Opens `wa.me` with the amount, the project and a polite, ready-made message. If the client has no phone number, it copies the message to the clipboard and shows a toast.
+- **Budgets that add up.** 50/50 or 40/30/30 schemes with integer amounts; the last milestone absorbs the rounding so the sum is exactly the total.
+- **Approve and collect with no extra steps.** Approving a budget activates the project and makes its milestones collectable in a single atomic operation. *Pay All* settles every pending milestone of a budget at once.
+- **A showcase to sell with.** A catalog of finished, live projects with a card ready to send to a prospect over WhatsApp.
+
+## Tour of the modules
 
 <p align="center">
-  <img src="docs/screenshots/desktop-projects.png" alt="Gestión de proyectos con estado, cobrado y pendiente por proyecto" width="49%">
-  <img src="docs/screenshots/desktop-showcase.png" alt="Showcase de proyectos terminados filtrable por categoría" width="49%">
+  <img src="docs/screenshots/desktop-projects.png" alt="Project management with status, collected and pending amounts per project" width="49%">
+  <img src="docs/screenshots/desktop-showcase.png" alt="Showcase of finished projects, filterable by category" width="49%">
 </p>
+
+<p align="center">
+  <img src="docs/screenshots/desktop-clients.png" alt="Client directory with contact details, project count, pending balance and a WhatsApp button" width="49%">
+  <img src="docs/screenshots/desktop-budgets.png" alt="Budget dialog with milestone history and a new-quote form with 50/50, 40/30/30 and 100% presets" width="49%">
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/desktop-security.png" alt="Security dialog to change the master PIN and the recovery questions" width="49%">
+</p>
+
+| Module | What it is for |
+| :--- | :--- |
+| **Radar / Collections** | Pending milestones by due date, upcoming renewals, and the history of recorded payments. |
+| **Projects** | Status, collected vs. pending per project, and quick links to production, repository and resources. |
+| **Budgets** | Quotes with preset milestone schemes, approval, rejection and *Pay All*. |
+| **Clients** | Directory with a pending balance per client and direct WhatsApp contact. |
+| **Showcase** | Finished projects that are live in production, ready to share with prospects. |
+| **Security** | Change the master PIN and the recovery questions. |
+| **Backup** | One-click JSON export of clients, projects, budgets and milestones (never credentials). |
 
 ---
 
-## Decisiones técnicas
+## Technical decisions
 
-| Decisión | Alternativa descartada | Por qué |
+| Decision | Rejected alternative | Why |
 | :--- | :--- | :--- |
-| **Una app Hono, dos runtimes** (Cloudflare Pages + D1 / Node + SQLite) | Atarse a un solo proveedor | Producción cuesta $0 en el plan gratuito de Cloudflare, y la misma app corre en Docker si algún día hay que salir de ahí. |
-| **Web Crypto (SHA-256 + HMAC)** | `bcrypt` / `argon2` | Los módulos nativos en C++ no corren en los isolates de Cloudflare. Web Crypto funciona igual en Edge y en Node. |
-| **PIN de 8 dígitos + cookie de 30 días** | OAuth / Auth0 / Supabase | Son dos usuarios que comparten la operación. Un PIN recordado por dispositivo cubre la necesidad sin servicios externos ni costes por usuario. |
-| **Montos enteros con absorción del residuo** | Decimales en coma flotante | Evita los "centavos fantasma" (`0.1 + 0.2`). La suma de hitos es igual al total por construcción, y está testeado. |
-| **Transiciones CSS nativas** | Framer Motion | Menos JavaScript en móviles de gama baja, que es donde se usa el radar. |
+| **One Hono app, two runtimes** (Cloudflare Pages + D1 / Node + SQLite) | Locking into a single provider | Production costs $0 on Cloudflare's free plan, and the same app runs on Docker if we ever need to leave. |
+| **Web Crypto (SHA-256 + HMAC)** | `bcrypt` / `argon2` | Native C++ modules do not run in Cloudflare isolates. Web Crypto behaves the same on Edge and on Node. |
+| **8-digit PIN + 30-day cookie** | OAuth / Auth0 / Supabase | Two users share the operation. A PIN remembered per device covers the need with no external services and no per-user cost. |
+| **Integer amounts with remainder absorption** | Floating-point decimals | Avoids phantom cents (`0.1 + 0.2`). The milestones sum to the total by construction, and it is tested. |
+| **Native CSS transitions** | Framer Motion | Less JavaScript on low-end phones, which is where the radar is used. |
 
-### Cómo está armado
+### How it is built
 
 ```mermaid
 flowchart LR
-    SPA[SPA React + Vite] -->|/api, mismo origen| EP
+    SPA[React + Vite SPA] -->|/api, same origin| EP
 
     subgraph EP [Entrypoints]
         CF["Cloudflare Pages Functions<br/>functions/api/[[route]].ts"]
@@ -71,7 +92,7 @@ flowchart LR
     EP --> APP
 
     subgraph APP [src/server/app.ts]
-        SAN[sanitizeMiddleware] --> AUTH[pinAuthMiddleware] --> MOD[Módulos: auth, clients,<br/>projects, budgets, finance, backup]
+        SAN[sanitizeMiddleware] --> AUTH[pinAuthMiddleware] --> MOD[Modules: auth, clients,<br/>projects, budgets, finance, backup]
     end
 
     MOD -->|"getDb(c)"| DB{{Drizzle ORM}}
@@ -79,47 +100,50 @@ flowchart LR
     DB --> SQL[(better-sqlite3 WAL)]
 ```
 
-- **Base de datos agnóstica.** Los handlers piden la conexión con `getDb(c)` ([`src/server/db/index.ts`](src/server/db/index.ts)), que devuelve D1 en Cloudflare o SQLite en Node. Las operaciones de varias tablas usan `db.batch` en D1 y `db.transaction` en SQLite.
-- **Arranque autónomo en Node.** Al iniciar aplica las migraciones de `./drizzle`, crea las credenciales iniciales si la base está vacía y sirve la SPA compilada.
+- **Database-agnostic.** Handlers get their connection through `getDb(c)` ([`src/server/db/index.ts`](src/server/db/index.ts)), which returns D1 on Cloudflare or SQLite on Node. Multi-table writes go through `runAtomic`: `db.batch` on D1 and `db.transaction` on SQLite.
+- **Layered modules.** Every backend module splits into `domain` (pure rules), `schemas` (Zod), `repository` (Drizzle queries), `service` (use cases) and `routes` (HTTP only), with dependencies pointing one way.
+- **Self-contained startup on Node.** On boot it applies the migrations in `./drizzle`, creates the initial credentials if the database is empty, and serves the built SPA.
+- **Thin frontend.** Pages are small containers that wire a data hook to presentational components, and all HTTP goes through one typed client per resource.
 
-### Reglas de negocio
+### Business rules
 
-Las reglas que protegen el dinero están documentadas como invariantes (RN-01 a RN-10 en [`agents.md`](agents.md)) y cubiertas por tests:
+The rules that protect the money are documented as invariants (RN-01 to RN-10 in [`agents.md`](agents.md)) and covered by tests:
 
-- Montos de presupuestos e hitos **enteros**; el último hito absorbe el residuo ([`calculateMilestonesAmounts`](src/server/modules/budgets/index.ts), [`test/budgets.test.ts`](test/budgets.test.ts)).
-- Los porcentajes de los hitos suman **exactamente 100**, si no la API responde `400`.
-- Cancelar un proyecto anula los hitos pendientes pero **nunca toca los ya cobrados**.
-- No se puede borrar un cliente con proyectos: la API responde `409 Conflict`.
-- El respaldo JSON exporta clientes, proyectos, presupuestos e hitos, **nunca** credenciales ni hashes.
+- Budget and milestone amounts are **integers**; the last milestone absorbs the remainder ([`calculateMilestonesAmounts`](src/server/modules/budgets/domain.ts), [`test/budgets.test.ts`](test/budgets.test.ts)).
+- Milestone percentages sum to **exactly 100**, otherwise the API answers `400`.
+- Cancelling a project voids its pending milestones but **never touches the ones already paid**.
+- A client with projects cannot be deleted: the API answers `409 Conflict`.
+- The JSON backup exports clients, projects, budgets and milestones, and **never** credentials or hashes.
 
-### Seguridad
+### Security
 
-- PIN y respuestas secretas guardados como SHA-256 con un secreto de servidor (`PIN_SECRET`), comparados en tiempo constante.
-- Sesión firmada con HMAC-SHA256 en una cookie `HttpOnly`, `SameSite=Lax` (necesario para volver desde WhatsApp sin perder la sesión) y 30 días de validez.
-- Límite de 5 intentos fallidos cada 15 minutos por IP en `/api/auth/*`.
-- Rechazo de bytes nulos en URL y query params, limpieza de textos en cada esquema Zod (`sanitizeString`) e IDs de ruta validados contra `^[a-zA-Z0-9_-]{1,64}$`.
-- Sin CORS: la SPA y la API comparten origen, así que ningún sitio externo puede hacer peticiones autenticadas ([`test/cors.test.ts`](test/cors.test.ts)).
+- PIN and secret answers are stored as SHA-256 with a server secret (`PIN_SECRET`) and compared in constant time.
+- The session is signed with HMAC-SHA256 in an `HttpOnly`, `SameSite=Lax` cookie (needed to come back from WhatsApp without losing the session), valid for 30 days.
+- Rate limit of 5 failed attempts per 15 minutes per IP on `/api/auth/*`.
+- Null bytes are rejected in URLs and query params, text is cleaned in every Zod schema (`sanitizeString`), and route IDs are validated against `^[a-zA-Z0-9_-]{1,64}$`.
+- No CORS: the SPA and the API share an origin, so no external site can make authenticated requests ([`test/cors.test.ts`](test/cors.test.ts)).
 
 ---
 
 ## Tests
 
-- **Contrato de la API:** un escenario de negocio completo recorre todos los endpoints y fija con snapshots el status y el cuerpo de cada respuesta ([`test/api-contract.test.ts`](test/api-contract.test.ts)). Es la red de seguridad para refactorizar sin romper producción.
-- **Vitest:** integración de la API contra SQLite en memoria, reglas contables, CORS y componentes de UI con Testing Library.
-- **Playwright:** flujos de punta a punta (desbloqueo, alta de clientes, WhatsApp y portapapeles, edición de proyectos) contra un servidor propio con una base temporal nueva en cada corrida.
+- **API contract:** one complete business scenario walks through every endpoint and snapshots the status and body of each response ([`test/api-contract.test.ts`](test/api-contract.test.ts)). It is the safety net for refactoring without breaking production.
+- **Vitest:** API integration against in-memory SQLite, accounting rules, CORS, and UI components with Testing Library.
+- **Playwright:** end-to-end flows (unlock, client creation, WhatsApp and clipboard, project editing) against its own server with a fresh temporary database on every run.
+- **CI:** GitHub Actions runs the checks on every push and pull request ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
 
 ```bash
 npm test                                              # Vitest
-npx vitest run test/budgets.test.ts -t "texto"        # un archivo o un caso
-npm run test:e2e                                      # Playwright (servidor en :3101 con base temporal)
-npx tsc --noEmit                                      # verificación de tipos
+npx vitest run test/budgets.test.ts -t "text"         # one file or one case
+npm run test:e2e                                      # Playwright (server on :3101 with a temporary database)
+npx tsc --noEmit                                      # type check
 ```
 
 ---
 
-## Puesta en marcha
+## Getting started
 
-Requisitos: Node.js 20+ y npm 10+. Docker es opcional.
+Requirements: Node.js 24 (see [`.nvmrc`](.nvmrc)) and npm. Docker is optional.
 
 ### Local
 
@@ -129,13 +153,13 @@ cd couvance-ops
 npm install
 cp .env.example .env
 
-npm run dev:server   # API en http://localhost:3000 (SQLite en ./data)
-npm run dev          # SPA en http://localhost:5173 (proxy de /api al puerto 3000)
+npm run dev:server   # API at http://localhost:3000 (SQLite in ./data)
+npm run dev          # SPA at http://localhost:5173 (proxies /api to port 3000)
 ```
 
-En Windows, `INICIAR.bat` levanta ambos a la vez.
+On Windows, `INICIAR.bat` starts both at once.
 
-Credenciales iniciales: PIN `12345678`. Respuestas secretas: `couvance` y `valencia`. Puedes cambiarlas con las variables de `.env.example` o desde la pantalla de Seguridad.
+Initial credentials: PIN `12345678`. Secret answers: `couvance` and `valencia`. Change them with the variables in `.env.example` or from the Security screen.
 
 ### Docker
 
@@ -143,34 +167,33 @@ Credenciales iniciales: PIN `12345678`. Respuestas secretas: `couvance` y `valen
 docker compose up -d --build
 ```
 
-Compila cliente y servidor, aplica migraciones al arrancar y queda en `http://localhost:3000`, con los datos en el volumen `couvance_data`.
+It builds client and server, applies migrations on startup, and listens on `http://localhost:3000`, with data in the `couvance_data` volume.
 
 ### Cloudflare Pages + D1
 
 ```bash
-npx wrangler d1 create couvance-ops-db        # copia el database_id a wrangler.toml
+npx wrangler d1 create couvance-ops-db        # copy the database_id into wrangler.toml
 npm run db:migrate:prod
 npx wrangler pages secret put PIN_SECRET
 npm run build:client
 npx wrangler pages deploy dist/client
 ```
 
-Si la base está vacía, la primera petición crea las credenciales iniciales. Cámbialas antes de usar la app con datos reales.
+If the database is empty, the first request creates the initial credentials. Change them before using the app with real data.
 
 ---
 
-## Limitaciones y próximos pasos
+## Limitations and next steps
 
-- **Un solo PIN compartido.** Está pensado para dos socios; no hay usuarios ni roles separados.
-- **Rate limit en memoria.** En Node es estricto; en Cloudflare cada isolate lleva su propio contador, así que ahí solo mitiga.
-- **Capas por separar.** Hoy los handlers mezclan HTTP, validación y acceso a datos. La lógica de cálculo ya está aislada en funciones puras; falta separar dominio y repositorios por módulo.
-- **Integración continua pendiente.** Los tests se corren en local antes de cada despliegue.
+- **A single shared PIN.** It is designed for two partners; there are no separate users or roles.
+- **In-memory rate limit.** Strict on Node; on Cloudflare each isolate keeps its own counter, so there it only mitigates.
+- **UI language.** The interface is in Spanish only; there is no i18n layer yet.
 
 ---
 
-## Autor
+## Author
 
-Desarrollado por **Alfonso Mendoza**, fullstack developer (TypeScript, React, Node, Cloudflare).
+Built by **Alfonso Mendoza**, fullstack developer (TypeScript, React, Node, Cloudflare).
 
 - GitHub: [@alfonsojms](https://github.com/alfonsojms)
 - Email: [alfonsojmendozas@gmail.com](mailto:alfonsojmendozas@gmail.com)
