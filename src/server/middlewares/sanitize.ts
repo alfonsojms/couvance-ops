@@ -7,16 +7,18 @@ import { z } from 'zod';
  */
 export function sanitizeString(val: string): string {
   if (typeof val !== 'string') return val;
-  return val
-    // 1. Eliminar bytes nulos (\0, \u0000) que causan terminación prematura de strings en C/SQLite
-    .replace(/\0/g, '')
-    // 2. Eliminar caracteres de control peligrosos (preservando saltos de línea \n, \r y tabulaciones \t)
-    // eslint-disable-next-line no-control-regex -- los caracteres de control son justo lo que se elimina
-    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
-    // 3. Normalizar Unicode en forma canónica compuesta (NFC)
-    .normalize('NFC')
-    // 4. Limpiar espacios iniciales y finales
-    .trim();
+  return (
+    val
+      // 1. Eliminar bytes nulos (\0, \u0000) que causan terminación prematura de strings en C/SQLite
+      .replace(/\0/g, '')
+      // 2. Eliminar caracteres de control peligrosos (preservando saltos de línea \n, \r y tabulaciones \t)
+      // eslint-disable-next-line no-control-regex -- los caracteres de control son justo lo que se elimina
+      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+      // 3. Normalizar Unicode en forma canónica compuesta (NFC)
+      .normalize('NFC')
+      // 4. Limpiar espacios iniciales y finales
+      .trim()
+  );
 }
 
 /**
@@ -28,7 +30,10 @@ export const idParamSchema = z
   .trim()
   .min(1, 'El identificador no puede estar vacío')
   .max(64, 'El identificador supera la longitud máxima permitida')
-  .regex(/^[a-zA-Z0-9_-]+$/, 'Formato de identificador inválido: solo se permiten caracteres alfanuméricos, guiones y guiones bajos');
+  .regex(
+    /^[a-zA-Z0-9_-]+$/,
+    'Formato de identificador inválido: solo se permiten caracteres alfanuméricos, guiones y guiones bajos',
+  );
 
 /**
  * Helper para validar y sanitizar parámetros de ruta (ej: :id, :projectId).

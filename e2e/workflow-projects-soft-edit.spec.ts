@@ -53,7 +53,9 @@ test.describe('E2E — Workflow de Alta Inline, Soft Edit y Cotización Encadena
     await expect(updatedCard).not.toContainText('+18095551111');
   });
 
-  test('Flujo completo: Crear cliente inline -> Crear proyecto -> Encadenar cotización desde Toast -> Soft edit', async ({ page }) => {
+  test('Flujo completo: Crear cliente inline -> Crear proyecto -> Encadenar cotización desde Toast -> Soft edit', async ({
+    page,
+  }) => {
     await page.getByRole('button', { name: /Proyectos/i }).click();
     await expect(page.getByRole('heading', { name: /Control de Proyectos/i })).toBeVisible();
 

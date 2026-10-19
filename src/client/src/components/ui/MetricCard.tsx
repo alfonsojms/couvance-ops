@@ -19,7 +19,7 @@ export const MetricCard = React.forwardRef<HTMLDivElement, MetricCardProps>(
         ref={ref}
         className={cn(
           'bg-neutral-900/60 border border-neutral-800 rounded-xl p-4 sm:p-5 flex flex-col justify-between transition-colors hover:border-neutral-700/80',
-          className
+          className,
         )}
         {...props}
       >
@@ -32,16 +32,11 @@ export const MetricCard = React.forwardRef<HTMLDivElement, MetricCardProps>(
           {value}
         </div>
 
-        {(subtitle || trend) ? (
+        {subtitle || trend ? (
           <div className="flex items-center justify-between text-[11px] text-neutral-500 pt-1 mt-1 border-t border-neutral-800/40">
             {subtitle ? <span>{subtitle}</span> : null}
             {trend ? (
-              <span
-                className={cn(
-                  'font-medium font-mono',
-                  trend.positive ? 'text-[#BDEF00]' : 'text-amber-400'
-                )}
-              >
+              <span className={cn('font-medium font-mono', trend.positive ? 'text-[#BDEF00]' : 'text-amber-400')}>
                 {trend.label}
               </span>
             ) : null}
@@ -49,7 +44,7 @@ export const MetricCard = React.forwardRef<HTMLDivElement, MetricCardProps>(
         ) : null}
       </div>
     );
-  }
+  },
 );
 
 MetricCard.displayName = 'MetricCard';

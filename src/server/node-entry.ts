@@ -48,4 +48,3 @@ serve({
   port,
   hostname: '0.0.0.0',
 });
-

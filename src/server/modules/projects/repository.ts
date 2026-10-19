@@ -49,8 +49,8 @@ export function createProjectsRepository(db: AppDatabase) {
             eq(projects.status, 'COMPLETED'),
             eq(projects.productionStatus, 'ACTIVE'),
             isNotNull(projects.productionUrl),
-            ne(projects.productionUrl, '')
-          )
+            ne(projects.productionUrl, ''),
+          ),
         )
         .all();
     },
@@ -77,7 +77,10 @@ export function createProjectsRepository(db: AppDatabase) {
     },
 
     async updateRenewalDate(id: string, renewalDate: string, nowIso: string): Promise<void> {
-      await db.update(projects).set({ recurringRenewalDate: renewalDate, updatedAt: nowIso }).where(eq(projects.id, id));
+      await db
+        .update(projects)
+        .set({ recurringRenewalDate: renewalDate, updatedAt: nowIso })
+        .where(eq(projects.id, id));
     },
   };
 }

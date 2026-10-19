@@ -6,7 +6,7 @@
   :root {
     color-scheme: dark;
   }
-  
+
   body {
     @apply bg-neutral-950 text-neutral-100 font-sans antialiased;
   }
@@ -29,9 +29,18 @@
 }
 
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  20%, 60% { transform: translateX(-6px); }
-  40%, 80% { transform: translateX(6px); }
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-6px);
+  }
+  40%,
+  80% {
+    transform: translateX(6px);
+  }
 }
 
 .animate-shake {
@@ -39,8 +48,13 @@
 }
 
 @keyframes pulse-subtle {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
 }
 
 .animate-pulse-subtle {
@@ -78,4 +92,3 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
-

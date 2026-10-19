@@ -36,12 +36,7 @@ export function PendingView({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {recurringAlerts.map((rec) => (
-              <RecurringAlertCard
-                key={rec.projectId}
-                rec={rec}
-                processingId={processingId}
-                onRenew={onRenew}
-              />
+              <RecurringAlertCard key={rec.projectId} rec={rec} processingId={processingId} onRenew={onRenew} />
             ))}
           </div>
         </div>
@@ -56,18 +51,14 @@ export function PendingView({
               Hitos Pendientes de Cobro ({pendingMilestones.length})
             </h2>
           </div>
-          <span className="text-[11px] text-neutral-500 font-mono">
-            Ordenados por fecha de vencimiento
-          </span>
+          <span className="text-[11px] text-neutral-500 font-mono">Ordenados por fecha de vencimiento</span>
         </div>
 
         {pendingMilestones.length === 0 ? (
           <Card className="p-8 text-center bg-neutral-900/30 border-neutral-800/80">
             <CheckCircle2 className="w-8 h-8 text-[#BDEF00]/80 mx-auto mb-2" />
             <p className="text-sm text-neutral-300 font-medium">¡Cero cuentas pendientes!</p>
-            <p className="text-xs text-neutral-500 mt-1">
-              Todos los hitos aprobados han sido cobrados con éxito.
-            </p>
+            <p className="text-xs text-neutral-500 mt-1">Todos los hitos aprobados han sido cobrados con éxito.</p>
           </Card>
         ) : (
           <div className="space-y-2.5 sm:space-y-3">

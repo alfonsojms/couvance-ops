@@ -55,7 +55,11 @@ export function getDb(c: Context): AppDatabase {
   throw new Error('Database connection not available in context. Ensure c.env.DB or c.get("db") is configured.');
 }
 
-export async function seedInitialAuthIfNeeded(db: AppDatabase, secret: string, env?: Record<string, any>): Promise<boolean> {
+export async function seedInitialAuthIfNeeded(
+  db: AppDatabase,
+  secret: string,
+  env?: Record<string, any>,
+): Promise<boolean> {
   const [existingAuth] = await db.select().from(authConfig).where(eq(authConfig.id, 1)).all();
   if (!existingAuth) {
     const getVal = (key: string, fallback: string) => {
@@ -87,4 +91,3 @@ export async function seedInitialAuthIfNeeded(db: AppDatabase, secret: string, e
   }
   return false;
 }
-

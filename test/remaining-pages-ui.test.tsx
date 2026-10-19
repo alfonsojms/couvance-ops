@@ -96,7 +96,7 @@ describe('UI — páginas restantes tras la división container/presentational',
       expect(postMock).toHaveBeenCalledWith('/api/auth/change-pin', {
         currentPin: '12345678',
         newPin: '87654321',
-      })
+      }),
     );
     await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
 
@@ -106,9 +106,7 @@ describe('UI — páginas restantes tras la división container/presentational',
 
   it('Unlock: recupera el PIN con preguntas y nuevo PIN', async () => {
     getMock.mockResolvedValue({ q1: 'Mascota?', q2: 'Ciudad?' });
-    postMock
-      .mockResolvedValueOnce({ resetToken: 'tok' })
-      .mockResolvedValueOnce({ ok: true, message: 'ok' });
+    postMock.mockResolvedValueOnce({ resetToken: 'tok' }).mockResolvedValueOnce({ ok: true, message: 'ok' });
     const onUnlockSuccess = vi.fn();
 
     render(<Unlock onUnlockSuccess={onUnlockSuccess} />);
@@ -120,16 +118,14 @@ describe('UI — páginas restantes tras la división container/presentational',
     fireEvent.change(screen.getByLabelText(/Ciudad\?/), { target: { value: 'Lima' } });
     fireEvent.click(screen.getByRole('button', { name: /Validar respuestas/ }));
 
-    await waitFor(() =>
-      expect(postMock).toHaveBeenCalledWith('/api/auth/recover', { a1: 'Firulais', a2: 'Lima' })
-    );
+    await waitFor(() => expect(postMock).toHaveBeenCalledWith('/api/auth/recover', { a1: 'Firulais', a2: 'Lima' }));
 
     fireEvent.change(await screen.findByLabelText(/Nuevo PIN \(8 dígitos/), { target: { value: '11223344' } });
     fireEvent.change(screen.getByLabelText(/Confirmar Nuevo PIN/), { target: { value: '11223344' } });
     fireEvent.click(screen.getByRole('button', { name: /Guardar y Entrar/ }));
 
     await waitFor(() =>
-      expect(postMock).toHaveBeenCalledWith('/api/auth/reset-pin', { token: 'tok', newPin: '11223344' })
+      expect(postMock).toHaveBeenCalledWith('/api/auth/reset-pin', { token: 'tok', newPin: '11223344' }),
     );
     // onUnlockSuccess corre recién cuando resuelve la promesa del reset: hay que esperarlo, no asumirlo.
     await waitFor(() => expect(onUnlockSuccess).toHaveBeenCalledTimes(1));

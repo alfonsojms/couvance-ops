@@ -51,7 +51,11 @@ export function createBudgetsService(repo: BudgetsRepository, clock: ServiceCloc
         createdAt: nowIso,
         updatedAt: nowIso,
       };
-      const milestoneRows = buildMilestoneRows(budget.id, calculateMilestonesAmounts(input.totalAmount, input.milestones), nowIso);
+      const milestoneRows = buildMilestoneRows(
+        budget.id,
+        calculateMilestonesAmounts(input.totalAmount, input.milestones),
+        nowIso,
+      );
 
       await repo.insertBudgetWithMilestones(budget, milestoneRows);
       return { ...budget, milestones: milestoneRows };
@@ -74,8 +78,17 @@ export function createBudgetsService(repo: BudgetsRepository, clock: ServiceCloc
       }
 
       const nowIso = clock.now();
-      const fields = { title: input.title, totalAmount: input.totalAmount, currency: input.currency, updatedAt: nowIso };
-      const milestoneRows = buildMilestoneRows(id, calculateMilestonesAmounts(input.totalAmount, input.milestones), nowIso);
+      const fields = {
+        title: input.title,
+        totalAmount: input.totalAmount,
+        currency: input.currency,
+        updatedAt: nowIso,
+      };
+      const milestoneRows = buildMilestoneRows(
+        id,
+        calculateMilestonesAmounts(input.totalAmount, input.milestones),
+        nowIso,
+      );
 
       await repo.replaceBudget(id, fields, milestoneRows);
       return { ...existing, ...fields, milestones: milestoneRows };
@@ -86,7 +99,7 @@ export function createBudgetsService(repo: BudgetsRepository, clock: ServiceCloc
       const budget = await requireBudget(id);
       if (!canDecideBudget(budget.status)) {
         throw conflict(
-          `No se puede aprobar un presupuesto en estado ${budget.status}. Solo se aprueban presupuestos en DRAFT o SENT.`
+          `No se puede aprobar un presupuesto en estado ${budget.status}. Solo se aprueban presupuestos en DRAFT o SENT.`,
         );
       }
 
@@ -99,7 +112,7 @@ export function createBudgetsService(repo: BudgetsRepository, clock: ServiceCloc
       const budget = await requireBudget(id);
       if (!canDecideBudget(budget.status)) {
         throw conflict(
-          `No se puede rechazar un presupuesto en estado ${budget.status}. Solo se rechazan presupuestos en DRAFT o SENT.`
+          `No se puede rechazar un presupuesto en estado ${budget.status}. Solo se rechazan presupuestos en DRAFT o SENT.`,
         );
       }
 

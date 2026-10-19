@@ -25,13 +25,7 @@ export interface ClientFormDialogProps {
   onSuccess?: (client: any) => void;
 }
 
-export const ClientFormDialog: React.FC<ClientFormDialogProps> = ({
-  open,
-  onOpenChange,
-  mode,
-  initial,
-  onSuccess,
-}) => {
+export const ClientFormDialog: React.FC<ClientFormDialogProps> = ({ open, onOpenChange, mode, initial, onSuccess }) => {
   const [name, setName] = useState('');
   const [contactName, setContactName] = useState('');
   const [phone, setPhone] = useState('');
@@ -96,9 +90,7 @@ export const ClientFormDialog: React.FC<ClientFormDialogProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[calc(100%-1.5rem)] max-w-md p-4 sm:p-6">
         <DialogHeader>
-          <DialogTitle>
-            {mode === 'create' ? 'Alta Rápida de Cliente' : 'Editar Cliente'}
-          </DialogTitle>
+          <DialogTitle>{mode === 'create' ? 'Alta Rápida de Cliente' : 'Editar Cliente'}</DialogTitle>
           <DialogDescription>
             {mode === 'create'
               ? 'Registra un nuevo cliente u organización para cotizar o asignar proyectos.'

@@ -38,7 +38,7 @@ export function SubTabBar({
             'flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all touch-manipulation',
             activeSubTab === 'pending'
               ? 'bg-neutral-800 text-amber-400 shadow-sm font-semibold border border-amber-500/30'
-              : 'text-neutral-400 hover:text-neutral-200'
+              : 'text-neutral-400 hover:text-neutral-200',
           )}
         >
           <Clock className="w-3.5 h-3.5 text-amber-400" />
@@ -55,7 +55,7 @@ export function SubTabBar({
             'flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all touch-manipulation',
             activeSubTab === 'history'
               ? 'bg-neutral-800 text-[#d4ff33] shadow-sm font-semibold border border-[#BDEF00]/30'
-              : 'text-neutral-400 hover:text-neutral-200'
+              : 'text-neutral-400 hover:text-neutral-200',
           )}
         >
           <Receipt className="w-3.5 h-3.5 text-[#BDEF00]" />

@@ -16,11 +16,7 @@ interface SecurityQuestionsFormProps {
 const ANSWER_HINT = 'Se normaliza automáticamente (sin distinción de mayúsculas/espacios)';
 
 // Tab 2: Preguntas de Seguridad
-export const SecurityQuestionsForm: React.FC<SecurityQuestionsFormProps> = ({
-  form,
-  loading,
-  onCancel,
-}) => (
+export const SecurityQuestionsForm: React.FC<SecurityQuestionsFormProps> = ({ form, loading, onCancel }) => (
   <form onSubmit={form.submit} className="space-y-4 pt-2">
     <CardPanel className="text-xs text-neutral-400 p-3 space-y-1">
       <div className="flex items-center gap-1.5 text-neutral-200 font-medium">
@@ -28,7 +24,8 @@ export const SecurityQuestionsForm: React.FC<SecurityQuestionsFormProps> = ({
         <span>Recuperación de Respaldo</span>
       </div>
       <p>
-        Estas preguntas permiten restablecer el PIN en caso de olvido. Las respuestas se almacenan mediante hash SHA-256 irreversible.
+        Estas preguntas permiten restablecer el PIN en caso de olvido. Las respuestas se almacenan mediante hash SHA-256
+        irreversible.
       </p>
     </CardPanel>
 
@@ -95,7 +92,14 @@ export const SecurityQuestionsForm: React.FC<SecurityQuestionsFormProps> = ({
     </div>
 
     <DialogFooter className="flex-col-reverse xs:flex-row gap-2 xs:gap-0 pt-2">
-      <Button type="button" variant="secondary" onClick={onCancel} disabled={loading} className="w-full xs:w-auto" touchFriendly>
+      <Button
+        type="button"
+        variant="secondary"
+        onClick={onCancel}
+        disabled={loading}
+        className="w-full xs:w-auto"
+        touchFriendly
+      >
         Cancelar
       </Button>
       <Button

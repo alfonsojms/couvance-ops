@@ -21,9 +21,7 @@ export const ChangePinForm: React.FC<ChangePinFormProps> = ({ form, loading, onC
         <Lock className="w-3.5 h-3.5 text-neutral-400" />
         <span>PIN Maestro de 8 Dígitos</span>
       </div>
-      <p>
-        Al cambiar el PIN, la sesión actual se mantendrá activa y se renovará en este dispositivo.
-      </p>
+      <p>Al cambiar el PIN, la sesión actual se mantendrá activa y se renovará en este dispositivo.</p>
     </CardPanel>
 
     <FormField label="PIN Actual (8 dígitos)" required>
@@ -74,7 +72,14 @@ export const ChangePinForm: React.FC<ChangePinFormProps> = ({ form, loading, onC
     </div>
 
     <DialogFooter className="flex-col-reverse xs:flex-row gap-2 xs:gap-0 pt-2">
-      <Button type="button" variant="secondary" onClick={onCancel} disabled={loading} className="w-full xs:w-auto" touchFriendly>
+      <Button
+        type="button"
+        variant="secondary"
+        onClick={onCancel}
+        disabled={loading}
+        className="w-full xs:w-auto"
+        touchFriendly
+      >
         Cancelar
       </Button>
       <Button

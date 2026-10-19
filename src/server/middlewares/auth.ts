@@ -13,13 +13,10 @@ export function getPinSecret(c: Context): string {
 // Generación y verificación de tokens HMAC-SHA256 nativos
 async function getHmacKey(secret: string): Promise<CryptoKey> {
   const encoder = new TextEncoder();
-  return crypto.subtle.importKey(
-    'raw',
-    encoder.encode(secret),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign', 'verify']
-  );
+  return crypto.subtle.importKey('raw', encoder.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, [
+    'sign',
+    'verify',
+  ]);
 }
 
 function bufferToBase64Url(buffer: ArrayBuffer): string {
@@ -65,11 +62,7 @@ export async function signToken(payload: TokenPayload, secret: string): Promise<
   const encoder = new TextEncoder();
   const payloadB64 = bufferToBase64Url(encoder.encode(payloadStr).buffer as ArrayBuffer);
 
-  const signature = await crypto.subtle.sign(
-    'HMAC',
-    key,
-    encoder.encode(payloadB64)
-  );
+  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(payloadB64));
   const sigB64 = bufferToBase64Url(signature);
   return `${payloadB64}.${sigB64}`;
 }
@@ -83,12 +76,7 @@ export async function verifyToken(token: string, secret: string): Promise<TokenP
     const key = await getHmacKey(secret);
     const encoder = new TextEncoder();
 
-    const isValid = await crypto.subtle.verify(
-      'HMAC',
-      key,
-      base64UrlToBuffer(sigB64),
-      encoder.encode(payloadB64)
-    );
+    const isValid = await crypto.subtle.verify('HMAC', key, base64UrlToBuffer(sigB64), encoder.encode(payloadB64));
 
     if (!isValid) return null;
 
@@ -169,9 +157,7 @@ export async function pinAuthMiddleware(c: Context, next: Next) {
   const path = rawPath.length > 1 ? rawPath.replace(/\/+$/, '') : rawPath;
 
   // 1. Exención rigurosa de rutas públicas
-  const isPublic = PUBLIC_ROUTES.some(
-    (route) => route.method === method && route.path === path
-  );
+  const isPublic = PUBLIC_ROUTES.some((route) => route.method === method && route.path === path);
   if (isPublic) {
     return next();
   }
@@ -194,4 +180,3 @@ export async function pinAuthMiddleware(c: Context, next: Next) {
 
   await next();
 }
-

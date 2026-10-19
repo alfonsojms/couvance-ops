@@ -2,15 +2,7 @@ import React from 'react';
 import { cn } from '../../lib/utils';
 
 export type BadgeStatus =
-  | 'PROSPECT'
-  | 'IN_PROGRESS'
-  | 'COMPLETED'
-  | 'CANCELLED'
-  | 'DRAFT'
-  | 'PENDING'
-  | 'PAID'
-  | 'ACTIVE'
-  | 'INACTIVE';
+  'PROSPECT' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'DRAFT' | 'PENDING' | 'PAID' | 'ACTIVE' | 'INACTIVE';
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
   status?: BadgeStatus;
@@ -18,10 +10,7 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
   showDot?: boolean;
 }
 
-const statusStyles: Record<
-  BadgeStatus,
-  { container: string; dot: string; defaultLabel: string }
-> = {
+const statusStyles: Record<BadgeStatus, { container: string; dot: string; defaultLabel: string }> = {
   PROSPECT: {
     container: 'bg-amber-500/10 text-amber-300 border-amber-500/20',
     dot: 'bg-amber-400',
@@ -77,14 +66,7 @@ const variantStyles = {
   info: 'bg-[#004BFF]/15 text-[#6ba0ff] border-[#004BFF]/35',
 };
 
-export const Badge: React.FC<BadgeProps> = ({
-  status,
-  variant,
-  showDot = false,
-  className,
-  children,
-  ...props
-}) => {
+export const Badge: React.FC<BadgeProps> = ({ status, variant, showDot = false, className, children, ...props }) => {
   let appliedClasses: string;
   let dotClass = '';
   let content = children;
@@ -107,18 +89,11 @@ export const Badge: React.FC<BadgeProps> = ({
       className={cn(
         'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium border select-none',
         appliedClasses,
-        className
+        className,
       )}
       {...props}
     >
-      {showDot ? (
-        <span
-          className={cn(
-            'w-1.5 h-1.5 rounded-full shrink-0',
-            dotClass || 'bg-current'
-          )}
-        />
-      ) : null}
+      {showDot ? <span className={cn('w-1.5 h-1.5 rounded-full shrink-0', dotClass || 'bg-current')} /> : null}
       <span>{content}</span>
     </span>
   );

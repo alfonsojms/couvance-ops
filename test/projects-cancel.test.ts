@@ -23,7 +23,10 @@ describe.each(CONTRACT_DRIVERS)('cancelación de proyecto en cascada [%s]', (dri
       ],
     });
     await h.raw('POST', `/api/budgets/${budget.body.id}/approve`);
-    return { projectId: project.body.id as string, milestoneIds: budget.body.milestones.map((m: any) => m.id) as string[] };
+    return {
+      projectId: project.body.id as string,
+      milestoneIds: budget.body.milestones.map((m: any) => m.id) as string[],
+    };
   }
 
   const getProject = async (id: string) => (await h.raw('GET', `/api/projects/${id}`)).body as any;
@@ -55,8 +58,8 @@ describe.each(CONTRACT_DRIVERS)('cancelación de proyecto en cascada [%s]', (dri
     await h.db.run(
       sql.raw(
         "CREATE TRIGGER fail_milestone_cancel BEFORE UPDATE OF status ON milestones WHEN NEW.status = 'CANCELLED' " +
-          "BEGIN SELECT RAISE(ABORT, 'forced failure'); END"
-      )
+          "BEGIN SELECT RAISE(ABORT, 'forced failure'); END",
+      ),
     );
 
     try {

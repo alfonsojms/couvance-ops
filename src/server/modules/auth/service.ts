@@ -116,7 +116,7 @@ export function createAuthService(repo: AuthRepository, ctx: AuthContext, clock:
           q2: input.q2.trim(),
           a2Hash: await sha256(input.a2, secret),
         },
-        clock.now()
+        clock.now(),
       );
     },
   };

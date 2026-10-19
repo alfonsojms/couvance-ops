@@ -26,9 +26,7 @@ export const ProjectBasicInfoSection: React.FC<ProjectBasicInfoSectionProps> = (
   onRequestNewClient,
 }) => (
   <div className="space-y-3">
-    <h4 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">
-      1. Información Básica
-    </h4>
+    <h4 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">1. Información Básica</h4>
 
     <FormField id="project-form-title" label="Nombre del Proyecto" required>
       <Input
@@ -88,10 +86,7 @@ export const ProjectBasicInfoSection: React.FC<ProjectBasicInfoSectionProps> = (
       </FormField>
 
       <FormField id="project-form-category" label="Categoría">
-        <Select
-          value={values.category}
-          onChange={(e) => onFieldChange('category', e.target.value as ProjectCategory)}
-        >
+        <Select value={values.category} onChange={(e) => onFieldChange('category', e.target.value as ProjectCategory)}>
           <option value="LANDING">Landing Page</option>
           <option value="ECOMMERCE">E-commerce</option>
           <option value="CORPORATE">Web Corporativa</option>

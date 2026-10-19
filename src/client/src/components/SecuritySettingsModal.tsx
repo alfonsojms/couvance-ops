@@ -1,13 +1,7 @@
 import React from 'react';
 import { Shield } from 'lucide-react';
 import { useSecuritySettings } from '../hooks/useSecuritySettings';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from './ui/Dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/Dialog';
 import { SecurityTabs } from './security/SecurityTabs';
 import { ChangePinForm } from './security/ChangePinForm';
 import { SecurityQuestionsForm } from './security/SecurityQuestionsForm';
@@ -17,14 +11,8 @@ interface SecuritySettingsModalProps {
   onClose: () => void;
 }
 
-export const SecuritySettingsModal: React.FC<SecuritySettingsModalProps> = ({
-  isOpen,
-  onClose,
-}) => {
-  const { activeTab, setActiveTab, loading, pinForm, questionsForm } = useSecuritySettings(
-    isOpen,
-    onClose
-  );
+export const SecuritySettingsModal: React.FC<SecuritySettingsModalProps> = ({ isOpen, onClose }) => {
+  const { activeTab, setActiveTab, loading, pinForm, questionsForm } = useSecuritySettings(isOpen, onClose);
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -45,9 +33,7 @@ export const SecuritySettingsModal: React.FC<SecuritySettingsModalProps> = ({
 
         <SecurityTabs activeTab={activeTab} onChange={setActiveTab} />
 
-        {activeTab === 'pin' ? (
-          <ChangePinForm form={pinForm} loading={loading} onCancel={onClose} />
-        ) : null}
+        {activeTab === 'pin' ? <ChangePinForm form={pinForm} loading={loading} onCancel={onClose} /> : null}
 
         {activeTab === 'questions' ? (
           <SecurityQuestionsForm form={questionsForm} loading={loading} onCancel={onClose} />

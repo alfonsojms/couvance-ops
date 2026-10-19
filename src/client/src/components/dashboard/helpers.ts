@@ -78,10 +78,7 @@ export function getMilestoneUrgency(dueDateStr?: string | null): UrgencyInfo {
 }
 
 // Resumen para el modal "Cobrar Todo": suma los hitos pendientes del mismo presupuesto.
-export function buildPayAllSummary(
-  pending: PendingMilestone[],
-  m: PendingMilestone
-): PayAllModalData {
+export function buildPayAllSummary(pending: PendingMilestone[], m: PendingMilestone): PayAllModalData {
   const related = pending.filter((item) => item.budgetId === m.budgetId);
   const total = related.reduce((acc, curr) => acc + curr.amount, 0);
   return {
@@ -103,7 +100,7 @@ export function filterPaidMilestones(paid: PaidMilestone[], search: string): Pai
       m.clientName.toLowerCase().includes(q) ||
       m.projectTitle.toLowerCase().includes(q) ||
       m.milestoneTitle.toLowerCase().includes(q) ||
-      m.projectCategory.toLowerCase().includes(q)
+      m.projectCategory.toLowerCase().includes(q),
   );
 }
 

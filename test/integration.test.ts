@@ -110,7 +110,6 @@ describe('QA - Nivel 2 y 3: Pruebas de Integración (API + Base de Datos en Memo
       const proyecto = await res.json();
       expect(proyecto).toHaveProperty('id');
       expect(proyecto.clientId).toBe(createdClientId);
-
     });
 
     it('RN-06: debe RECHAZAR con 409 Conflict si intentamos borrar un cliente que tiene proyectos asociados', async () => {
@@ -444,4 +443,3 @@ describe('QA - Nivel 2 y 3: Pruebas de Integración (API + Base de Datos en Memo
     });
   });
 });
-

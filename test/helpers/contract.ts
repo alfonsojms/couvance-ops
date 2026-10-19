@@ -45,7 +45,10 @@ export async function createContractHarness(driver: ContractDriver = 'sqlite') {
     if (Array.isArray(value)) return value.map(normalize);
     if (value && typeof value === 'object') {
       return Object.fromEntries(
-        Object.entries(value).map(([key, v]) => [key, VOLATILE_KEYS.has(key) && typeof v === 'string' ? '<token>' : normalize(v)])
+        Object.entries(value).map(([key, v]) => [
+          key,
+          VOLATILE_KEYS.has(key) && typeof v === 'string' ? '<token>' : normalize(v),
+        ]),
       );
     }
     return value;
@@ -65,7 +68,7 @@ export async function createContractHarness(driver: ContractDriver = 'sqlite') {
         body: body !== undefined ? JSON.stringify(body) : undefined,
       },
       // Copia por petición: getDb() cachea la instancia Drizzle en el objeto env.
-      env ? { ...env } : undefined
+      env ? { ...env } : undefined,
     );
     const setCookie = res.headers.get('set-cookie');
     if (setCookie) {

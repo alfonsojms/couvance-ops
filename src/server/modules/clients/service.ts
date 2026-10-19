@@ -30,7 +30,7 @@ export function createClientsService(repo: ClientsRepository, clock: ServiceCloc
       return sources.clients.map((client) => {
         const clientProjects = projectsByClient.get(client.id) || [];
         const clientMilestones = clientProjects.flatMap((p) =>
-          (budgetsByProject.get(p.id) || []).flatMap((b) => milestonesByBudget.get(b.id) || [])
+          (budgetsByProject.get(p.id) || []).flatMap((b) => milestonesByBudget.get(b.id) || []),
         );
         return { ...client, projectsCount: clientProjects.length, ...sumMilestones(clientMilestones) };
       });

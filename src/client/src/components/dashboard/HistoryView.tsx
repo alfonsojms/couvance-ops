@@ -26,9 +26,7 @@ export function HistoryView({ milestones, totalAmount, historySearch }: HistoryV
             Filtrado: {formatCurrency(totalAmount)} ({milestones.length} hitos)
           </span>
         ) : (
-          <span className="text-[11px] text-neutral-500 font-mono">
-            Ordenados por fecha de cobro más reciente
-          </span>
+          <span className="text-[11px] text-neutral-500 font-mono">Ordenados por fecha de cobro más reciente</span>
         )}
       </div>
 

@@ -19,9 +19,7 @@ export const BudgetHistory: React.FC<BudgetHistoryProps> = ({
   onApprove,
 }) => (
   <div className="space-y-3 mb-5">
-    <h4 className="text-xs font-semibold text-neutral-300 uppercase tracking-wider">
-      Historial de Presupuestos
-    </h4>
+    <h4 className="text-xs font-semibold text-neutral-300 uppercase tracking-wider">Historial de Presupuestos</h4>
 
     {budgets.length === 0 ? (
       <p className="text-xs text-neutral-500 italic p-3 rounded-lg bg-neutral-950/40 border border-neutral-850">
@@ -30,10 +28,7 @@ export const BudgetHistory: React.FC<BudgetHistoryProps> = ({
     ) : (
       <div className="space-y-3">
         {budgets.map((b) => (
-          <div
-            key={b.id}
-            className="p-3.5 sm:p-4 rounded-xl bg-neutral-950/80 border border-neutral-800 space-y-3"
-          >
+          <div key={b.id} className="p-3.5 sm:p-4 rounded-xl bg-neutral-950/80 border border-neutral-800 space-y-3">
             <div className="flex items-center justify-between gap-2">
               <div className="min-w-0">
                 <span className="text-sm font-semibold text-neutral-100 block sm:inline truncate">{b.title}</span>
@@ -56,9 +51,7 @@ export const BudgetHistory: React.FC<BudgetHistoryProps> = ({
                       {m.title} ({m.percentage}%)
                     </span>
                     <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-neutral-200 font-semibold">
-                        {formatCurrency(m.amount, b.currency)}
-                      </span>
+                      <span className="text-neutral-200 font-semibold">{formatCurrency(m.amount, b.currency)}</span>
                       <Badge status={m.status as BadgeStatus} />
                     </div>
                   </div>

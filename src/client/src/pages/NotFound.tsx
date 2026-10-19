@@ -35,8 +35,7 @@ export const NotFound: React.FC<NotFoundProps> = ({
   const [showTechnicalDetails, setShowTechnicalDetails] = useState(false);
 
   const currentPath =
-    requestedPath ||
-    (typeof window !== 'undefined' ? window.location.pathname + window.location.search : '/404');
+    requestedPath || (typeof window !== 'undefined' ? window.location.pathname + window.location.search : '/404');
 
   const fullUrl = typeof window !== 'undefined' ? window.location.href : currentPath;
 
@@ -85,15 +84,10 @@ export const NotFound: React.FC<NotFoundProps> = ({
   return (
     <div className="min-h-[80vh] flex flex-col items-center justify-center px-4 py-8 sm:py-12">
       <div className="w-full max-w-2xl mx-auto space-y-6 sm:space-y-8">
-        
         {/* Cabecera / Logo Couvance e Identificador Técnico */}
         <div className="flex flex-col items-center text-center space-y-3">
           <div className="w-14 h-14 rounded-2xl overflow-hidden border border-[#004BFF]/50 bg-[#004BFF] shadow-[0_0_24px_rgba(0,75,255,0.35)] flex items-center justify-center select-none pointer-events-none mb-1">
-            <img
-              src="/logo-couvance.png"
-              alt="Couvance Logo"
-              className="w-full h-full object-cover"
-            />
+            <img src="/logo-couvance.png" alt="Couvance Logo" className="w-full h-full object-cover" />
           </div>
 
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-medium bg-rose-500/10 text-rose-300 border border-rose-500/20 select-none">
@@ -111,11 +105,10 @@ export const NotFound: React.FC<NotFoundProps> = ({
             </div>
           </div>
 
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
-            Página o recurso inexistente
-          </h1>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">Página o recurso inexistente</h1>
           <p className="text-sm text-neutral-400 max-w-lg leading-relaxed">
-            La dirección a la que intentas ingresar no existe en este servidor, fue movida o el enlace contiene un error tipográfico.
+            La dirección a la que intentas ingresar no existe en este servidor, fue movida o el enlace contiene un error
+            tipográfico.
           </p>
         </div>
 
@@ -185,7 +178,9 @@ export const NotFound: React.FC<NotFoundProps> = ({
                     <LayoutDashboard className="w-4 h-4 text-[#004BFF]" />
                   </div>
                   <div className="text-left">
-                    <div className="font-semibold text-xs sm:text-sm text-white group-hover:text-white">Radar de Cobros</div>
+                    <div className="font-semibold text-xs sm:text-sm text-white group-hover:text-white">
+                      Radar de Cobros
+                    </div>
                     <div className="text-xs text-neutral-400 font-normal">Panel principal y cobranzas</div>
                   </div>
                 </Button>
@@ -200,7 +195,9 @@ export const NotFound: React.FC<NotFoundProps> = ({
                     <FolderKanban className="w-4 h-4 text-neutral-300 group-hover:text-white" />
                   </div>
                   <div className="text-left">
-                    <div className="font-semibold text-xs sm:text-sm text-neutral-100 group-hover:text-white">Proyectos</div>
+                    <div className="font-semibold text-xs sm:text-sm text-neutral-100 group-hover:text-white">
+                      Proyectos
+                    </div>
                     <div className="text-xs text-neutral-400 font-normal">Cotizador e hitos de pago</div>
                   </div>
                 </Button>
@@ -215,7 +212,9 @@ export const NotFound: React.FC<NotFoundProps> = ({
                     <Users className="w-4 h-4 text-neutral-300 group-hover:text-white" />
                   </div>
                   <div className="text-left">
-                    <div className="font-semibold text-xs sm:text-sm text-neutral-100 group-hover:text-white">Clientes</div>
+                    <div className="font-semibold text-xs sm:text-sm text-neutral-100 group-hover:text-white">
+                      Clientes
+                    </div>
                     <div className="text-xs text-neutral-400 font-normal">Directorio y contactos</div>
                   </div>
                 </Button>
@@ -230,7 +229,9 @@ export const NotFound: React.FC<NotFoundProps> = ({
                     <Sparkles className="w-4 h-4 text-[#BDEF00]" />
                   </div>
                   <div className="text-left">
-                    <div className="font-semibold text-xs sm:text-sm text-neutral-100 group-hover:text-white">Showcase</div>
+                    <div className="font-semibold text-xs sm:text-sm text-neutral-100 group-hover:text-white">
+                      Showcase
+                    </div>
                     <div className="text-xs text-neutral-400 font-normal">Portafolio activo de ventas</div>
                   </div>
                 </Button>
@@ -260,11 +261,7 @@ export const NotFound: React.FC<NotFoundProps> = ({
             className="w-full flex items-center justify-between text-xs text-neutral-500 hover:text-neutral-400 transition-colors py-1 select-none"
           >
             <span>Detalles técnicos del error</span>
-            {showTechnicalDetails ? (
-              <ChevronUp className="w-3.5 h-3.5" />
-            ) : (
-              <ChevronDown className="w-3.5 h-3.5" />
-            )}
+            {showTechnicalDetails ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
           </button>
 
           {showTechnicalDetails ? (
@@ -294,7 +291,6 @@ export const NotFound: React.FC<NotFoundProps> = ({
             </div>
           ) : null}
         </div>
-
       </div>
     </div>
   );

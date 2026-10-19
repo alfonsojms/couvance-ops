@@ -16,7 +16,12 @@ export const milestoneInputSchema = z.object({
   dueDate: z
     .string()
     .transform(sanitizeString)
-    .pipe(z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de fecha YYYY-MM-DD').or(z.literal('')))
+    .pipe(
+      z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de fecha YYYY-MM-DD')
+        .or(z.literal('')),
+    )
     .optional()
     .nullable(),
 });
@@ -48,7 +53,7 @@ export const budgetCreateSchema = z
     {
       message: 'La suma de los porcentajes de los hitos debe ser exactamente 100% (RN-02).',
       path: ['milestones'],
-    }
+    },
   );
 
 export type MilestoneInput = z.infer<typeof milestoneInputSchema>;

@@ -20,27 +20,21 @@ export const RecurringAlertCard = memo<RecurringAlertCardProps>(({ rec, processi
   return (
     <Card
       className={`p-4 flex flex-col justify-between gap-3 content-visibility-auto ${
-        rec.isOverdue
-          ? 'border-rose-500/30 bg-rose-950/10'
-          : 'border-amber-500/30 bg-amber-950/10'
+        rec.isOverdue ? 'border-rose-500/30 bg-rose-950/10' : 'border-amber-500/30 bg-amber-950/10'
       }`}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <span className="text-xs font-semibold text-neutral-200 block truncate">
-            {rec.projectTitle}
-          </span>
+          <span className="text-xs font-semibold text-neutral-200 block truncate">{rec.projectTitle}</span>
           <span className="text-xs text-neutral-400 block truncate">{rec.clientName}</span>
         </div>
 
         <Badge variant={rec.isOverdue ? 'danger' : 'warning'} showDot>
           {rec.isOverdue
-            ? `Vencido hace ${Math.abs(rec.daysRemaining)} ${
-                Math.abs(rec.daysRemaining) === 1 ? 'día' : 'días'
-              }`
+            ? `Vencido hace ${Math.abs(rec.daysRemaining)} ${Math.abs(rec.daysRemaining) === 1 ? 'día' : 'días'}`
             : rec.daysRemaining === 0
-            ? 'Vence hoy'
-            : `Vence en ${rec.daysRemaining} días`}
+              ? 'Vence hoy'
+              : `Vence en ${rec.daysRemaining} días`}
         </Badge>
       </div>
 

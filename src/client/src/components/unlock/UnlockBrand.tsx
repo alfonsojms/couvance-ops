@@ -17,9 +17,7 @@ export const UnlockBrand: React.FC = () => (
       </div>
     </div>
 
-    <h1 className="text-xl font-bold tracking-tight text-white mb-1 text-center">
-      Couvance Ops
-    </h1>
+    <h1 className="text-xl font-bold tracking-tight text-white mb-1 text-center">Couvance Ops</h1>
     <p className="text-xs text-neutral-400 mb-6 sm:mb-8 text-center">
       Ingresa el PIN maestro de 8 dígitos para acceder
     </p>

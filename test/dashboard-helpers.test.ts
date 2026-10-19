@@ -46,11 +46,19 @@ describe('getMilestoneUrgency', () => {
   afterEach(() => vi.useRealTimers());
 
   it('sin fecha es neutral', () => {
-    expect(getMilestoneUrgency(null)).toMatchObject({ variant: 'neutral', label: 'Sin fecha límite', isOverdue: false });
+    expect(getMilestoneUrgency(null)).toMatchObject({
+      variant: 'neutral',
+      label: 'Sin fecha límite',
+      isOverdue: false,
+    });
   });
 
   it('marca vencidos con singular y plural', () => {
-    expect(getMilestoneUrgency('2026-10-16')).toMatchObject({ variant: 'danger', label: 'Vencido hace 1 día', isOverdue: true });
+    expect(getMilestoneUrgency('2026-10-16')).toMatchObject({
+      variant: 'danger',
+      label: 'Vencido hace 1 día',
+      isOverdue: true,
+    });
     expect(getMilestoneUrgency('2026-10-14').label).toBe('Vencido hace 3 días');
   });
 
@@ -87,7 +95,14 @@ describe('buildPayAllSummary', () => {
 describe('filterPaidMilestones', () => {
   const list = [
     paid({ id: '1', clientName: 'ACME', amount: 10 }),
-    paid({ id: '2', clientName: 'Globex', projectTitle: 'App Móvil', milestoneTitle: 'Final', projectCategory: 'APP', amount: 20 }),
+    paid({
+      id: '2',
+      clientName: 'Globex',
+      projectTitle: 'App Móvil',
+      milestoneTitle: 'Final',
+      projectCategory: 'APP',
+      amount: 20,
+    }),
   ];
 
   it('sin búsqueda devuelve la misma lista', () => {

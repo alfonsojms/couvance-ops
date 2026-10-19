@@ -38,7 +38,9 @@ test.describe('E2E Avanzado - Formularios y Gestión de Clientes', () => {
     await page.getByPlaceholder('Ej: Carlos Morales').fill('Lic. Roberto García');
     await page.getByPlaceholder('Ej: +5491123456789').fill('+18095558899');
     await page.getByPlaceholder('contacto@empresa.com').fill(`contacto@garcia${randomSuffix}.com`);
-    await page.getByPlaceholder('Observaciones de pago, horarios o requerimientos...').fill('Cliente corporativo preferencial para QA');
+    await page
+      .getByPlaceholder('Observaciones de pago, horarios o requerimientos...')
+      .fill('Cliente corporativo preferencial para QA');
 
     // 4. Enviar el formulario haciendo clic en "Guardar Cliente"
     await page.getByRole('button', { name: /Guardar Cliente/i }).click();
@@ -61,7 +63,7 @@ test.describe('E2E Avanzado - Formularios y Gestión de Clientes', () => {
     await page.getByRole('button', { name: /Nuevo Cliente/i }).click();
 
     const inputNombre = page.getByPlaceholder('Ej: Estudio Jurídico Morales');
-    
+
     // Verificamos que el input tiene el atributo HTML5 'required'
     await expect(inputNombre).toHaveAttribute('required', '');
 

@@ -39,9 +39,7 @@ export const BudgetPresetForm: React.FC<BudgetPresetFormProps> = ({
   <div className="border-t border-neutral-800 pt-5">
     <div className="flex items-center gap-2 mb-3">
       <Sparkles className="w-4 h-4 text-neutral-300" />
-      <h4 className="text-xs font-semibold text-neutral-200 uppercase tracking-wider">
-        Nueva Cotización con Presets
-      </h4>
+      <h4 className="text-xs font-semibold text-neutral-200 uppercase tracking-wider">Nueva Cotización con Presets</h4>
     </div>
 
     <form
@@ -53,11 +51,7 @@ export const BudgetPresetForm: React.FC<BudgetPresetFormProps> = ({
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <FormField id="budget-title" label="Concepto de la Cotización" required>
-          <Input
-            required
-            value={title}
-            onChange={(e) => onTitleChange(e.target.value)}
-          />
+          <Input required value={title} onChange={(e) => onTitleChange(e.target.value)} />
         </FormField>
 
         <FormField id="budget-amount" label="Monto Total Entero (USD)" required>
@@ -91,7 +85,9 @@ export const BudgetPresetForm: React.FC<BudgetPresetFormProps> = ({
               }`}
             >
               <span className="block font-bold text-xs sm:text-sm text-neutral-100">{option.label}</span>
-              <span className="text-[10px] sm:text-[11px] text-neutral-400 block leading-tight">{option.description}</span>
+              <span className="text-[10px] sm:text-[11px] text-neutral-400 block leading-tight">
+                {option.description}
+              </span>
             </button>
           ))}
         </div>
@@ -101,9 +97,7 @@ export const BudgetPresetForm: React.FC<BudgetPresetFormProps> = ({
       <div className="p-3 rounded-lg bg-neutral-950 border border-neutral-850 space-y-2">
         <div className="flex items-center justify-between text-[11px] text-neutral-400 font-mono">
           <span>Vista previa de hitos:</span>
-          <span className="text-neutral-200 font-semibold">
-            Total: {formatCurrency(total)}
-          </span>
+          <span className="text-neutral-200 font-semibold">Total: {formatCurrency(total)}</span>
         </div>
 
         <div className="space-y-1.5">
@@ -115,23 +109,14 @@ export const BudgetPresetForm: React.FC<BudgetPresetFormProps> = ({
               <span className="text-neutral-300 truncate">
                 {m.title} ({m.percentage}%)
               </span>
-              <span className="text-[#BDEF00] font-semibold shrink-0 ml-2">
-                {formatCurrency(m.amount)}
-              </span>
+              <span className="text-[#BDEF00] font-semibold shrink-0 ml-2">{formatCurrency(m.amount)}</span>
             </div>
           ))}
         </div>
       </div>
 
       <DialogFooter className="flex-col-reverse xs:flex-row gap-2 xs:gap-0">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          touchFriendly
-          onClick={onClose}
-          className="w-full xs:w-auto"
-        >
+        <Button type="button" variant="ghost" size="sm" touchFriendly onClick={onClose} className="w-full xs:w-auto">
           Cerrar
         </Button>
         <Button

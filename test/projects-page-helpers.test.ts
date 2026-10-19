@@ -37,7 +37,7 @@ describe('budgetPresets', () => {
         '• Anticipo (100%): $1,000',
         '',
         '¡Quedamos a tu disposición para dar inicio!',
-      ].join('\n')
+      ].join('\n'),
     );
   });
 });
@@ -71,7 +71,7 @@ describe('projectFormModel', () => {
     expect(validateProjectForm(empty, 'create')).toBe('El nombre del proyecto es obligatorio');
     expect(validateProjectForm({ ...empty, title: 'X' }, 'create')).toBe('Selecciona un cliente para el proyecto');
     expect(validateProjectForm({ ...empty, title: 'X', hasRecurring: true, recurringAmount: '0' }, 'edit')).toBe(
-      'El monto recurrente es obligatorio cuando la recurrencia está activa'
+      'El monto recurrente es obligatorio cuando la recurrencia está activa',
     );
   });
 });

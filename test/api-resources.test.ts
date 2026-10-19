@@ -58,13 +58,33 @@ const cases: [string, () => Promise<unknown>, Method, unknown[]][] = [
 
   ['projectsApi.list', () => projectsApi.list(), 'get', ['/api/projects']],
   ['projectsApi.create', () => projectsApi.create(projectInput), 'post', ['/api/projects', projectInput]],
-  ['projectsApi.softEdit', () => projectsApi.softEdit('p-1', { title: 'Nuevo' }), 'patch', ['/api/projects/p-1', { title: 'Nuevo' }]],
-  ['projectsApi.setStatus COMPLETED', () => projectsApi.setStatus('p-1', 'COMPLETED'), 'put', ['/api/projects/p-1', { status: 'COMPLETED' }]],
-  ['projectsApi.setStatus CANCELLED', () => projectsApi.setStatus('p-1', 'CANCELLED'), 'put', ['/api/projects/p-1', { status: 'CANCELLED' }]],
+  [
+    'projectsApi.softEdit',
+    () => projectsApi.softEdit('p-1', { title: 'Nuevo' }),
+    'patch',
+    ['/api/projects/p-1', { title: 'Nuevo' }],
+  ],
+  [
+    'projectsApi.setStatus COMPLETED',
+    () => projectsApi.setStatus('p-1', 'COMPLETED'),
+    'put',
+    ['/api/projects/p-1', { status: 'COMPLETED' }],
+  ],
+  [
+    'projectsApi.setStatus CANCELLED',
+    () => projectsApi.setStatus('p-1', 'CANCELLED'),
+    'put',
+    ['/api/projects/p-1', { status: 'CANCELLED' }],
+  ],
   ['projectsApi.renew', () => projectsApi.renew('p-1'), 'post', ['/api/projects/p-1/renew']],
 
   ['budgetsApi.listByProject', () => budgetsApi.listByProject('p-1'), 'get', ['/api/projects/p-1/budgets']],
-  ['budgetsApi.create', () => budgetsApi.create('p-1', budgetInput), 'post', ['/api/projects/p-1/budgets', budgetInput]],
+  [
+    'budgetsApi.create',
+    () => budgetsApi.create('p-1', budgetInput),
+    'post',
+    ['/api/projects/p-1/budgets', budgetInput],
+  ],
   ['budgetsApi.approve', () => budgetsApi.approve('b-1'), 'post', ['/api/budgets/b-1/approve']],
   ['budgetsApi.payAll', () => budgetsApi.payAll('b-1'), 'post', ['/api/budgets/b-1/pay-all']],
   ['milestonesApi.pay', () => milestonesApi.pay('m-1'), 'patch', ['/api/milestones/m-1/pay']],
@@ -80,10 +100,30 @@ const cases: [string, () => Promise<unknown>, Method, unknown[]][] = [
   ['authApi.lock', () => authApi.lock(), 'post', ['/api/auth/lock']],
   ['authApi.questions', () => authApi.questions(), 'get', ['/api/auth/questions']],
   ['authApi.settings', () => authApi.settings(), 'get', ['/api/auth/settings']],
-  ['authApi.recover', () => authApi.recover({ a1: 'firulais', a2: 'lima' }), 'post', ['/api/auth/recover', { a1: 'firulais', a2: 'lima' }]],
-  ['authApi.resetPin', () => authApi.resetPin({ token: 'tok', newPin: '87654321' }), 'post', ['/api/auth/reset-pin', { token: 'tok', newPin: '87654321' }]],
-  ['authApi.changePin', () => authApi.changePin({ currentPin: '12345678', newPin: '87654321' }), 'post', ['/api/auth/change-pin', { currentPin: '12345678', newPin: '87654321' }]],
-  ['authApi.updateQuestions', () => authApi.updateQuestions(questionsInput), 'post', ['/api/auth/update-questions', questionsInput]],
+  [
+    'authApi.recover',
+    () => authApi.recover({ a1: 'firulais', a2: 'lima' }),
+    'post',
+    ['/api/auth/recover', { a1: 'firulais', a2: 'lima' }],
+  ],
+  [
+    'authApi.resetPin',
+    () => authApi.resetPin({ token: 'tok', newPin: '87654321' }),
+    'post',
+    ['/api/auth/reset-pin', { token: 'tok', newPin: '87654321' }],
+  ],
+  [
+    'authApi.changePin',
+    () => authApi.changePin({ currentPin: '12345678', newPin: '87654321' }),
+    'post',
+    ['/api/auth/change-pin', { currentPin: '12345678', newPin: '87654321' }],
+  ],
+  [
+    'authApi.updateQuestions',
+    () => authApi.updateQuestions(questionsInput),
+    'post',
+    ['/api/auth/update-questions', questionsInput],
+  ],
 ];
 
 describe('Clientes HTTP por recurso (lib/resources)', () => {

@@ -19,12 +19,7 @@ describe('UI & Interaction Testing - Interfaz Página 404 (NotFound)', () => {
   });
 
   it('TC-404-01: Debe renderizar elementos clave de la interfaz 404', () => {
-    render(
-      <NotFound
-        onNavigate={mockOnNavigate}
-        requestedPath="/cotizaciones/inexistente-123"
-      />
-    );
+    render(<NotFound onNavigate={mockOnNavigate} requestedPath="/cotizaciones/inexistente-123" />);
 
     // 1. Badge HTTP 404
     expect(screen.getByText(/HTTP 404 · RECURSO NO ENCONTRADO/i)).toBeInTheDocument();
@@ -96,13 +91,7 @@ describe('UI & Interaction Testing - Interfaz Página 404 (NotFound)', () => {
   });
 
   it('TC-404-05: En modo standalone con onGoToUnlock, debe mostrar botón para acceder con PIN', () => {
-    render(
-      <NotFound
-        isStandalone={true}
-        onGoToUnlock={mockOnGoToUnlock}
-        requestedPath="/ruta-privada"
-      />
-    );
+    render(<NotFound isStandalone={true} onGoToUnlock={mockOnGoToUnlock} requestedPath="/ruta-privada" />);
 
     const unlockBtn = screen.getByRole('button', {
       name: /Acceder a Couvance Ops \(Ingresar PIN\)/i,

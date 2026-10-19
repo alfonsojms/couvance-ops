@@ -78,7 +78,7 @@ describe('shared/http', () => {
     cases.forEach(([error], i) =>
       app.get(`/domain/${i}`, () => {
         throw error;
-      })
+      }),
     );
     app.onError((err, c) => handleHttpError(err, c) ?? c.json({ error: 'unhandled' }, 500));
 
@@ -125,7 +125,7 @@ describe.each(TEST_DRIVERS)('db/runAtomic [%s]', (driver) => {
         db.insert(clients).values(clientRow('atomic-rollback-1', 'Antes del fallo')),
         // Clave primaria duplicada: la segunda sentencia falla.
         db.insert(clients).values(clientRow('atomic-rollback-1', 'Duplicado')),
-      ])
+      ]),
     ).rejects.toThrow();
 
     expect(await db.select().from(clients).where(eq(clients.id, 'atomic-rollback-1')).all()).toHaveLength(0);

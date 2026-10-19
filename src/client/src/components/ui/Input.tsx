@@ -16,12 +16,12 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           hasError
             ? 'border-rose-500/80 focus:border-rose-500 focus:ring-rose-500/30'
             : 'border-neutral-800 focus:border-[#004BFF] focus:ring-[#004BFF]/40',
-          className
+          className,
         )}
         {...props}
       />
     );
-  }
+  },
 );
 Input.displayName = 'Input';
 
@@ -39,14 +39,14 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
           hasError
             ? 'border-rose-500/80 focus:border-rose-500 focus:ring-rose-500/30'
             : 'border-neutral-800 focus:border-[#004BFF] focus:ring-[#004BFF]/40',
-          className
+          className,
         )}
         {...props}
       >
         {children}
       </select>
     );
-  }
+  },
 );
 Select.displayName = 'Select';
 
@@ -64,12 +64,12 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           hasError
             ? 'border-rose-500/80 focus:border-rose-500 focus:ring-rose-500/30'
             : 'border-neutral-800 focus:border-[#004BFF] focus:ring-[#004BFF]/40',
-          className
+          className,
         )}
         {...props}
       />
     );
-  }
+  },
 );
 Textarea.displayName = 'Textarea';
 
@@ -99,25 +99,20 @@ export const FormField: React.FC<FormFieldProps> = ({
   return (
     <div className={cn('space-y-1.5', className)}>
       {label && (
-        <label
-          htmlFor={id}
-          className="block text-xs font-medium text-neutral-300"
-        >
+        <label htmlFor={id} className="block text-xs font-medium text-neutral-300">
           {label}
           {required && <span className="text-rose-400 ml-1">*</span>}
         </label>
       )}
 
-      {typeof children === 'function' ? (
-        children({ id, hasError })
-      ) : React.isValidElement(children) ? (
-        React.cloneElement(children as React.ReactElement<any>, {
-          id: (children.props as any).id || id,
-          hasError: (children.props as any).hasError ?? hasError,
-        })
-      ) : (
-        children
-      )}
+      {typeof children === 'function'
+        ? children({ id, hasError })
+        : React.isValidElement(children)
+          ? React.cloneElement(children as React.ReactElement<any>, {
+              id: (children.props as any).id || id,
+              hasError: (children.props as any).hasError ?? hasError,
+            })
+          : children}
 
       {error ? (
         <p className="text-[11px] text-rose-400 font-medium">{error}</p>

@@ -20,7 +20,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       children,
       ...props
     },
-    ref
+    ref,
   ) => {
     const baseClasses =
       'inline-flex items-center justify-center rounded-md font-medium select-none border transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004BFF] focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950 disabled:opacity-50 disabled:pointer-events-none active:scale-[0.98]';
@@ -30,16 +30,13 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         'bg-white text-neutral-950 border-transparent hover:bg-neutral-200 active:bg-neutral-300 font-semibold shadow-sm',
       secondary:
         'bg-neutral-900 text-neutral-100 border-neutral-800 hover:bg-neutral-850 hover:border-neutral-700 hover:text-white',
-      danger:
-        'bg-rose-950/40 text-rose-300 border-rose-800/80 hover:bg-rose-900/60 hover:border-rose-700',
-      ghost:
-        'bg-transparent text-neutral-400 border-transparent hover:bg-neutral-900 hover:text-neutral-100',
+      danger: 'bg-rose-950/40 text-rose-300 border-rose-800/80 hover:bg-rose-900/60 hover:border-rose-700',
+      ghost: 'bg-transparent text-neutral-400 border-transparent hover:bg-neutral-900 hover:text-neutral-100',
       whatsapp:
         'bg-[#25D366] text-neutral-950 border-[#25D366]/40 hover:bg-[#20ba5a] active:bg-[#1da851] font-semibold',
       couvance:
         'bg-[#004BFF] text-white border-[#004BFF]/50 hover:bg-[#1a5eff] active:bg-[#003ed4] shadow-[0_0_15px_rgba(0,75,255,0.3)] font-semibold',
-      lime:
-        'bg-[#BDEF00] text-neutral-950 border-[#BDEF00]/40 hover:bg-[#cbff00] active:bg-[#a8d300] shadow-[0_0_15px_rgba(189,239,0,0.3)] font-semibold',
+      lime: 'bg-[#BDEF00] text-neutral-950 border-[#BDEF00]/40 hover:bg-[#cbff00] active:bg-[#a8d300] shadow-[0_0_15px_rgba(189,239,0,0.3)] font-semibold',
     };
 
     const sizeClasses = {
@@ -55,13 +52,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         disabled={disabled || isLoading}
-        className={cn(
-          baseClasses,
-          variantClasses[variant],
-          sizeClasses[size],
-          touchClasses,
-          className
-        )}
+        className={cn(baseClasses, variantClasses[variant], sizeClasses[size], touchClasses, className)}
         {...props}
       >
         {isLoading ? (
@@ -74,7 +65,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         )}
       </button>
     );
-  }
+  },
 );
 
 Button.displayName = 'Button';

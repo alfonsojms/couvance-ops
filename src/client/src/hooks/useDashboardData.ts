@@ -1,12 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { budgetsApi, financeApi, milestonesApi, projectsApi } from '../lib/resources';
-import type {
-  FinancialMetrics,
-  PaidMilestone,
-  PendingMilestone,
-  RecurringAlert,
-} from '../lib/types';
+import type { FinancialMetrics, PaidMilestone, PendingMilestone, RecurringAlert } from '../lib/types';
 import { buildPayAllSummary, type PayAllModalData } from '../components/dashboard/helpers';
 
 // Datos y acciones del Radar: carga de métricas/radar/historial y cobros/renovaciones.
@@ -44,18 +39,21 @@ export function useDashboardData() {
   }, [loadDashboardData]);
 
   // Cobro individual de hito
-  const payMilestone = useCallback(async (id: string) => {
-    try {
-      setProcessingId(id);
-      await milestonesApi.pay(id);
-      toast.success('Hito marcado como cobrado.');
-      loadDashboardData();
-    } catch (err: any) {
-      toast.error(err.message || 'Error al registrar cobro');
-    } finally {
-      setProcessingId(null);
-    }
-  }, [loadDashboardData]);
+  const payMilestone = useCallback(
+    async (id: string) => {
+      try {
+        setProcessingId(id);
+        await milestonesApi.pay(id);
+        toast.success('Hito marcado como cobrado.');
+        loadDashboardData();
+      } catch (err: any) {
+        toast.error(err.message || 'Error al registrar cobro');
+      } finally {
+        setProcessingId(null);
+      }
+    },
+    [loadDashboardData],
+  );
 
   // Abrir modal para Cobro Express "Cobrar Todo". Lee la lista vigente desde el updater
   // para que el callback sea estable y no re-renderice las tarjetas memoizadas.
@@ -86,18 +84,21 @@ export function useDashboardData() {
   };
 
   // Cobrar y renovar hosting/mantenimiento recurrente (+1 mes o +1 año)
-  const renewProject = useCallback(async (projectId: string) => {
-    try {
-      setProcessingId(`renew-${projectId}`);
-      const res = await projectsApi.renew(projectId);
-      toast.success(res.message || 'Renovación extendida con éxito.');
-      loadDashboardData();
-    } catch (err: any) {
-      toast.error(err.message || 'Error al renovar servicio');
-    } finally {
-      setProcessingId(null);
-    }
-  }, [loadDashboardData]);
+  const renewProject = useCallback(
+    async (projectId: string) => {
+      try {
+        setProcessingId(`renew-${projectId}`);
+        const res = await projectsApi.renew(projectId);
+        toast.success(res.message || 'Renovación extendida con éxito.');
+        loadDashboardData();
+      } catch (err: any) {
+        toast.error(err.message || 'Error al renovar servicio');
+      } finally {
+        setProcessingId(null);
+      }
+    },
+    [loadDashboardData],
+  );
 
   return {
     metrics,

@@ -42,7 +42,7 @@ export const NumericKeypad: React.FC<NumericKeypadProps> = ({
       <div
         className={cn(
           'flex gap-2.5 sm:gap-3 mb-8 justify-center items-center h-8 transition-transform will-change-transform',
-          isShaking && 'animate-shake'
+          isShaking && 'animate-shake',
         )}
         aria-label={`${pin.length} de 8 dígitos ingresados`}
       >
@@ -55,7 +55,7 @@ export const NumericKeypad: React.FC<NumericKeypadProps> = ({
                 'w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full border transition-all duration-150 ease-out',
                 filled
                   ? 'bg-[#BDEF00] border-[#BDEF00] scale-110 shadow-[0_0_12px_rgba(189,239,0,0.6)]'
-                  : 'bg-neutral-900/80 border-neutral-800'
+                  : 'bg-neutral-900/80 border-neutral-800',
               )}
             />
           );

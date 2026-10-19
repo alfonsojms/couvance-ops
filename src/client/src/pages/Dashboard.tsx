@@ -20,18 +20,15 @@ export interface DashboardProps {
 export const Dashboard: React.FC<DashboardProps> = ({ initialSubTab = 'pending', onSubTabChange }) => {
   const { activeSubTab, switchSubTab } = useDashboardSubTab(initialSubTab, onSubTabChange);
   const data = useDashboardData();
-  const { historySearch, setHistorySearch, filteredPaidMilestones, filteredTotalCollected } =
-    useDashboardHistorySearch(data.paidMilestones);
+  const { historySearch, setHistorySearch, filteredPaidMilestones, filteredTotalCollected } = useDashboardHistorySearch(
+    data.paidMilestones,
+  );
 
   return (
     <div className="space-y-5 sm:space-y-6 max-w-7xl mx-auto">
       <DashboardHeader loading={data.loading} onRefresh={data.reload} />
 
-      <MetricsRow
-        metrics={data.metrics}
-        activeSubTab={activeSubTab}
-        onSwitchSubTab={switchSubTab}
-      />
+      <MetricsRow metrics={data.metrics} activeSubTab={activeSubTab} onSwitchSubTab={switchSubTab} />
 
       <SubTabBar
         activeSubTab={activeSubTab}

@@ -16,11 +16,7 @@ export const Clients: React.FC = () => {
 
   return (
     <div className="space-y-5 sm:space-y-6 max-w-7xl mx-auto">
-      <ClientsHeader
-        loading={loading}
-        onRefresh={loadClients}
-        onCreate={() => setOpenModal(true)}
-      />
+      <ClientsHeader loading={loading} onRefresh={loadClients} onCreate={() => setOpenModal(true)} />
 
       {/* Grid de Clientes */}
       {clients.length === 0 && !loading ? (
@@ -28,23 +24,13 @@ export const Clients: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
           {clients.map((c) => (
-            <ClientCard
-              key={c.id}
-              c={c}
-              onOpenEdit={setEditingClient}
-              onOpenDelete={deletion.openDeleteConfirmation}
-            />
+            <ClientCard key={c.id} c={c} onOpenEdit={setEditingClient} onOpenDelete={deletion.openDeleteConfirmation} />
           ))}
         </div>
       )}
 
       {/* Modal Alta Rápida de Cliente */}
-      <ClientFormDialog
-        open={openModal}
-        onOpenChange={setOpenModal}
-        mode="create"
-        onSuccess={loadClients}
-      />
+      <ClientFormDialog open={openModal} onOpenChange={setOpenModal} mode="create" onSuccess={loadClients} />
 
       {/* Modal Edición de Cliente */}
       <ClientFormDialog
