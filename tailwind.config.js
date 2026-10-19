@@ -1,18 +1,14 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: [
-    './index.html',
-    './src/client/index.html',
-    './src/client/src/**/*.{js,ts,jsx,tsx}',
-  ],
+  content: ['./index.html', './src/client/index.html', './src/client/src/**/*.{js,ts,jsx,tsx}'],
   darkMode: 'class',
   theme: {
     screens: {
-      'xs': '420px',
-      'sm': '640px',
-      'md': '768px',
-      'lg': '1024px',
-      'xl': '1280px',
+      xs: '420px',
+      sm: '640px',
+      md: '768px',
+      lg: '1024px',
+      xl: '1280px',
       '2xl': '1536px',
     },
     extend: {
@@ -46,10 +42,10 @@ export default {
         mono: ['JetBrains Mono', 'Menlo', 'Monaco', 'Courier New', 'monospace'],
       },
       transitionDuration: {
-        '150': '150ms',
+        150: '150ms',
       },
       transitionTimingFunction: {
-        'out': 'ease-out',
+        out: 'ease-out',
       },
       keyframes: {
         shake: {

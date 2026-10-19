@@ -14,9 +14,7 @@ export const ClientsHeader: React.FC<ClientsHeaderProps> = ({ loading, onRefresh
     <div>
       <div className="flex items-center gap-2 mb-1">
         <Users className="w-5 h-5 text-[#004BFF]" />
-        <h1 className="text-lg sm:text-xl font-bold tracking-tight text-white">
-          Directorio de Clientes
-        </h1>
+        <h1 className="text-lg sm:text-xl font-bold tracking-tight text-white">Directorio de Clientes</h1>
       </div>
       <p className="text-xs text-neutral-400">
         Registro ágil sin burocracia, historial de proyectos y control de saldos

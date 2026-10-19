@@ -20,7 +20,10 @@ export interface TestDatabase {
 
 /** Aplica las migraciones SQL de ./drizzle sobre un binding D1. */
 async function migrateD1(d1: D1Database) {
-  const files = fs.readdirSync('./drizzle').filter((f) => f.endsWith('.sql')).sort();
+  const files = fs
+    .readdirSync('./drizzle')
+    .filter((f) => f.endsWith('.sql'))
+    .sort();
   for (const file of files) {
     const statements = fs
       .readFileSync(path.join('./drizzle', file), 'utf8')

@@ -5,7 +5,7 @@ import { backupApi } from '../lib/resources';
 
 // Vercel React Best Practice: Dynamic import for heavy modal component
 const SecuritySettingsModal = React.lazy(() =>
-  import('./SecuritySettingsModal').then((m) => ({ default: m.SecuritySettingsModal }))
+  import('./SecuritySettingsModal').then((m) => ({ default: m.SecuritySettingsModal })),
 );
 
 export type NavTab = 'dashboard' | 'history' | 'projects' | 'showcase' | 'clients';
@@ -160,9 +160,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onTabChange, onLock 
                 onTouchStart={() => preloadTab(item.id)}
                 aria-current={isActive ? 'page' : undefined}
                 className={`flex flex-col items-center justify-center gap-1 min-h-[48px] py-1 transition-all duration-150 select-none touch-manipulation focus-visible:outline-none ${
-                  isActive
-                    ? 'text-white'
-                    : 'text-neutral-400 hover:text-neutral-200 active:text-white'
+                  isActive ? 'text-white' : 'text-neutral-400 hover:text-neutral-200 active:text-white'
                 }`}
               >
                 <div
@@ -188,10 +186,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onTabChange, onLock 
       {/* Modal de Seguridad cargado dinámicamente */}
       {securityModalOpen ? (
         <React.Suspense fallback={null}>
-          <SecuritySettingsModal
-            isOpen={securityModalOpen}
-            onClose={() => setSecurityModalOpen(false)}
-          />
+          <SecuritySettingsModal isOpen={securityModalOpen} onClose={() => setSecurityModalOpen(false)} />
         </React.Suspense>
       ) : null}
     </>

@@ -20,7 +20,7 @@ const DOMAIN_ERROR_STATUS: Record<DomainErrorKind, ContentfulStatusCode> = {
 export class HttpError extends Error {
   constructor(
     public readonly status: ContentfulStatusCode,
-    message: string
+    message: string,
   ) {
     super(message);
     this.name = 'HttpError';
@@ -54,7 +54,7 @@ export function requireId(rawId: string | undefined, message: string): string {
 export async function parseBody<S extends z.ZodTypeAny>(
   c: Context,
   schema: S,
-  fallbackMessage = 'Datos inválidos.'
+  fallbackMessage = 'Datos inválidos.',
 ): Promise<z.output<S>> {
   const body = await c.req.json().catch(() => null);
   const parsed = schema.safeParse(body);

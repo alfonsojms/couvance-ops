@@ -3,7 +3,7 @@ import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
-import { Navbar, NavTab } from '../src/client/src/components/Navbar';
+import { Navbar } from '../src/client/src/components/Navbar';
 
 describe('UI & Responsive Testing - Navbar & Mobile Navigation', () => {
   const mockOnTabChange = vi.fn();
@@ -14,9 +14,7 @@ describe('UI & Responsive Testing - Navbar & Mobile Navigation', () => {
   });
 
   it('TC-RESP-01: Debe renderizar tanto la barra principal como la navegación móvil accesible con una sola mano', () => {
-    render(
-      <Navbar currentTab="dashboard" onTabChange={mockOnTabChange} onLock={mockOnLock} />
-    );
+    render(<Navbar currentTab="dashboard" onTabChange={mockOnTabChange} onLock={mockOnLock} />);
 
     // 1. Verificamos presencia de marca
     expect(screen.getByText('Couvance')).toBeInTheDocument();
@@ -46,9 +44,7 @@ describe('UI & Responsive Testing - Navbar & Mobile Navigation', () => {
   });
 
   it('TC-RESP-02: Debe llamar a onTabChange al seleccionar un ítem en móvil o desktop', () => {
-    render(
-      <Navbar currentTab="dashboard" onTabChange={mockOnTabChange} onLock={mockOnLock} />
-    );
+    render(<Navbar currentTab="dashboard" onTabChange={mockOnTabChange} onLock={mockOnLock} />);
 
     const cobrosBtn = screen.getAllByRole('button', { name: /Cobros/i })[1];
     fireEvent.click(cobrosBtn);
@@ -60,9 +56,7 @@ describe('UI & Responsive Testing - Navbar & Mobile Navigation', () => {
   });
 
   it('TC-RESP-03: Botones de acción rápida poseen accesibilidad y touch targets', () => {
-    render(
-      <Navbar currentTab="dashboard" onTabChange={mockOnTabChange} onLock={mockOnLock} />
-    );
+    render(<Navbar currentTab="dashboard" onTabChange={mockOnTabChange} onLock={mockOnLock} />);
 
     const backupBtn = screen.getByRole('button', { name: /Descargar respaldo JSON/i });
     const securityBtn = screen.getByRole('button', { name: /Seguridad y PIN maestro/i });
@@ -78,9 +72,7 @@ describe('UI & Responsive Testing - Navbar & Mobile Navigation', () => {
   });
 
   it('TC-RESP-04: Al pulsar Seguridad, abre el modal cargado dinámicamente', async () => {
-    render(
-      <Navbar currentTab="dashboard" onTabChange={mockOnTabChange} onLock={mockOnLock} />
-    );
+    render(<Navbar currentTab="dashboard" onTabChange={mockOnTabChange} onLock={mockOnLock} />);
 
     const securityBtn = screen.getByRole('button', { name: /Seguridad y PIN maestro/i });
     fireEvent.click(securityBtn);

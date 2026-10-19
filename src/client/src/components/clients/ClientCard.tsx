@@ -16,17 +16,13 @@ export const ClientCard = memo<ClientCardProps>(({ c, onOpenEdit, onOpenDelete }
   const contactMsg = `Hola ${c.name}, te escribimos de Couvance. ¿Cómo estás?`;
 
   return (
-    <Card
-      className="p-4 sm:p-5 flex flex-col justify-between hover:border-neutral-700 transition-colors space-y-4 content-visibility-auto"
-    >
+    <Card className="p-4 sm:p-5 flex flex-col justify-between hover:border-neutral-700 transition-colors space-y-4 content-visibility-auto">
       <div className="space-y-3">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             <h3 className="font-semibold text-sm text-neutral-100 truncate">{c.name}</h3>
             {c.contactName ? (
-              <span className="text-xs text-neutral-400 block truncate">
-                Contacto: {c.contactName}
-              </span>
+              <span className="text-xs text-neutral-400 block truncate">Contacto: {c.contactName}</span>
             ) : null}
           </div>
 
@@ -91,9 +87,7 @@ export const ClientCard = memo<ClientCardProps>(({ c, onOpenEdit, onOpenDelete }
           </div>
           <div>
             <span className="text-neutral-500 text-[10px] block">Pendiente</span>
-            <span className="text-amber-400 font-semibold">
-              {formatCurrency(c.totalPending)}
-            </span>
+            <span className="text-amber-400 font-semibold">{formatCurrency(c.totalPending)}</span>
           </div>
         </CardPanel>
       </div>

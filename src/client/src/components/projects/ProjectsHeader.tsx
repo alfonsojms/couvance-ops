@@ -34,13 +34,7 @@ export const ProjectsHeader: React.FC<ProjectsHeaderProps> = ({ loading, onRefre
         <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
       </Button>
 
-      <Button
-        type="button"
-        variant="primary"
-        size="sm"
-        touchFriendly
-        onClick={onCreateProject}
-      >
+      <Button type="button" variant="primary" size="sm" touchFriendly onClick={onCreateProject}>
         <Plus className="w-3.5 h-3.5 mr-1" />
         <span>Nuevo Proyecto</span>
       </Button>

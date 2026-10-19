@@ -28,9 +28,12 @@ export function createAuthRepository(db: AppDatabase) {
 
     async updateQuestions(
       fields: Pick<AuthConfigRow, 'q1' | 'a1Hash' | 'q2' | 'a2Hash'>,
-      nowIso: string
+      nowIso: string,
     ): Promise<void> {
-      await db.update(authConfig).set({ ...fields, updatedAt: nowIso }).where(eq(authConfig.id, AUTH_CONFIG_ID));
+      await db
+        .update(authConfig)
+        .set({ ...fields, updatedAt: nowIso })
+        .where(eq(authConfig.id, AUTH_CONFIG_ID));
     },
   };
 }

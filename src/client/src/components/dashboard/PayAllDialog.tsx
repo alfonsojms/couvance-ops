@@ -22,10 +22,7 @@ interface PayAllDialogProps {
 // Modal de Confirmación para "Cobrar Todo"
 export function PayAllDialog({ target, isProcessing, onClose, onConfirm }: PayAllDialogProps) {
   return (
-    <Dialog
-      open={Boolean(target)}
-      onOpenChange={(open) => !open && onClose()}
-    >
+    <Dialog open={Boolean(target)} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="w-[calc(100%-1.5rem)] max-w-md p-4 sm:p-6">
         <DialogHeader>
           <div className="flex items-center gap-2 text-amber-400 mb-1">
@@ -33,7 +30,8 @@ export function PayAllDialog({ target, isProcessing, onClose, onConfirm }: PayAl
             <DialogTitle>¿Confirmar liquidación total del presupuesto?</DialogTitle>
           </div>
           <DialogDescription>
-            Esta acción marcará de forma inmediata todos los hitos pendientes de este presupuesto como cobrados, registrando la fecha de pago de hoy.
+            Esta acción marcará de forma inmediata todos los hitos pendientes de este presupuesto como cobrados,
+            registrando la fecha de pago de hoy.
           </DialogDescription>
         </DialogHeader>
 
@@ -61,13 +59,7 @@ export function PayAllDialog({ target, isProcessing, onClose, onConfirm }: PayAl
         ) : null}
 
         <DialogFooter className="flex-col-reverse xs:flex-row gap-2 xs:gap-0">
-          <Button
-            type="button"
-            variant="ghost"
-            touchFriendly
-            onClick={onClose}
-            className="w-full xs:w-auto"
-          >
+          <Button type="button" variant="ghost" touchFriendly onClick={onClose} className="w-full xs:w-auto">
             Cancelar
           </Button>
           <Button

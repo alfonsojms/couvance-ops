@@ -41,8 +41,8 @@ export function createBudgetsRepository(db: AppDatabase) {
         .where(
           inArray(
             milestones.budgetId,
-            projectBudgets.map((b) => b.id)
-          )
+            projectBudgets.map((b) => b.id),
+          ),
         )
         .all();
       return projectBudgets.map((b) => ({ ...b, milestones: rows.filter((m) => m.budgetId === b.id) }));
@@ -57,7 +57,7 @@ export function createBudgetsRepository(db: AppDatabase) {
     async replaceBudget(
       id: string,
       fields: Pick<BudgetRow, 'title' | 'totalAmount' | 'currency' | 'updatedAt'>,
-      milestoneRows: MilestoneRow[]
+      milestoneRows: MilestoneRow[],
     ): Promise<void> {
       await runAtomic(db, [
         db.update(budgets).set(fields).where(eq(budgets.id, id)),
@@ -83,7 +83,10 @@ export function createBudgetsRepository(db: AppDatabase) {
     },
 
     async markMilestonePaid(id: string, nowIso: string): Promise<void> {
-      await db.update(milestones).set({ status: 'PAID', paidAt: nowIso, updatedAt: nowIso }).where(eq(milestones.id, id));
+      await db
+        .update(milestones)
+        .set({ status: 'PAID', paidAt: nowIso, updatedAt: nowIso })
+        .where(eq(milestones.id, id));
     },
 
     /** RN-04: un solo UPDATE marca PAID todos los hitos PENDING del presupuesto. */

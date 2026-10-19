@@ -55,7 +55,11 @@ export function createProjectsService(repo: ProjectsRepository, clock: ServiceCl
     async createProject(input: ProjectCreateInput): Promise<ProjectRow> {
       if (!(await repo.findClient(input.clientId))) throw invalid('El cliente especificado no existe');
 
-      const violation = recurringServiceViolation(input.hasRecurring, input.recurringRenewalDate, input.recurringAmount);
+      const violation = recurringServiceViolation(
+        input.hasRecurring,
+        input.recurringRenewalDate,
+        input.recurringAmount,
+      );
       if (violation) throw invalid(violation);
 
       const nowIso = clock.now();
@@ -103,7 +107,7 @@ export function createProjectsService(repo: ProjectsRepository, clock: ServiceCl
       const violation = recurringServiceViolation(
         input.hasRecurring !== undefined ? input.hasRecurring : existing.hasRecurring,
         input.recurringRenewalDate !== undefined ? input.recurringRenewalDate : existing.recurringRenewalDate,
-        input.recurringAmount !== undefined ? input.recurringAmount : existing.recurringAmount
+        input.recurringAmount !== undefined ? input.recurringAmount : existing.recurringAmount,
       );
       if (violation) throw invalid(violation);
 
@@ -118,7 +122,10 @@ export function createProjectsService(repo: ProjectsRepository, clock: ServiceCl
         throw invalid('El proyecto no tiene un servicio recurrente configurado con fecha de renovación.');
       }
 
-      const nextRenewalDate = calculateNextRenewalDate(project.recurringRenewalDate, project.recurringPeriod as RecurringPeriod);
+      const nextRenewalDate = calculateNextRenewalDate(
+        project.recurringRenewalDate,
+        project.recurringPeriod as RecurringPeriod,
+      );
       await repo.updateRenewalDate(id, nextRenewalDate, clock.now());
       return nextRenewalDate;
     },

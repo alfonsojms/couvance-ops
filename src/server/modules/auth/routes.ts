@@ -1,7 +1,12 @@
 import { Hono, type Context } from 'hono';
 import { getDb } from '../../db';
 import { clearSessionCookie, getPinSecret, getRequestToken, setSessionCookie } from '../../middlewares/auth';
-import { clearFailedAttempts, getClientIp, rateLimitMiddleware, recordFailedAttempt } from '../../middlewares/rate-limit';
+import {
+  clearFailedAttempts,
+  getClientIp,
+  rateLimitMiddleware,
+  recordFailedAttempt,
+} from '../../middlewares/rate-limit';
 import { parseBody } from '../../shared/http';
 import { createAuthRepository } from './repository';
 import { changePinSchema, recoverSchema, resetPinSchema, unlockSchema, updateQuestionsSchema } from './schemas';
@@ -52,7 +57,8 @@ authRoutes.post('/lock', (c) => {
 });
 
 // GET /api/auth/status y GET /api/auth/me — Verifica si hay una sesión activa
-const authStatus = async (c: Context) => c.json({ authenticated: await serviceFor(c).isAuthenticated(getRequestToken(c)) });
+const authStatus = async (c: Context) =>
+  c.json({ authenticated: await serviceFor(c).isAuthenticated(getRequestToken(c)) });
 authRoutes.get('/status', authStatus);
 authRoutes.get('/me', authStatus);
 

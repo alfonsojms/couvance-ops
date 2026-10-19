@@ -34,7 +34,7 @@ export function useUnlockPin({ onUnlockSuccess, keyboardPaused }: UseUnlockPinOp
         setLoading(false);
       }
     },
-    [loading, onUnlockSuccess]
+    [loading, onUnlockSuccess],
   );
 
   // Escuchar eventos globales de teclado físico (0-9, Backspace, Escape, Enter)

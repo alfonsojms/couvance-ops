@@ -59,13 +59,15 @@ describe.each(CONTRACT_DRIVERS)('Contrato de la API [%s]', (driver) => {
 
   describe('clients', () => {
     it('crea clientes y valida el body', async () => {
-      ids.dental = (await pin('POST', '/api/clients', {
-        name: 'Clínica Dental Sonrisa',
-        contactName: 'Dra. Marta Pérez',
-        phone: '+34600000101',
-        email: 'marta@sonrisa.example',
-        notes: 'Paga siempre por transferencia',
-      })).id;
+      ids.dental = (
+        await pin('POST', '/api/clients', {
+          name: 'Clínica Dental Sonrisa',
+          contactName: 'Dra. Marta Pérez',
+          phone: '+34600000101',
+          email: 'marta@sonrisa.example',
+          notes: 'Paga siempre por transferencia',
+        })
+      ).id;
       ids.ferre = (await pin('POST', '/api/clients', { name: 'Ferretería El Tornillo' })).id;
       ids.lonely = (await pin('POST', '/api/clients', { name: 'Cliente sin proyectos' })).id;
       await pin('POST', '/api/clients', { name: '' });
@@ -85,46 +87,60 @@ describe.each(CONTRACT_DRIVERS)('Contrato de la API [%s]', (driver) => {
 
   describe('projects', () => {
     it('crea proyectos con y sin recurrencia', async () => {
-      ids.web = (await pin('POST', '/api/projects', {
-        clientId: ids.dental,
-        title: 'Web corporativa con reserva de citas',
-        category: 'CORPORATE',
-        productionUrl: 'https://sonrisa.example.com',
-        hasRecurring: 1,
-        recurringAmount: 180,
-        recurringPeriod: 'ANNUALLY',
-        recurringRenewalDate: '2026-10-28',
-      })).id;
-      ids.shop = (await pin('POST', '/api/projects', {
-        clientId: ids.ferre,
-        title: 'Tienda online de herramientas',
-        category: 'ECOMMERCE',
-        hasRecurring: 1,
-        recurringAmount: 29.99,
-        recurringPeriod: 'MONTHLY',
-        recurringRenewalDate: '2026-01-31',
-      })).id;
-      ids.landing = (await pin('POST', '/api/projects', {
-        clientId: ids.ferre,
-        title: 'Landing de catálogo',
-        category: 'LANDING',
-      })).id;
+      ids.web = (
+        await pin('POST', '/api/projects', {
+          clientId: ids.dental,
+          title: 'Web corporativa con reserva de citas',
+          category: 'CORPORATE',
+          productionUrl: 'https://sonrisa.example.com',
+          hasRecurring: 1,
+          recurringAmount: 180,
+          recurringPeriod: 'ANNUALLY',
+          recurringRenewalDate: '2026-10-28',
+        })
+      ).id;
+      ids.shop = (
+        await pin('POST', '/api/projects', {
+          clientId: ids.ferre,
+          title: 'Tienda online de herramientas',
+          category: 'ECOMMERCE',
+          hasRecurring: 1,
+          recurringAmount: 29.99,
+          recurringPeriod: 'MONTHLY',
+          recurringRenewalDate: '2026-01-31',
+        })
+      ).id;
+      ids.landing = (
+        await pin('POST', '/api/projects', {
+          clientId: ids.ferre,
+          title: 'Landing de catálogo',
+          category: 'LANDING',
+        })
+      ).id;
       // Mantenimiento mensual que vence dentro de 30 días y nunca se renueva: alimenta recurringAlerts del radar.
-      ids.cafe = (await pin('POST', '/api/projects', {
-        clientId: ids.dental,
-        title: 'Mantenimiento de la web del consultorio',
-        category: 'WEBAPP',
-        status: 'IN_PROGRESS',
-        hasRecurring: 1,
-        recurringAmount: 49.5,
-        recurringPeriod: 'MONTHLY',
-        recurringRenewalDate: '2026-11-05',
-      })).id;
+      ids.cafe = (
+        await pin('POST', '/api/projects', {
+          clientId: ids.dental,
+          title: 'Mantenimiento de la web del consultorio',
+          category: 'WEBAPP',
+          status: 'IN_PROGRESS',
+          hasRecurring: 1,
+          recurringAmount: 49.5,
+          recurringPeriod: 'MONTHLY',
+          recurringRenewalDate: '2026-11-05',
+        })
+      ).id;
     });
 
     it('rechaza proyectos inválidos', async () => {
       await pin('POST', '/api/projects', { clientId: ids.dental, title: '', category: 'LANDING' });
-      await pin('POST', '/api/projects', { clientId: ids.dental, title: 'Sin fecha', category: 'LANDING', hasRecurring: 1, recurringAmount: 10 });
+      await pin('POST', '/api/projects', {
+        clientId: ids.dental,
+        title: 'Sin fecha',
+        category: 'LANDING',
+        hasRecurring: 1,
+        recurringAmount: 10,
+      });
       await pin('POST', '/api/projects', { clientId: 'bad;id', title: 'X', category: 'LANDING' });
     });
 
@@ -137,7 +153,10 @@ describe.each(CONTRACT_DRIVERS)('Contrato de la API [%s]', (driver) => {
     });
 
     it('soft edit con PATCH', async () => {
-      await pin('PATCH', `/api/projects/${ids.landing}`, { title: 'Landing de catálogo 2026', codeRepoUrl: 'https://github.com/example/landing' });
+      await pin('PATCH', `/api/projects/${ids.landing}`, {
+        title: 'Landing de catálogo 2026',
+        codeRepoUrl: 'https://github.com/example/landing',
+      });
       await pin('PATCH', `/api/projects/${ids.landing}`, { status: 'COMPLETED' });
     });
   });
@@ -166,22 +185,29 @@ describe.each(CONTRACT_DRIVERS)('Contrato de la API [%s]', (driver) => {
       });
       ids.shopBudget = shop.id;
 
-      ids.landingBudget = (await pin('POST', `/api/projects/${ids.landing}/budgets`, {
-        title: 'Landing',
-        totalAmount: 950,
-        milestones: [{ title: 'Entrega', percentage: 100, dueDate: '2026-10-18' }],
-      })).id;
+      ids.landingBudget = (
+        await pin('POST', `/api/projects/${ids.landing}/budgets`, {
+          title: 'Landing',
+          totalAmount: 950,
+          milestones: [{ title: 'Entrega', percentage: 100, dueDate: '2026-10-18' }],
+        })
+      ).id;
 
-      ids.rejectedBudget = (await pin('POST', `/api/projects/${ids.landing}/budgets`, {
-        title: 'Landing premium',
-        totalAmount: 1500,
-        milestones: [{ title: 'Entrega', percentage: 100 }],
-      })).id;
+      ids.rejectedBudget = (
+        await pin('POST', `/api/projects/${ids.landing}/budgets`, {
+          title: 'Landing premium',
+          totalAmount: 1500,
+          milestones: [{ title: 'Entrega', percentage: 100 }],
+        })
+      ).id;
 
       await pin('POST', `/api/projects/${ids.web}/budgets`, {
         title: 'No suma 100',
         totalAmount: 100,
-        milestones: [{ title: 'A', percentage: 60 }, { title: 'B', percentage: 30 }],
+        milestones: [
+          { title: 'A', percentage: 60 },
+          { title: 'B', percentage: 30 },
+        ],
       });
       await pin('POST', `/api/projects/${ids.web}/budgets`, {
         title: 'Decimales',
@@ -242,7 +268,10 @@ describe.each(CONTRACT_DRIVERS)('Contrato de la API [%s]', (driver) => {
 
   describe('projects: cambios de estado y renovaciones', () => {
     it('completa y cancela proyectos con PUT (cascada no destructiva)', async () => {
-      await pin('PUT', `/api/projects/${ids.landing}`, { status: 'COMPLETED', productionUrl: 'https://catalogo.example.com' });
+      await pin('PUT', `/api/projects/${ids.landing}`, {
+        status: 'COMPLETED',
+        productionUrl: 'https://catalogo.example.com',
+      });
       await pin('PUT', `/api/projects/${ids.shop}`, { status: 'CANCELLED' });
       await pin('GET', `/api/projects/${ids.shop}`);
       await pin('PATCH', `/api/projects/${ids.shop}`, { title: 'Editar cancelado' });

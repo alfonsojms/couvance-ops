@@ -21,11 +21,7 @@ export const SecurityTabs: React.FC<SecurityTabsProps> = ({ activeTab, onChange 
       <KeyRound className="w-3.5 h-3.5" />
       <span>Cambiar PIN</span>
     </button>
-    <button
-      type="button"
-      onClick={() => onChange('questions')}
-      className={tabClass(activeTab === 'questions')}
-    >
+    <button type="button" onClick={() => onChange('questions')} className={tabClass(activeTab === 'questions')}>
       <HelpCircle className="w-3.5 h-3.5" />
       <span>Preguntas Secretas</span>
     </button>

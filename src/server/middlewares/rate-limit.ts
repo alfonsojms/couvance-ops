@@ -89,7 +89,7 @@ export async function rateLimitMiddleware(c: Context, next: Next) {
       {
         error: 'Demasiados intentos fallidos. Por favor, espera 15 minutos antes de volver a intentar.',
       },
-      429
+      429,
     );
   }
 
@@ -97,4 +97,3 @@ export async function rateLimitMiddleware(c: Context, next: Next) {
 }
 
 export { getClientIp };
-

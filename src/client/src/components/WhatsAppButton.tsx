@@ -3,8 +3,7 @@ import { MessageSquare, Copy } from 'lucide-react';
 import { handleWhatsAppOrCopy } from '../lib/utils';
 import { Button } from './ui/Button';
 
-export interface WhatsAppButtonProps
-  extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'size'> {
+export interface WhatsAppButtonProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'size'> {
   phone?: string | null;
   message: string;
   label?: string;
@@ -39,9 +38,7 @@ export const WhatsAppButton: React.FC<WhatsAppButtonProps> = ({
       touchFriendly={touchFriendly}
       onClick={handleClick}
       title={
-        hasPhone
-          ? `Enviar a WhatsApp (${phone})`
-          : 'Cliente sin teléfono registrado: copiar mensaje al portapapeles'
+        hasPhone ? `Enviar a WhatsApp (${phone})` : 'Cliente sin teléfono registrado: copiar mensaje al portapapeles'
       }
       className={className}
       {...props}
@@ -55,4 +52,3 @@ export const WhatsAppButton: React.FC<WhatsAppButtonProps> = ({
     </Button>
   );
 };
-

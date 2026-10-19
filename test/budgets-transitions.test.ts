@@ -38,7 +38,11 @@ describe.each(CONTRACT_DRIVERS)('reglas de transición de presupuestos (S8) [%s]
     h = await createContractHarness(driver);
     await h.unlock();
     const client = await h.raw('POST', '/api/clients', { name: 'Cliente S8' });
-    const project = await h.raw('POST', '/api/projects', { clientId: client.body.id, title: 'Proyecto S8', category: 'LANDING' });
+    const project = await h.raw('POST', '/api/projects', {
+      clientId: client.body.id,
+      title: 'Proyecto S8',
+      category: 'LANDING',
+    });
     projectId = project.body.id;
   }, 60_000);
 
@@ -78,7 +82,9 @@ describe.each(CONTRACT_DRIVERS)('reglas de transición de presupuestos (S8) [%s]
 
     const res = await h.raw('POST', `/api/budgets/${budget.id}/approve`);
     expect(res.status).toBe(409);
-    expect(res.body.error).toBe('No se puede aprobar un presupuesto en estado REJECTED. Solo se aprueban presupuestos en DRAFT o SENT.');
+    expect(res.body.error).toBe(
+      'No se puede aprobar un presupuesto en estado REJECTED. Solo se aprueban presupuestos en DRAFT o SENT.',
+    );
     const after = await getBudget(budget.id);
     expect(after.status).toBe('REJECTED');
     expect(after.milestones.map((m: any) => m.status)).toEqual(['DRAFT', 'DRAFT']);
@@ -90,7 +96,9 @@ describe.each(CONTRACT_DRIVERS)('reglas de transición de presupuestos (S8) [%s]
 
     const res = await h.raw('POST', `/api/budgets/${budget.id}/reject`);
     expect(res.status).toBe(409);
-    expect(res.body.error).toBe('No se puede rechazar un presupuesto en estado APPROVED. Solo se rechazan presupuestos en DRAFT o SENT.');
+    expect(res.body.error).toBe(
+      'No se puede rechazar un presupuesto en estado APPROVED. Solo se rechazan presupuestos en DRAFT o SENT.',
+    );
     expect((await getBudget(budget.id)).status).toBe('APPROVED');
   });
 
@@ -119,7 +127,11 @@ describe.each(CONTRACT_DRIVERS)('reglas de transición de presupuestos (S8) [%s]
 
   it('pagar un hito CANCELLED responde 409 (antes 400) y sigue CANCELLED', async () => {
     const client = await h.raw('POST', '/api/clients', { name: 'Cliente cancelación' });
-    const project = await h.raw('POST', '/api/projects', { clientId: client.body.id, title: 'Proyecto a cancelar', category: 'LANDING' });
+    const project = await h.raw('POST', '/api/projects', {
+      clientId: client.body.id,
+      title: 'Proyecto a cancelar',
+      category: 'LANDING',
+    });
     const budgetRes = await h.raw('POST', `/api/projects/${project.body.id}/budgets`, {
       title: 'Se cancelará',
       totalAmount: 500,

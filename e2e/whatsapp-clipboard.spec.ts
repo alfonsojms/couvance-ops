@@ -50,9 +50,7 @@ test.describe('E2E Experto - RN-09: WhatsApp y Fallback de Portapapeles con Sonn
     await botonCopiar.click();
 
     // 6. Verificamos la notificación Toast de Sonner en pantalla
-    const toastMensaje = page.getByText(
-      /El cliente no tiene teléfono guardado/i
-    );
+    const toastMensaje = page.getByText(/El cliente no tiene teléfono guardado/i);
     await expect(toastMensaje).toBeVisible();
 
     // 7. Inspeccionamos el contenido real del portapapeles del sistema operativo
@@ -60,9 +58,7 @@ test.describe('E2E Experto - RN-09: WhatsApp y Fallback de Portapapeles con Sonn
     expect(portapapeles).toContain(`Hola ${clientName}, te escribimos de Couvance`);
   });
 
-  test('RN-09 (Directo): Cliente con teléfono debe abrir el enlace de wa.me en una nueva pestaña', async ({
-    page,
-  }) => {
+  test('RN-09 (Directo): Cliente con teléfono debe abrir el enlace de wa.me en una nueva pestaña', async ({ page }) => {
     const randomSuffix = Math.floor(Math.random() * 10000);
     const clientName = `Empresa Con WhatsApp ${randomSuffix}`;
     const testPhone = '+18095557788';

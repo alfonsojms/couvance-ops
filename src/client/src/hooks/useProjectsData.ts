@@ -17,10 +17,7 @@ export function useProjectsData() {
   const loadProjects = useCallback(async () => {
     try {
       setLoading(true);
-      const [projData, clientData] = await Promise.all([
-        projectsApi.list(),
-        clientsApi.list(),
-      ]);
+      const [projData, clientData] = await Promise.all([projectsApi.list(), clientsApi.list()]);
       setProjects(projData);
       setClients(clientData);
     } catch (err: any) {
@@ -35,15 +32,18 @@ export function useProjectsData() {
   }, [loadProjects]);
 
   // Marcar como Completado
-  const completeProject = useCallback(async (projectId: string) => {
-    try {
-      await projectsApi.setStatus(projectId, 'COMPLETED');
-      toast.success('Proyecto marcado como completado');
-      loadProjects();
-    } catch (err: any) {
-      toast.error(err.message || 'Error al completar proyecto');
-    }
-  }, [loadProjects]);
+  const completeProject = useCallback(
+    async (projectId: string) => {
+      try {
+        await projectsApi.setStatus(projectId, 'COMPLETED');
+        toast.success('Proyecto marcado como completado');
+        loadProjects();
+      } catch (err: any) {
+        toast.error(err.message || 'Error al completar proyecto');
+      }
+    },
+    [loadProjects],
+  );
 
   // Confirmar Cancelación del Proyecto (No destructiva, preserva pagos cobrados)
   const confirmCancelProject = async () => {

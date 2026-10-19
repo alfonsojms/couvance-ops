@@ -48,7 +48,7 @@ describe('UI Testing — ProjectFormDialog & ClientFormDialog', () => {
           mode="edit"
           initial={initialProject}
           clients={mockClients}
-        />
+        />,
       );
 
       // Verificamos precarga del título
@@ -83,7 +83,7 @@ describe('UI Testing — ProjectFormDialog & ClientFormDialog', () => {
           initial={initialProject}
           clients={mockClients}
           onSuccess={mockSuccess}
-        />
+        />,
       );
 
       // Modificamos únicamente la URL de producción
@@ -132,7 +132,7 @@ describe('UI Testing — ProjectFormDialog & ClientFormDialog', () => {
           mode="edit"
           initial={initialClient}
           onSuccess={mockSuccess}
-        />
+        />,
       );
 
       expect(screen.getByLabelText(/Nombre o Empresa/i)).toHaveValue('Carlos Gómez');

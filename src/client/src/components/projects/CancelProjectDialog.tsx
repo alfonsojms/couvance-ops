@@ -2,15 +2,7 @@ import React from 'react';
 import { AlertTriangle } from 'lucide-react';
 import type { ProjectListItem } from '../../lib/types';
 import { formatCurrency } from '../../lib/utils';
-import {
-  Button,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '../ui';
+import { Button, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../ui';
 
 interface CancelProjectDialogProps {
   project: ProjectListItem | null;
@@ -53,9 +45,9 @@ export const CancelProjectDialog: React.FC<CancelProjectDialogProps> = ({
         <ul className="list-disc list-inside space-y-1 text-[11px] text-neutral-400">
           <li>Todos los hitos de cobro en estado pendiente se cancelarán.</li>
           <li>
-            Los pagos cobrados previamente (<strong className="text-emerald-400">
-              {formatCurrency(project?.totalPaid || 0)}
-            </strong>) se conservarán intactos en el historial.
+            Los pagos cobrados previamente (
+            <strong className="text-emerald-400">{formatCurrency(project?.totalPaid || 0)}</strong>) se conservarán
+            intactos en el historial.
           </li>
           <li>El proyecto se marcará como cancelado y no se mostrará en el Showcase.</li>
         </ul>

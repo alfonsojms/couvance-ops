@@ -1,15 +1,7 @@
 import React, { useState } from 'react';
 import type { ClientRef, ProjectFormData } from '../lib/types';
 import { useProjectForm } from '../hooks/useProjectForm';
-import {
-  Button,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from './ui';
+import { Button, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from './ui';
 import { ClientFormDialog, ClientFormItem } from './ClientFormDialog';
 import { ProjectBasicInfoSection } from './projects/ProjectBasicInfoSection';
 import { ProjectLinksSection } from './projects/ProjectLinksSection';

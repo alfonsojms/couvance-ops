@@ -8,6 +8,12 @@ export default defineConfig({
     globals: true,
     include: ['test/**/*.{test,spec}.{ts,tsx}'],
     exclude: ['**/node_modules/**', '**/e2e/**'],
+    coverage: {
+      provider: 'v8',
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: ['**/dist/**', '**/*.d.ts'],
+      reporter: ['text-summary', 'html', 'lcov'],
+    },
   },
   resolve: {
     alias: {

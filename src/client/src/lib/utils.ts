@@ -39,7 +39,7 @@ export function cleanPhoneNumber(phone?: string | null): string {
 export function handleWhatsAppOrCopy(
   phone: string | null | undefined,
   message: string,
-  onCopiedSuccessMessage?: string
+  onCopiedSuccessMessage?: string,
 ): void {
   const cleanedPhone = cleanPhoneNumber(phone);
 
@@ -53,12 +53,12 @@ export function handleWhatsAppOrCopy(
       () => {
         toast.info(
           onCopiedSuccessMessage ||
-            'El cliente no tiene teléfono guardado. El mensaje fue copiado al portapapeles para pegarlo donde prefieras.'
+            'El cliente no tiene teléfono guardado. El mensaje fue copiado al portapapeles para pegarlo donde prefieras.',
         );
       },
       () => {
         toast.error('No se pudo copiar el mensaje al portapapeles.');
-      }
+      },
     );
   }
 }

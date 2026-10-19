@@ -7,7 +7,6 @@ export const projectsApi = {
   /** Edición parcial: envía solo los campos modificados. */
   softEdit: (id: string, diff: ProjectPatch) => api.patch<Project>(`/api/projects/${id}`, diff),
   /** Completar o cancelar (RN-05: cancelar preserva los hitos cobrados). */
-  setStatus: (id: string, status: 'COMPLETED' | 'CANCELLED') =>
-    api.put<Project>(`/api/projects/${id}`, { status }),
+  setStatus: (id: string, status: 'COMPLETED' | 'CANCELLED') => api.put<Project>(`/api/projects/${id}`, { status }),
   renew: (id: string) => api.post<RenewResult>(`/api/projects/${id}/renew`),
 };

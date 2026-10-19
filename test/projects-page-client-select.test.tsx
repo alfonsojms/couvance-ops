@@ -15,7 +15,7 @@ describe('ProjectFormDialog en modo create', () => {
         onOpenChange={vi.fn()}
         mode="create"
         clients={[{ id: 'client-1', name: 'Acme Corporation' }]}
-      />
+      />,
     );
 
     const clientSelect = screen.getByLabelText(/Cliente Asociado/i);

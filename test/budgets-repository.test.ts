@@ -59,11 +59,13 @@ describe.each(TEST_DRIVERS)('budgets repository: escrituras atómicas [%s]', (dr
       repo.insertBudgetWithMilestones(budgetRow('budget-create-fail'), [
         milestoneRow('dup-create', 'budget-create-fail'),
         milestoneRow('dup-create', 'budget-create-fail'),
-      ])
+      ]),
     ).rejects.toThrow();
 
     expect(await db.select().from(budgets).where(eq(budgets.id, 'budget-create-fail')).all()).toHaveLength(0);
-    expect(await db.select().from(milestones).where(eq(milestones.budgetId, 'budget-create-fail')).all()).toHaveLength(0);
+    expect(await db.select().from(milestones).where(eq(milestones.budgetId, 'budget-create-fail')).all()).toHaveLength(
+      0,
+    );
   });
 
   it('editar: si falla un hito nuevo, el presupuesto conserva su título y sus hitos originales', async () => {
@@ -77,7 +79,7 @@ describe.each(TEST_DRIVERS)('budgets repository: escrituras atómicas [%s]', (dr
       repo.replaceBudget('budget-edit', { title: 'Editado', totalAmount: 2000, currency: 'EUR', updatedAt: NOW }, [
         milestoneRow('dup-edit', 'budget-edit'),
         milestoneRow('dup-edit', 'budget-edit'),
-      ])
+      ]),
     ).rejects.toThrow();
 
     const [budget] = await db.select().from(budgets).where(eq(budgets.id, 'budget-edit')).all();

@@ -25,7 +25,7 @@ export function useUnlockRecovery(onRecovered: () => void) {
     try {
       const data = await authApi.questions();
       setQuestions(data);
-    } catch (err: any) {
+    } catch {
       toast.error('Error al cargar preguntas de recuperación');
     }
   };

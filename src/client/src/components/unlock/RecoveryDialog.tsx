@@ -1,13 +1,6 @@
 import React from 'react';
 import { KeyRound, ArrowRight } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '../ui/Dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../ui/Dialog';
 import { FormField, Input } from '../ui/Input';
 import { Button } from '../ui/Button';
 import type { UnlockRecovery } from '../../hooks/useUnlockRecovery';
@@ -24,24 +17,10 @@ interface RecoveryFooterProps {
 
 const RecoveryFooter: React.FC<RecoveryFooterProps> = ({ loading, submitLabel, onCancel }) => (
   <DialogFooter className="flex-col-reverse xs:flex-row gap-2 xs:gap-0">
-    <Button
-      type="button"
-      variant="ghost"
-      size="sm"
-      touchFriendly
-      onClick={onCancel}
-      className="w-full xs:w-auto"
-    >
+    <Button type="button" variant="ghost" size="sm" touchFriendly onClick={onCancel} className="w-full xs:w-auto">
       Cancelar
     </Button>
-    <Button
-      type="submit"
-      variant="primary"
-      size="sm"
-      touchFriendly
-      isLoading={loading}
-      className="w-full xs:w-auto"
-    >
+    <Button type="submit" variant="primary" size="sm" touchFriendly isLoading={loading} className="w-full xs:w-auto">
       <span>{submitLabel}</span>
       <ArrowRight className="w-3.5 h-3.5 ml-1" />
     </Button>
@@ -69,11 +48,7 @@ export const RecoveryDialog: React.FC<RecoveryDialogProps> = ({ recovery }) => {
 
         {!recovery.resetToken ? (
           <form onSubmit={recovery.verifyQuestions} className="space-y-4">
-            <FormField
-              id="recovery-a1"
-              label={recovery.questions?.q1 || 'Pregunta de seguridad 1'}
-              required
-            >
+            <FormField id="recovery-a1" label={recovery.questions?.q1 || 'Pregunta de seguridad 1'} required>
               <Input
                 required
                 value={recovery.a1}
@@ -83,11 +58,7 @@ export const RecoveryDialog: React.FC<RecoveryDialogProps> = ({ recovery }) => {
               />
             </FormField>
 
-            <FormField
-              id="recovery-a2"
-              label={recovery.questions?.q2 || 'Pregunta de seguridad 2'}
-              required
-            >
+            <FormField id="recovery-a2" label={recovery.questions?.q2 || 'Pregunta de seguridad 2'} required>
               <Input
                 required
                 value={recovery.a2}
@@ -104,11 +75,7 @@ export const RecoveryDialog: React.FC<RecoveryDialogProps> = ({ recovery }) => {
           </form>
         ) : (
           <form onSubmit={recovery.resetPin} className="space-y-4">
-            <FormField
-              id="recovery-new-pin"
-              label="Nuevo PIN (8 dígitos numéricos)"
-              required
-            >
+            <FormField id="recovery-new-pin" label="Nuevo PIN (8 dígitos numéricos)" required>
               <Input
                 type="password"
                 inputMode="numeric"
@@ -123,11 +90,7 @@ export const RecoveryDialog: React.FC<RecoveryDialogProps> = ({ recovery }) => {
               />
             </FormField>
 
-            <FormField
-              id="recovery-confirm-pin"
-              label="Confirmar Nuevo PIN"
-              required
-            >
+            <FormField id="recovery-confirm-pin" label="Confirmar Nuevo PIN" required>
               <Input
                 type="password"
                 inputMode="numeric"

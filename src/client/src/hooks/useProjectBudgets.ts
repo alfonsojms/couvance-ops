@@ -3,11 +3,7 @@ import { toast } from 'sonner';
 import { budgetsApi } from '../lib/resources';
 import type { BudgetWithMilestones, ProjectListItem } from '../lib/types';
 import { copyToClipboard } from '../lib/utils';
-import {
-  buildBudgetSummary,
-  calculatePresetMilestones,
-  type BudgetPreset,
-} from '../components/projects/budgetPresets';
+import { buildBudgetSummary, calculatePresetMilestones, type BudgetPreset } from '../components/projects/budgetPresets';
 
 /**
  * Modal de cotizaciones de un proyecto: presupuestos existentes, borrador con presets,
@@ -36,10 +32,7 @@ export function useProjectBudgets(onBudgetsChanged: () => void) {
   }, []);
 
   // Generar hitos según preset con cálculo previo para feedback visual
-  const calculatedMilestones = useMemo(
-    () => calculatePresetMilestones(preset, budgetTotal),
-    [preset, budgetTotal]
-  );
+  const calculatedMilestones = useMemo(() => calculatePresetMilestones(preset, budgetTotal), [preset, budgetTotal]);
 
   // Crear presupuesto
   const createBudget = async () => {

@@ -1,15 +1,7 @@
 import React from 'react';
 import { AlertTriangle, FolderKanban } from 'lucide-react';
 import type { ClientWithTotals } from '../../lib/types';
-import {
-  Button,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '../ui';
+import { Button, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../ui';
 
 interface DeleteClientDialogProps {
   client: ClientWithTotals | null;
@@ -57,9 +49,8 @@ export const DeleteClientDialog: React.FC<DeleteClientDialogProps> = ({
             <span>Cliente con proyectos activos ({client.projectsCount})</span>
           </div>
           <p className="text-[11px] text-amber-300/80 leading-relaxed">
-            Por protección e integridad contable, no es posible eliminar clientes que tengan
-            proyectos registrados. Para poder eliminar este cliente, primero debes archivar o
-            reasignar todos sus proyectos vinculados.
+            Por protección e integridad contable, no es posible eliminar clientes que tengan proyectos registrados. Para
+            poder eliminar este cliente, primero debes archivar o reasignar todos sus proyectos vinculados.
           </p>
         </div>
       ) : conflictMessage ? (

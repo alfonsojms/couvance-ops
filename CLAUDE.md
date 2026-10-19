@@ -16,7 +16,10 @@ npx vitest run test/budgets.test.ts             # un archivo
 npx vitest run test/budgets.test.ts -t "texto"  # un caso por nombre
 npm run test:e2e                                # Playwright (e2e/), arranca node-entry en :3101 con BD temporal
 npx playwright test e2e/unlock.spec.ts          # un spec e2e
-npx tsc --noEmit                                # typecheck de src/ y functions/ (no incluye test/; no hay script de lint)
+npx tsc --noEmit                                # typecheck de src/ y functions/ (no incluye test/)
+npm run lint                                    # ESLint: errores rompen el CI; los warnings (any, setState en useEffect) son deuda conocida
+npm run format:check                            # Prettier solo sobre código (.ts/.tsx/.js/.css); `npm run format` lo aplica
+npm run test:coverage                           # Vitest + cobertura v8 (reporte en coverage/, sin umbral mínimo)
 npx wrangler pages functions build --outdir <tmp> --compatibility-flags nodejs_compat --compatibility-date 2024-09-23
                                                 # bundle Edge de producción (npm run build no lo cubre)
 

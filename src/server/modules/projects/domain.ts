@@ -46,7 +46,7 @@ export const RECURRING_AMOUNT_REQUIRED = 'El monto recurrente es obligatorio cua
 export function recurringServiceViolation(
   hasRecurring: number | undefined,
   renewalDate: string | null | undefined,
-  amount: number | null | undefined
+  amount: number | null | undefined,
 ): string | null {
   if (hasRecurring !== 1) return null;
   if (!renewalDate || renewalDate.trim() === '') return RENEWAL_DATE_REQUIRED;
@@ -58,7 +58,11 @@ export function recurringServiceViolation(
  * Traduce una edición parcial a los cambios a persistir. Desactivar el recurrente limpia monto y fecha;
  * el monto solo se guarda si el recurrente queda activo.
  */
-export function buildProjectUpdate(data: ProjectInput, existing: { hasRecurring: number }, nowIso: string): ProjectChanges {
+export function buildProjectUpdate(
+  data: ProjectInput,
+  existing: { hasRecurring: number },
+  nowIso: string,
+): ProjectChanges {
   const updateData: ProjectChanges = {
     updatedAt: nowIso,
   };
@@ -147,7 +151,11 @@ export function computeProjectTotals(projectBudgets: BudgetForTotals[]): Project
 }
 
 /** RN-07: solo proyectos COMPLETED, en producción ACTIVE y con URL de producción no vacía. */
-export function isShowcaseEligible(project: { status: string; productionStatus: string; productionUrl: string | null }): boolean {
+export function isShowcaseEligible(project: {
+  status: string;
+  productionStatus: string;
+  productionUrl: string | null;
+}): boolean {
   return (
     project.status === 'COMPLETED' &&
     project.productionStatus === 'ACTIVE' &&

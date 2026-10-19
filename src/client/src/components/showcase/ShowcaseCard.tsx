@@ -17,27 +17,17 @@ interface ShowcaseCardProps {
 }
 
 // Vercel React Best Practice: Memoized Showcase card to avoid full catalog re-renders
-export const ShowcaseCard = memo<ShowcaseCardProps>(({
-  p,
-  onCopySalesPitch,
-  onCopyDirectLink,
-}) => {
+export const ShowcaseCard = memo<ShowcaseCardProps>(({ p, onCopySalesPitch, onCopyDirectLink }) => {
   return (
-    <Card
-      className="p-4 sm:p-5 flex flex-col justify-between hover:border-neutral-700 transition-colors space-y-4 content-visibility-auto"
-    >
+    <Card className="p-4 sm:p-5 flex flex-col justify-between hover:border-neutral-700 transition-colors space-y-4 content-visibility-auto">
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <Badge variant="neutral">
-            {categoryLabels[p.category] || p.category}
-          </Badge>
+          <Badge variant="neutral">{categoryLabels[p.category] || p.category}</Badge>
           <Badge status="ACTIVE" showDot />
         </div>
 
         <div>
-          <h3 className="font-semibold text-base text-neutral-100 mb-1 leading-snug truncate">
-            {p.title}
-          </h3>
+          <h3 className="font-semibold text-base text-neutral-100 mb-1 leading-snug truncate">{p.title}</h3>
           <span className="text-xs text-neutral-400 block truncate">{p.clientName}</span>
         </div>
 

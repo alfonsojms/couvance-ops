@@ -46,7 +46,9 @@ export function createFinanceRepository(db: AppDatabase) {
         })
         .from(projects)
         .innerJoin(clients, eq(projects.clientId, clients.id))
-        .where(and(eq(projects.hasRecurring, 1), ne(projects.status, 'CANCELLED'), isNotNull(projects.recurringRenewalDate)))
+        .where(
+          and(eq(projects.hasRecurring, 1), ne(projects.status, 'CANCELLED'), isNotNull(projects.recurringRenewalDate)),
+        )
         .all();
     },
 

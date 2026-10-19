@@ -8,7 +8,7 @@ export type DomainErrorKind = 'invalid' | 'unauthorized' | 'not_found' | 'confli
 export class DomainError extends Error {
   constructor(
     public readonly kind: DomainErrorKind,
-    message: string
+    message: string,
   ) {
     super(message);
     this.name = 'DomainError';

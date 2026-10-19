@@ -24,10 +24,7 @@ export interface ProjectFormValues {
   recurringRenewalDate: string;
 }
 
-export type ProjectFormFieldSetter = <K extends keyof ProjectFormValues>(
-  key: K,
-  value: ProjectFormValues[K]
-) => void;
+export type ProjectFormFieldSetter = <K extends keyof ProjectFormValues>(key: K, value: ProjectFormValues[K]) => void;
 
 /** Valores iniciales en modo creación: preselecciona el primer cliente si existe. */
 export function emptyProjectFormValues(clients: ClientRef[]): ProjectFormValues {
@@ -59,9 +56,7 @@ export function projectFormValuesFrom(initial: ProjectFormData): ProjectFormValu
     resourcesUrl: initial.resourcesUrl || '',
     hasRecurring: initial.hasRecurring === 1,
     recurringAmount:
-      initial.recurringAmount !== undefined && initial.recurringAmount !== null
-        ? String(initial.recurringAmount)
-        : '',
+      initial.recurringAmount !== undefined && initial.recurringAmount !== null ? String(initial.recurringAmount) : '',
     recurringCurrency: initial.recurringCurrency || 'USD',
     recurringPeriod: initial.recurringPeriod || 'ANNUALLY',
     recurringRenewalDate: initial.recurringRenewalDate || '',

@@ -18,18 +18,14 @@ describe('QA - Nivel 4: UI & Interaction Testing (Pantalla de Desbloqueo)', () =
 
     // 1. Verificamos elementos clave de la interfaz desde los ojos del usuario
     expect(screen.getByText('Couvance Ops')).toBeInTheDocument();
-    expect(
-      screen.getByText(/Ingresa el PIN maestro de 8 dígitos/i)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Ingresa el PIN maestro de 8 dígitos/i)).toBeInTheDocument();
 
     // 2. Verificamos que los 8 dígitos inicien vacíos (0 de 8)
     expect(screen.getByLabelText('0 de 8 dígitos ingresados')).toBeInTheDocument();
 
     // 3. Verificamos que los botones del 0 al 9 estén presentes en el DOM
     for (let i = 0; i <= 9; i++) {
-      expect(
-        screen.getByRole('button', { name: new RegExp(`Dígito ${i}`, 'i') })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: new RegExp(`Dígito ${i}`, 'i') })).toBeInTheDocument();
     }
   });
 
@@ -84,9 +80,7 @@ describe('QA - Nivel 4: UI & Interaction Testing (Pantalla de Desbloqueo)', () =
 
     // Esperamos a que la UI procese la respuesta asíncrona y pinte el error
     await waitFor(() => {
-      expect(
-        screen.getByText(/PIN incorrecto. Intente nuevamente./i)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/PIN incorrecto. Intente nuevamente./i)).toBeInTheDocument();
     });
 
     // Verificamos que NO se haya llamado a onUnlockSuccess

@@ -73,7 +73,7 @@ app.notFound((c) => {
         statusCode: 404,
         timestamp: new Date().toISOString(),
       },
-      404
+      404,
     );
   }
   return c.text('404 Not Found', 404);
@@ -93,7 +93,7 @@ app.onError((err, c) => {
       error: err.message || 'Internal Server Error',
       stack: typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production' ? err.stack : undefined,
     },
-    500
+    500,
   );
 });
 

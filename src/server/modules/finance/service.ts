@@ -12,7 +12,9 @@ export function createFinanceService(repo: FinanceRepository, clock: ServiceCloc
       const pendingMilestones = (await repo.listPendingMilestones()).sort(compareByDueDate);
 
       const recurringAlerts = (await repo.listRecurringProjects())
-        .filter((p) => p.recurringRenewalDate && getDaysUntil(p.recurringRenewalDate, today) <= RENEWAL_ALERT_WINDOW_DAYS)
+        .filter(
+          (p) => p.recurringRenewalDate && getDaysUntil(p.recurringRenewalDate, today) <= RENEWAL_ALERT_WINDOW_DAYS,
+        )
         .map((p) => {
           const daysRemaining = p.recurringRenewalDate ? getDaysUntil(p.recurringRenewalDate, today) : 0;
           return {

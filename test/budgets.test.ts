@@ -1,8 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  calculateMilestonesAmounts,
-  budgetCreateSchema,
-} from '../src/server/modules/budgets';
+import { calculateMilestonesAmounts, budgetCreateSchema } from '../src/server/modules/budgets';
 
 describe('QA - Módulo de Presupuestos (Budgets)', () => {
   describe('RN-01: Cálculo de montos sin decimales y absorción de residuo', () => {
@@ -102,9 +99,7 @@ describe('QA - Módulo de Presupuestos (Budgets)', () => {
         title: 'Presupuesto con centavos',
         totalAmount: 1250.75, // Decimal no permitido en presupuestos
         currency: 'USD',
-        milestones: [
-          { title: '100% Total', percentage: 100 },
-        ],
+        milestones: [{ title: '100% Total', percentage: 100 }],
       };
 
       const resultado = budgetCreateSchema.safeParse(payloadConDecimales);

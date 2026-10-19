@@ -27,17 +27,13 @@ export function MetricsRow({ metrics, activeSubTab, onSwitchSubTab }: MetricsRow
               {formatCurrency(metrics?.totalInTheStreet || 0)}
             </span>
           }
-          subtitle={
-            activeSubTab === 'pending'
-              ? '● Viendo pendientes ahora'
-              : 'Clic para ver pendientes →'
-          }
+          subtitle={activeSubTab === 'pending' ? '● Viendo pendientes ahora' : 'Clic para ver pendientes →'}
           icon={<Clock className="w-5 h-5 text-amber-400" />}
           className={cn(
             'border-amber-500/30 bg-amber-500/5 relative overflow-hidden transition-all cursor-pointer h-full',
             activeSubTab === 'pending'
               ? 'ring-2 ring-amber-500/60 shadow-md shadow-amber-500/10'
-              : 'hover:border-amber-500/50 hover:bg-amber-500/10 ring-1 ring-amber-500/20 opacity-85 hover:opacity-100'
+              : 'hover:border-amber-500/50 hover:bg-amber-500/10 ring-1 ring-amber-500/20 opacity-85 hover:opacity-100',
           )}
         />
       </button>
@@ -55,17 +51,13 @@ export function MetricsRow({ metrics, activeSubTab, onSwitchSubTab }: MetricsRow
               {formatCurrency(metrics?.totalCollected || 0)}
             </span>
           }
-          subtitle={
-            activeSubTab === 'history'
-              ? '● Viendo historial ahora'
-              : 'Clic para ver desglose →'
-          }
+          subtitle={activeSubTab === 'history' ? '● Viendo historial ahora' : 'Clic para ver desglose →'}
           icon={<DollarSign className="w-5 h-5 text-[#BDEF00]" />}
           className={cn(
             'border-[#BDEF00]/25 bg-[#BDEF00]/5 relative overflow-hidden transition-all cursor-pointer h-full',
             activeSubTab === 'history'
               ? 'ring-2 ring-[#BDEF00]/60 shadow-md shadow-[#BDEF00]/10'
-              : 'hover:border-[#BDEF00]/50 hover:bg-[#BDEF00]/10 ring-1 ring-[#BDEF00]/15 opacity-85 hover:opacity-100'
+              : 'hover:border-[#BDEF00]/50 hover:bg-[#BDEF00]/10 ring-1 ring-[#BDEF00]/15 opacity-85 hover:opacity-100',
           )}
         />
       </button>
