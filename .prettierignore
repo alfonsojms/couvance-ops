@@ -1,0 +1,22 @@
+node_modules
+**/dist
+data
+drizzle
+coverage
+test-results
+playwright-report
+.wrangler
+.atl
+.agents
+.claude
+.codegraph
+.playwright
+logs-github
+package-lock.json
+test/__snapshots__
+
+# Documentos y configs: no se reformatean
+*.md
+*.html
+*.yml
+*.json
