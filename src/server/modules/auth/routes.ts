@@ -17,7 +17,7 @@ function serviceFor(c: Context) {
   const ip = getClientIp(c);
   return createAuthService(createAuthRepository(getDb(c)), {
     secret: getPinSecret(c),
-    env: c.env as Record<string, any>,
+    env: c.env as Record<string, unknown>,
     attempts: { record: () => recordFailedAttempt(ip), clear: () => clearFailedAttempts(ip) },
   });
 }
