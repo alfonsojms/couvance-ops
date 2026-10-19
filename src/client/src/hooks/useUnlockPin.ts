@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { authApi } from '../lib/resources';
+import { errorMessage } from '../lib/errors';
 
 interface UseUnlockPinOptions {
   onUnlockSuccess: () => void;
@@ -25,8 +26,8 @@ export function useUnlockPin({ onUnlockSuccess, keyboardPaused }: UseUnlockPinOp
         await authApi.unlock(pinToSubmit);
         toast.success('Desbloqueado exitosamente');
         onUnlockSuccess();
-      } catch (err: any) {
-        setErrorMsg(err.message || 'PIN incorrecto.');
+      } catch (err) {
+        setErrorMsg(errorMessage(err, 'PIN incorrecto.'));
         setPin('');
         setIsShaking(true);
         setTimeout(() => setIsShaking(false), 400);

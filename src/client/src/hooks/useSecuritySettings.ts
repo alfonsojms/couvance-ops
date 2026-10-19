@@ -1,6 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { toast } from 'sonner';
 import { authApi } from '../lib/resources';
+import { errorMessage } from '../lib/errors';
+import { useChanged } from './useChanged';
 
 export type SecurityTab = 'pin' | 'questions';
 
@@ -22,6 +24,17 @@ export function useSecuritySettings(isOpen: boolean, onClose: () => void) {
   const [a2, setA2] = useState('');
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
 
+  // Resetear inputs de PIN al abrir (durante el render, no en un efecto)
+  const openChanged = useChanged([isOpen]);
+  if (openChanged && isOpen) {
+    setCurrentPinForPin('');
+    setNewPin('');
+    setConfirmPin('');
+    setCurrentPinForQuestions('');
+    setA1('');
+    setA2('');
+  }
+
   // Cargar configuración actual al abrir
   useEffect(() => {
     if (isOpen) {
@@ -35,13 +48,6 @@ export function useSecuritySettings(isOpen: boolean, onClose: () => void) {
         .catch(() => {
           // Silencioso o valores por defecto
         });
-      // Resetear inputs de PIN
-      setCurrentPinForPin('');
-      setNewPin('');
-      setConfirmPin('');
-      setCurrentPinForQuestions('');
-      setA1('');
-      setA2('');
     }
   }, [isOpen]);
 
@@ -76,8 +82,8 @@ export function useSecuritySettings(isOpen: boolean, onClose: () => void) {
       });
       toast.success('PIN maestro actualizado exitosamente.');
       onClose();
-    } catch (err: any) {
-      toast.error(err.message || 'Error al actualizar el PIN');
+    } catch (err) {
+      toast.error(errorMessage(err, 'Error al actualizar el PIN'));
     } finally {
       setLoading(false);
     }
@@ -112,8 +118,8 @@ export function useSecuritySettings(isOpen: boolean, onClose: () => void) {
       });
       toast.success('Preguntas y respuestas secretas actualizadas exitosamente.');
       onClose();
-    } catch (err: any) {
-      toast.error(err.message || 'Error al actualizar las preguntas');
+    } catch (err) {
+      toast.error(errorMessage(err, 'Error al actualizar las preguntas'));
     } finally {
       setLoading(false);
     }

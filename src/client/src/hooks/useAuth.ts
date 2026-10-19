@@ -6,16 +6,18 @@ export function useAuth() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
-  const checkAuth = useCallback(async () => {
-    try {
-      const res = await authApi.status();
-      setIsAuthenticated(res.authenticated);
-    } catch {
-      setIsAuthenticated(false);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  // El estado solo se actualiza al resolver la consulta, nunca de forma síncrona dentro del efecto.
+  const checkAuth = useCallback(
+    () =>
+      authApi
+        .status()
+        .then(
+          (res) => setIsAuthenticated(res.authenticated),
+          () => setIsAuthenticated(false),
+        )
+        .finally(() => setLoading(false)),
+    [],
+  );
 
   useEffect(() => {
     setUnauthorizedHandler(() => {

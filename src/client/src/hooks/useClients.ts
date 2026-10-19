@@ -1,28 +1,19 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import { clientsApi } from '../lib/resources';
 import type { ClientWithTotals } from '../lib/types';
+import { errorMessage } from '../lib/errors';
+import { useAsyncData } from './useAsyncData';
+
+const fetchClients = () => clientsApi.list();
 
 // Carga del directorio de clientes, con recarga manual.
 export function useClientsList() {
-  const [clients, setClients] = useState<ClientWithTotals[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const loadClients = useCallback(async () => {
-    try {
-      setLoading(true);
-      const data = await clientsApi.list();
-      setClients(data);
-    } catch (err: any) {
-      toast.error(err.message || 'Error al cargar clientes');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadClients();
-  }, [loadClients]);
+  const {
+    data: clients,
+    loading,
+    reload: loadClients,
+  } = useAsyncData<ClientWithTotals[]>(fetchClients, [], 'Error al cargar clientes');
 
   return { clients, loading, loadClients };
 }
@@ -60,10 +51,12 @@ export function useClientDeletion(onDeleted: () => void) {
       toast.success('Cliente eliminado');
       setClientToDelete(null);
       onDeleted();
-    } catch (err: any) {
+    } catch (err) {
       // Manejo constructivo de 409 Conflict
-      const errorMsg =
-        err.message || 'No se pudo eliminar el cliente porque posee proyectos asociados o historial contable activo.';
+      const errorMsg = errorMessage(
+        err,
+        'No se pudo eliminar el cliente porque posee proyectos asociados o historial contable activo.',
+      );
       setConflictMessage(errorMsg);
       toast.error(errorMsg);
     } finally {

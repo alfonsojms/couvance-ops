@@ -107,10 +107,10 @@ export const FormField: React.FC<FormFieldProps> = ({
 
       {typeof children === 'function'
         ? children({ id, hasError })
-        : React.isValidElement(children)
-          ? React.cloneElement(children as React.ReactElement<any>, {
-              id: (children.props as any).id || id,
-              hasError: (children.props as any).hasError ?? hasError,
+        : React.isValidElement<{ id?: string; hasError?: boolean }>(children)
+          ? React.cloneElement(children, {
+              id: children.props.id || id,
+              hasError: children.props.hasError ?? hasError,
             })
           : children}
 

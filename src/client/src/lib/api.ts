@@ -1,8 +1,8 @@
 export class ApiError extends Error {
   status: number;
-  data: any;
+  data: unknown;
 
-  constructor(status: number, message: string, data?: any) {
+  constructor(status: number, message: string, data?: unknown) {
     super(message);
     this.name = 'ApiError';
     this.status = status;
@@ -46,11 +46,11 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     return (await response.text()) as unknown as T;
   }
 
-  const json: any = await response.json().catch(() => null);
+  const json: unknown = await response.json().catch(() => null);
 
   if (!response.ok) {
-    const errorMessage = json?.error || json?.message || `Error HTTP ${response.status}`;
-    throw new ApiError(response.status, errorMessage, json);
+    const { error, message } = (json ?? {}) as { error?: string; message?: string };
+    throw new ApiError(response.status, error || message || `Error HTTP ${response.status}`, json);
   }
 
   return json as T;
@@ -58,11 +58,11 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 
 export const api = {
   get: <T>(url: string) => request<T>(url, { method: 'GET' }),
-  post: <T>(url: string, body?: any) =>
+  post: <T>(url: string, body?: unknown) =>
     request<T>(url, { method: 'POST', body: body ? JSON.stringify(body) : undefined }),
-  put: <T>(url: string, body?: any) =>
+  put: <T>(url: string, body?: unknown) =>
     request<T>(url, { method: 'PUT', body: body ? JSON.stringify(body) : undefined }),
-  patch: <T>(url: string, body?: any) =>
+  patch: <T>(url: string, body?: unknown) =>
     request<T>(url, { method: 'PATCH', body: body ? JSON.stringify(body) : undefined }),
   del: <T>(url: string) => request<T>(url, { method: 'DELETE' }),
 };

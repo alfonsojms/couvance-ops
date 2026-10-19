@@ -1,42 +1,51 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { budgetsApi, financeApi, milestonesApi, projectsApi } from '../lib/resources';
 import type { FinancialMetrics, PaidMilestone, PendingMilestone, RecurringAlert } from '../lib/types';
-import { buildPayAllSummary, type PayAllModalData } from '../components/dashboard/helpers';
+import { buildPayAllSummary } from '../components/dashboard/helpers';
+import { errorMessage } from '../lib/errors';
+import { useAsyncData } from './useAsyncData';
+
+interface DashboardData {
+  metrics: FinancialMetrics | null;
+  pendingMilestones: PendingMilestone[];
+  paidMilestones: PaidMilestone[];
+  recurringAlerts: RecurringAlert[];
+}
+
+const emptyDashboardData: DashboardData = {
+  metrics: null,
+  pendingMilestones: [],
+  paidMilestones: [],
+  recurringAlerts: [],
+};
+
+// Vercel React Best Practice: Eliminating waterfalls with Promise.all
+async function fetchDashboardData(): Promise<DashboardData> {
+  const [metrics, radar, history] = await Promise.all([financeApi.metrics(), financeApi.radar(), financeApi.history()]);
+  return {
+    metrics,
+    pendingMilestones: radar.pendingMilestones,
+    recurringAlerts: radar.recurringAlerts,
+    paidMilestones: history.history || [],
+  };
+}
 
 // Datos y acciones del Radar: carga de métricas/radar/historial y cobros/renovaciones.
 export function useDashboardData() {
-  const [metrics, setMetrics] = useState<FinancialMetrics | null>(null);
-  const [pendingMilestones, setPendingMilestones] = useState<PendingMilestone[]>([]);
-  const [paidMilestones, setPaidMilestones] = useState<PaidMilestone[]>([]);
-  const [recurringAlerts, setRecurringAlerts] = useState<RecurringAlert[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    data: { metrics, pendingMilestones, paidMilestones, recurringAlerts },
+    loading,
+    reload: loadDashboardData,
+  } = useAsyncData(fetchDashboardData, emptyDashboardData, 'Error al cargar el Radar de finanzas');
   const [processingId, setProcessingId] = useState<string | null>(null);
-  const [payAllTarget, setPayAllTarget] = useState<PayAllModalData | null>(null);
+  const [payAllMilestone, setPayAllMilestone] = useState<PendingMilestone | null>(null);
 
-  // Vercel React Best Practice: Eliminating waterfalls with Promise.all
-  const loadDashboardData = useCallback(async () => {
-    try {
-      setLoading(true);
-      const [metricsData, radarData, historyData] = await Promise.all([
-        financeApi.metrics(),
-        financeApi.radar(),
-        financeApi.history(),
-      ]);
-      setMetrics(metricsData);
-      setPendingMilestones(radarData.pendingMilestones);
-      setRecurringAlerts(radarData.recurringAlerts);
-      setPaidMilestones(historyData.history || []);
-    } catch (err: any) {
-      toast.error(err.message || 'Error al cargar el Radar de finanzas');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadDashboardData();
-  }, [loadDashboardData]);
+  // Resumen del modal "Cobrar Todo", derivado de la lista vigente de hitos pendientes.
+  const payAllTarget = useMemo(
+    () => (payAllMilestone ? buildPayAllSummary(pendingMilestones, payAllMilestone) : null),
+    [pendingMilestones, payAllMilestone],
+  );
 
   // Cobro individual de hito
   const payMilestone = useCallback(
@@ -46,8 +55,8 @@ export function useDashboardData() {
         await milestonesApi.pay(id);
         toast.success('Hito marcado como cobrado.');
         loadDashboardData();
-      } catch (err: any) {
-        toast.error(err.message || 'Error al registrar cobro');
+      } catch (err) {
+        toast.error(errorMessage(err, 'Error al registrar cobro'));
       } finally {
         setProcessingId(null);
       }
@@ -55,16 +64,11 @@ export function useDashboardData() {
     [loadDashboardData],
   );
 
-  // Abrir modal para Cobro Express "Cobrar Todo". Lee la lista vigente desde el updater
-  // para que el callback sea estable y no re-renderice las tarjetas memoizadas.
-  const openPayAll = useCallback((m: PendingMilestone) => {
-    setPendingMilestones((current) => {
-      setPayAllTarget(buildPayAllSummary(current, m));
-      return current;
-    });
-  }, []);
+  // Abrir modal para Cobro Express "Cobrar Todo". Callback estable para no re-renderizar
+  // las tarjetas memoizadas; el resumen se deriva en payAllTarget.
+  const openPayAll = useCallback((m: PendingMilestone) => setPayAllMilestone(m), []);
 
-  const closePayAll = useCallback(() => setPayAllTarget(null), []);
+  const closePayAll = useCallback(() => setPayAllMilestone(null), []);
 
   // Confirmar ejecución de "Cobrar Todo"
   const confirmPayAll = async () => {
@@ -74,10 +78,10 @@ export function useDashboardData() {
       setProcessingId(`budget-${targetBudgetId}`);
       await budgetsApi.payAll(targetBudgetId);
       toast.success('Todos los hitos del presupuesto fueron liquidados.');
-      setPayAllTarget(null);
+      setPayAllMilestone(null);
       loadDashboardData();
-    } catch (err: any) {
-      toast.error(err.message || 'Error al liquidar hitos');
+    } catch (err) {
+      toast.error(errorMessage(err, 'Error al liquidar hitos'));
     } finally {
       setProcessingId(null);
     }
@@ -91,8 +95,8 @@ export function useDashboardData() {
         const res = await projectsApi.renew(projectId);
         toast.success(res.message || 'Renovación extendida con éxito.');
         loadDashboardData();
-      } catch (err: any) {
-        toast.error(err.message || 'Error al renovar servicio');
+      } catch (err) {
+        toast.error(errorMessage(err, 'Error al renovar servicio'));
       } finally {
         setProcessingId(null);
       }

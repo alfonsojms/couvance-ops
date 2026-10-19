@@ -4,6 +4,7 @@ import { budgetsApi } from '../lib/resources';
 import type { BudgetWithMilestones, ProjectListItem } from '../lib/types';
 import { copyToClipboard } from '../lib/utils';
 import { buildBudgetSummary, calculatePresetMilestones, type BudgetPreset } from '../components/projects/budgetPresets';
+import { errorMessage } from '../lib/errors';
 
 /**
  * Modal de cotizaciones de un proyecto: presupuestos existentes, borrador con presets,
@@ -26,8 +27,8 @@ export function useProjectBudgets(onBudgetsChanged: () => void) {
     try {
       const data = await budgetsApi.listByProject(project.id);
       setProjectBudgets(data);
-    } catch (err: any) {
-      toast.error(err.message || 'Error al cargar presupuestos del proyecto');
+    } catch (err) {
+      toast.error(errorMessage(err, 'Error al cargar presupuestos del proyecto'));
     }
   }, []);
 
@@ -55,8 +56,8 @@ export function useProjectBudgets(onBudgetsChanged: () => void) {
       const data = await budgetsApi.listByProject(selectedProject.id);
       setProjectBudgets(data);
       onBudgetsChanged();
-    } catch (err: any) {
-      toast.error(err.message || 'Error al crear presupuesto');
+    } catch (err) {
+      toast.error(errorMessage(err, 'Error al crear presupuesto'));
     } finally {
       setSubmittingBudget(false);
     }
@@ -73,8 +74,8 @@ export function useProjectBudgets(onBudgetsChanged: () => void) {
         setProjectBudgets(data);
       }
       onBudgetsChanged();
-    } catch (err: any) {
-      toast.error(err.message || 'Error al aprobar presupuesto');
+    } catch (err) {
+      toast.error(errorMessage(err, 'Error al aprobar presupuesto'));
     } finally {
       setApprovingBudgetId(null);
     }

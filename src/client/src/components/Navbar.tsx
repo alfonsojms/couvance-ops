@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { LayoutDashboard, FolderKanban, Sparkles, Users, Download, Lock, Shield, History } from 'lucide-react';
 import { toast } from 'sonner';
 import { backupApi } from '../lib/resources';
+import { errorMessage } from '../lib/errors';
 
 // Vercel React Best Practice: Dynamic import for heavy modal component
 const SecuritySettingsModal = React.lazy(() =>
@@ -52,8 +53,8 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onTabChange, onLock 
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
       toast.success('Respaldo descargado exitosamente');
-    } catch (err: any) {
-      toast.error(err.message || 'Error al exportar respaldo');
+    } catch (err) {
+      toast.error(errorMessage(err, 'Error al exportar respaldo'));
     } finally {
       setDownloading(false);
     }
