@@ -70,7 +70,7 @@
     "wrangler": "^4.136.3"
   },
   "allowScripts": {
-    "better-sqlite3@11.10.0": true,
+    "better-sqlite3@13.0.3": true,
     "esbuild@0.18.20": true,
     "esbuild@0.25.12": true,
     "esbuild@0.27.2": true,
