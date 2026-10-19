@@ -15,7 +15,7 @@ export function createAuthRepository(db: AppDatabase) {
     findConfig,
 
     /** Lee la configuración y, si la BD está recién migrada (p. ej. D1 en frío), la siembra antes. */
-    async findOrSeedConfig(secret: string, env?: Record<string, any>): Promise<AuthConfigRow | undefined> {
+    async findOrSeedConfig(secret: string, env?: Record<string, unknown>): Promise<AuthConfigRow | undefined> {
       const existing = await findConfig();
       if (existing) return existing;
       await seedInitialAuthIfNeeded(db, secret, env);

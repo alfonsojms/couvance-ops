@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import { projectsApi } from '../lib/resources';
 import type { ClientRef, ProjectFormData } from '../lib/types';
@@ -11,6 +11,8 @@ import {
   type ProjectFormFieldSetter,
   type ProjectFormValues,
 } from '../components/projects/projectFormModel';
+import { errorMessage } from '../lib/errors';
+import { useChanged } from './useChanged';
 
 interface UseProjectFormOptions {
   open: boolean;
@@ -31,11 +33,10 @@ export function useProjectForm({ open, onOpenChange, mode, initial, clients, onS
   }, []);
 
   // Cada apertura precarga el proyecto (edición) o reinicia el formulario (creación)
-  useEffect(() => {
-    if (open) {
-      setValues(mode === 'edit' && initial ? projectFormValuesFrom(initial) : emptyProjectFormValues(clients));
-    }
-  }, [open, mode, initial, clients]);
+  const formInputsChanged = useChanged([open, mode, initial, clients]);
+  if (formInputsChanged && open) {
+    setValues(mode === 'edit' && initial ? projectFormValuesFrom(initial) : emptyProjectFormValues(clients));
+  }
 
   const submit = async () => {
     const validationError = validateProjectForm(values, mode);
@@ -65,8 +66,8 @@ export function useProjectForm({ open, onOpenChange, mode, initial, clients, onS
         onSuccess?.(updated);
         onOpenChange(false);
       }
-    } catch (err: any) {
-      toast.error(err.message || 'Error al guardar proyecto');
+    } catch (err) {
+      toast.error(errorMessage(err, 'Error al guardar proyecto'));
     } finally {
       setSubmitting(false);
     }

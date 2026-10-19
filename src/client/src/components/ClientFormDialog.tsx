@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { clientsApi } from '../lib/resources';
 import type { Client } from '../lib/types';
@@ -14,6 +14,8 @@ import {
   Input,
   Textarea,
 } from './ui';
+import { errorMessage } from '../lib/errors';
+import { useChanged } from '../hooks/useChanged';
 
 export type ClientFormItem = Client;
 
@@ -22,7 +24,7 @@ export interface ClientFormDialogProps {
   onOpenChange: (open: boolean) => void;
   mode: 'create' | 'edit';
   initial?: ClientFormItem | null;
-  onSuccess?: (client: any) => void;
+  onSuccess?: (client: Client) => void;
 }
 
 export const ClientFormDialog: React.FC<ClientFormDialogProps> = ({ open, onOpenChange, mode, initial, onSuccess }) => {
@@ -33,23 +35,16 @@ export const ClientFormDialog: React.FC<ClientFormDialogProps> = ({ open, onOpen
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (open) {
-      if (mode === 'edit' && initial) {
-        setName(initial.name || '');
-        setContactName(initial.contactName || '');
-        setPhone(initial.phone || '');
-        setEmail(initial.email || '');
-        setNotes(initial.notes || '');
-      } else {
-        setName('');
-        setContactName('');
-        setPhone('');
-        setEmail('');
-        setNotes('');
-      }
-    }
-  }, [open, mode, initial]);
+  // Cada apertura precarga el cliente (edición) o limpia el formulario (creación)
+  const formInputsChanged = useChanged([open, mode, initial]);
+  if (formInputsChanged && open) {
+    const source = mode === 'edit' && initial ? initial : null;
+    setName(source?.name || '');
+    setContactName(source?.contactName || '');
+    setPhone(source?.phone || '');
+    setEmail(source?.email || '');
+    setNotes(source?.notes || '');
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,8 +74,8 @@ export const ClientFormDialog: React.FC<ClientFormDialogProps> = ({ open, onOpen
       }
 
       onOpenChange(false);
-    } catch (err: any) {
-      toast.error(err.message || 'Error al guardar cliente');
+    } catch (err) {
+      toast.error(errorMessage(err, 'Error al guardar cliente'));
     } finally {
       setSubmitting(false);
     }

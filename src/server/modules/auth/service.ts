@@ -15,7 +15,7 @@ export interface AuthContext {
   /** Secreto de firma y de hash (`PIN_SECRET`). */
   secret: string;
   /** Variables del runtime para sembrar credenciales iniciales (INITIAL_PIN, SECURITY_*). */
-  env?: Record<string, any>;
+  env?: Record<string, unknown>;
   attempts?: FailedAttempts;
 }
 

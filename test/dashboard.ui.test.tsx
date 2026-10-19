@@ -73,7 +73,7 @@ describe('UI Testing — Dashboard Radar & Collection History (Historial de Cobr
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (api.get as any).mockImplementation((url: string) => {
+    vi.mocked(api.get).mockImplementation((url: string) => {
       if (url === '/api/finance/metrics') {
         return Promise.resolve(mockMetrics);
       }

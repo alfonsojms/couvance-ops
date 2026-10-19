@@ -1,35 +1,34 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import { clientsApi, projectsApi } from '../lib/resources';
 import type { ClientWithTotals, ProjectListItem } from '../lib/types';
+import { errorMessage } from '../lib/errors';
+import { useAsyncData } from './useAsyncData';
+
+interface ProjectsPageData {
+  projects: ProjectListItem[];
+  clients: ClientWithTotals[];
+}
+
+const emptyProjectsPageData: ProjectsPageData = { projects: [], clients: [] };
+
+// Vercel React Best Practice: Promise.all to eliminate network waterfall
+async function fetchProjectsPageData(): Promise<ProjectsPageData> {
+  const [projects, clients] = await Promise.all([projectsApi.list(), clientsApi.list()]);
+  return { projects, clients };
+}
 
 /** Listado de proyectos y clientes, con las acciones que cambian el estado de un proyecto. */
 export function useProjectsData() {
-  const [projects, setProjects] = useState<ProjectListItem[]>([]);
-  const [clients, setClients] = useState<ClientWithTotals[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    data: { projects, clients },
+    loading,
+    reload: loadProjects,
+  } = useAsyncData(fetchProjectsPageData, emptyProjectsPageData, 'Error al cargar proyectos');
 
   // Confirmación de cancelación de proyecto
   const [projectToCancel, setProjectToCancel] = useState<ProjectListItem | null>(null);
   const [cancelling, setCancelling] = useState(false);
-
-  // Vercel React Best Practice: Promise.all to eliminate network waterfall
-  const loadProjects = useCallback(async () => {
-    try {
-      setLoading(true);
-      const [projData, clientData] = await Promise.all([projectsApi.list(), clientsApi.list()]);
-      setProjects(projData);
-      setClients(clientData);
-    } catch (err: any) {
-      toast.error(err.message || 'Error al cargar proyectos');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadProjects();
-  }, [loadProjects]);
 
   // Marcar como Completado
   const completeProject = useCallback(
@@ -38,8 +37,8 @@ export function useProjectsData() {
         await projectsApi.setStatus(projectId, 'COMPLETED');
         toast.success('Proyecto marcado como completado');
         loadProjects();
-      } catch (err: any) {
-        toast.error(err.message || 'Error al completar proyecto');
+      } catch (err) {
+        toast.error(errorMessage(err, 'Error al completar proyecto'));
       }
     },
     [loadProjects],
@@ -55,8 +54,8 @@ export function useProjectsData() {
       toast.success('Proyecto cancelado. Los pagos previos se mantuvieron intactos.');
       setProjectToCancel(null);
       loadProjects();
-    } catch (err: any) {
-      toast.error(err.message || 'Error al cancelar proyecto');
+    } catch (err) {
+      toast.error(errorMessage(err, 'Error al cancelar proyecto'));
     } finally {
       setCancelling(false);
     }

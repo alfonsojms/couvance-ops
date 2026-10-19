@@ -58,12 +58,13 @@ export function getDb(c: Context): AppDatabase {
 export async function seedInitialAuthIfNeeded(
   db: AppDatabase,
   secret: string,
-  env?: Record<string, any>,
+  env?: Record<string, unknown>,
 ): Promise<boolean> {
   const [existingAuth] = await db.select().from(authConfig).where(eq(authConfig.id, 1)).all();
   if (!existingAuth) {
-    const getVal = (key: string, fallback: string) => {
-      if (env && env[key]) return env[key];
+    const getVal = (key: string, fallback: string): string => {
+      const fromEnv = env?.[key];
+      if (typeof fromEnv === 'string' && fromEnv) return fromEnv;
       if (typeof process !== 'undefined' && process.env?.[key]) return process.env[key];
       return fallback;
     };

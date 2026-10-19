@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { toast } from 'sonner';
 import { authApi } from '../lib/resources';
 import type { SecurityQuestions } from '../lib/types';
+import { errorMessage } from '../lib/errors';
 
 // Recuperación del PIN en dos pasos: validar preguntas secretas y luego fijar el nuevo PIN.
 export function useUnlockRecovery(onRecovered: () => void) {
@@ -45,8 +46,8 @@ export function useUnlockRecovery(onRecovered: () => void) {
       });
       setResetToken(res.resetToken);
       toast.success('Respuestas correctas. Configure su nuevo PIN.');
-    } catch (err: any) {
-      toast.error(err.message || 'Respuestas incorrectas');
+    } catch (err) {
+      toast.error(errorMessage(err, 'Respuestas incorrectas'));
     } finally {
       setRecoveryLoading(false);
     }
@@ -72,8 +73,8 @@ export function useUnlockRecovery(onRecovered: () => void) {
       toast.success('Nuevo PIN configurado exitosamente.');
       setRecoveryOpen(false);
       onRecovered();
-    } catch (err: any) {
-      toast.error(err.message || 'Error al restablecer el PIN');
+    } catch (err) {
+      toast.error(errorMessage(err, 'Error al restablecer el PIN'));
     } finally {
       setRecoveryLoading(false);
     }

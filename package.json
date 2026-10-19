@@ -9,7 +9,7 @@
     "build:client": "vite build --outDir dist/client",
     "build:server": "tsup src/server/node-entry.ts --format esm --out-dir dist/server --external better-sqlite3",
     "build": "npm run build:client && npm run build:server",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings 0",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "db:generate": "drizzle-kit generate",

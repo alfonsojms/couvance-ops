@@ -31,8 +31,8 @@ export default tseslint.config(
     plugins: { 'react-hooks': reactHooks },
     rules: {
       ...reactHooks.configs.recommended.rules,
-      // Deuda conocida: varios hooks cargan datos dentro de un useEffect. Visible, pero no bloquea el CI.
-      'react-hooks/set-state-in-effect': 'warn',
+      // Las cargas usan useAsyncData y los reinicios por props useChanged: setState en un efecto rompe el CI.
+      'react-hooks/set-state-in-effect': 'error',
     },
   },
   {
@@ -45,8 +45,8 @@ export default tseslint.config(
   },
   {
     rules: {
-      // Deuda conocida: la mayoría son `catch (e: any)`. Visible, pero no bloquea el CI.
-      '@typescript-eslint/no-explicit-any': 'warn',
+      // Los errores capturados son `unknown` (ver lib/errors.ts); la única excepción es JsonBody en los tests.
+      '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
     },
   },

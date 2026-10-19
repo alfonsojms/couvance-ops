@@ -1,7 +1,7 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 // Helper reutilizable de autenticación para no repetir el tecleo de PIN en cada test
-async function unlockApp(page: any, pin = '12345678') {
+async function unlockApp(page: Page, pin = '12345678') {
   await page.goto('/');
   // Si la app ya está desbloqueada en esta sesión, no re-teclear
   if (await page.getByRole('button', { name: /Radar/i }).isVisible()) {

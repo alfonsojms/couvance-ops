@@ -1,5 +1,11 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { createContractHarness, type ContractHarness, CONTRACT_DRIVERS, DEFAULT_PIN } from './helpers/contract';
+import {
+  createContractHarness,
+  type ContractHarness,
+  type JsonBody,
+  CONTRACT_DRIVERS,
+  DEFAULT_PIN,
+} from './helpers/contract';
 
 /**
  * Tests de contrato de la API (caracterización).
@@ -23,7 +29,7 @@ describe.each(CONTRACT_DRIVERS)('Contrato de la API [%s]', (driver) => {
     return res.body;
   }
 
-  const milestonesOf = (budget: any): any[] => budget?.milestones ?? budget?.budget?.milestones ?? [];
+  const milestonesOf = (budget: JsonBody): JsonBody[] => budget?.milestones ?? budget?.budget?.milestones ?? [];
 
   beforeAll(async () => {
     h = await createContractHarness(driver);
