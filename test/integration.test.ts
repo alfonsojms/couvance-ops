@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import Database from 'better-sqlite3';
+import type { Context } from 'hono';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
 import app from '../src/server/app';
@@ -24,7 +25,7 @@ describe('QA - Nivel 2 y 3: Pruebas de Integración (API + Base de Datos en Memo
     migrate(db, { migrationsFolder: './drizzle' });
 
     // 3. Sembramos el usuario con PIN por defecto '12345678'
-    const secret = getPinSecret({} as any);
+    const secret = getPinSecret({} as Context);
     await seedInitialAuthIfNeeded(db, secret);
   });
 
@@ -379,8 +380,8 @@ describe('QA - Nivel 2 y 3: Pruebas de Integración (API + Base de Datos en Memo
       });
       const detail = await resDetail.json();
       const ms = detail.budgets[0].milestones;
-      const paidMs = ms.find((m: any) => m.id === hito1.id);
-      const otherMs = ms.find((m: any) => m.id !== hito1.id);
+      const paidMs = ms.find((m: { id: string }) => m.id === hito1.id);
+      const otherMs = ms.find((m: { id: string }) => m.id !== hito1.id);
 
       expect(paidMs.status).toBe('PAID');
       expect(otherMs.status).toBe('CANCELLED');
@@ -410,7 +411,7 @@ describe('QA - Nivel 2 y 3: Pruebas de Integración (API + Base de Datos en Memo
       });
       expect(resShowcase.status).toBe(200);
       const showcase = await resShowcase.json();
-      const item = showcase.find((p: any) => p.id === testProjectId);
+      const item = showcase.find((p: { id: string }) => p.id === testProjectId);
       expect(item).toBeTruthy();
       expect(item.productionUrl).toBe('https://tienda-showcase.com');
       expect(item.productionStatus).toBe('ACTIVE');

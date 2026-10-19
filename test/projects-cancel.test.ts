@@ -25,12 +25,14 @@ describe.each(CONTRACT_DRIVERS)('cancelación de proyecto en cascada [%s]', (dri
     await h.raw('POST', `/api/budgets/${budget.body.id}/approve`);
     return {
       projectId: project.body.id as string,
-      milestoneIds: budget.body.milestones.map((m: any) => m.id) as string[],
+      milestoneIds: budget.body.milestones.map((m: { id: string }) => m.id) as string[],
     };
   }
 
-  const getProject = async (id: string) => (await h.raw('GET', `/api/projects/${id}`)).body as any;
-  const milestoneStatuses = (project: any) => project.budgets[0].milestones.map((m: any) => m.status);
+  type ProjectDetail = { budgets: Array<{ milestones: Array<{ status: string }> }> };
+
+  const getProject = async (id: string) => (await h.raw('GET', `/api/projects/${id}`)).body;
+  const milestoneStatuses = (project: ProjectDetail) => project.budgets[0].milestones.map((m) => m.status);
 
   beforeAll(async () => {
     h = await createContractHarness(driver);

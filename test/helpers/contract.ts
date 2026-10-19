@@ -1,4 +1,5 @@
 import { vi } from 'vitest';
+import type { Context } from 'hono';
 import app from '../../src/server/app';
 import { setGlobalDb, seedInitialAuthIfNeeded } from '../../src/server/db';
 import { getPinSecret } from '../../src/server/middlewares/auth';
@@ -12,6 +13,13 @@ export const START_TIME = new Date('2026-10-16T12:00:00.000Z');
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const VOLATILE_KEYS = new Set(['token', 'resetToken']);
+
+/**
+ * Cuerpo JSON de `raw`: los tests lo recorren libremente para reutilizar IDs y las aserciones
+ * validan su forma. Es la única excepción a no-explicit-any, acotada al harness de tests.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON sin esquema, solo en tests
+export type JsonBody = any;
 
 export interface ContractResponse {
   status: number;
@@ -28,7 +36,7 @@ export async function createContractHarness(driver: ContractDriver = 'sqlite') {
   vi.setSystemTime(START_TIME);
 
   const testDb = await createTestDatabase(driver);
-  await seedInitialAuthIfNeeded(testDb.db, getPinSecret({} as any));
+  await seedInitialAuthIfNeeded(testDb.db, getPinSecret({} as Context));
   // D1 llega a la app como binding `env.DB` (igual que en Cloudflare); SQLite como instancia global (igual que en Node).
   const env = testDb.d1 ? { DB: testDb.d1 } : undefined;
   if (!env) setGlobalDb(testDb.db);
@@ -82,7 +90,7 @@ export async function createContractHarness(driver: ContractDriver = 'sqlite') {
     } catch {
       // cuerpo no JSON (p. ej. 404 de texto plano)
     }
-    return { status: res.status, body: parsed as any, headers: res.headers };
+    return { status: res.status, body: parsed as JsonBody, headers: res.headers };
   }
 
   /** Petición normalizada lista para snapshot. */

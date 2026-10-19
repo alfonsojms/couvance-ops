@@ -31,7 +31,7 @@ describe.each(CONTRACT_DRIVERS)('reglas de transición de presupuestos (S8) [%s]
     return res.body as { id: string; milestones: Array<{ id: string }> };
   }
 
-  const getBudget = async (id: string) => (await h.raw('GET', `/api/budgets/${id}`)).body as any;
+  const getBudget = async (id: string) => (await h.raw('GET', `/api/budgets/${id}`)).body;
   const milestoneOf = async (budgetId: string, index = 0) => (await getBudget(budgetId)).milestones[index];
 
   beforeAll(async () => {
@@ -53,7 +53,7 @@ describe.each(CONTRACT_DRIVERS)('reglas de transición de presupuestos (S8) [%s]
     const res = await h.raw('POST', `/api/budgets/${budget.id}/approve`);
     expect(res.status).toBe(200);
     expect(res.body.budget.status).toBe('APPROVED');
-    expect(res.body.milestones.map((m: any) => m.status)).toEqual(['PENDING', 'PENDING']);
+    expect(res.body.milestones.map((m: { status: string }) => m.status)).toEqual(['PENDING', 'PENDING']);
   });
 
   it('rechazar un presupuesto DRAFT sigue funcionando (200)', async () => {
@@ -87,7 +87,7 @@ describe.each(CONTRACT_DRIVERS)('reglas de transición de presupuestos (S8) [%s]
     );
     const after = await getBudget(budget.id);
     expect(after.status).toBe('REJECTED');
-    expect(after.milestones.map((m: any) => m.status)).toEqual(['DRAFT', 'DRAFT']);
+    expect(after.milestones.map((m: { status: string }) => m.status)).toEqual(['DRAFT', 'DRAFT']);
   });
 
   it('rechazar un presupuesto APPROVED responde 409 y sigue APPROVED', async () => {

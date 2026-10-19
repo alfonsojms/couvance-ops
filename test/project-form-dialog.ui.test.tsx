@@ -70,7 +70,7 @@ describe('UI Testing — ProjectFormDialog & ClientFormDialog', () => {
       const mockSuccess = vi.fn();
       const mockOpenChange = vi.fn();
 
-      (api.patch as any).mockResolvedValue({
+      vi.mocked(api.patch).mockResolvedValue({
         ...initialProject,
         productionUrl: 'https://nueva-acme.com',
       });
@@ -120,7 +120,7 @@ describe('UI Testing — ProjectFormDialog & ClientFormDialog', () => {
         notes: 'Cliente preferencial',
       };
 
-      (api.put as any).mockResolvedValue({
+      vi.mocked(api.put).mockResolvedValue({
         ...initialClient,
         phone: '+18095559999',
       });

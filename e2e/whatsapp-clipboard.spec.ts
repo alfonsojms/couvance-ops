@@ -1,7 +1,7 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 // Helper reutilizable de autenticación
-async function unlockApp(page: any, pin = '12345678') {
+async function unlockApp(page: Page, pin = '12345678') {
   await page.goto('/');
   if (await page.getByRole('button', { name: /Radar/i }).isVisible()) {
     return;
