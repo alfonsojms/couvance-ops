@@ -85,7 +85,7 @@ export const Badge: React.FC<BadgeProps> = ({
   children,
   ...props
 }) => {
-  let appliedClasses = '';
+  let appliedClasses: string;
   let dotClass = '';
   let content = children;
 

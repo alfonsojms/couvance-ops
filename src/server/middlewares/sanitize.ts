@@ -11,6 +11,7 @@ export function sanitizeString(val: string): string {
     // 1. Eliminar bytes nulos (\0, \u0000) que causan terminación prematura de strings en C/SQLite
     .replace(/\0/g, '')
     // 2. Eliminar caracteres de control peligrosos (preservando saltos de línea \n, \r y tabulaciones \t)
+    // eslint-disable-next-line no-control-regex -- los caracteres de control son justo lo que se elimina
     .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
     // 3. Normalizar Unicode en forma canónica compuesta (NFC)
     .normalize('NFC')
@@ -54,7 +55,7 @@ export async function sanitizeMiddleware(c: Context, next: Next) {
   // 2. Sanitizar parámetros de consulta
   const queries = c.req.queries();
   if (queries) {
-    for (const [key, values] of Object.entries(queries)) {
+    for (const values of Object.values(queries)) {
       if (values) {
         for (const v of values) {
           if (typeof v === 'string' && (v.includes('\0') || v.includes('%00'))) {

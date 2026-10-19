@@ -10,7 +10,6 @@ import { getPinSecret } from '../src/server/middlewares/auth';
 describe('QA - Nivel 2 y 3: Pruebas de Integración (API + Base de Datos en Memoria)', () => {
   let sessionCookie = '';
   let createdClientId = '';
-  let createdProjectId = '';
 
   beforeAll(async () => {
     // 1. Configuramos una base de datos SQLite en memoria exclusiva para este test
@@ -112,7 +111,6 @@ describe('QA - Nivel 2 y 3: Pruebas de Integración (API + Base de Datos en Memo
       expect(proyecto).toHaveProperty('id');
       expect(proyecto.clientId).toBe(createdClientId);
 
-      createdProjectId = proyecto.id;
     });
 
     it('RN-06: debe RECHAZAR con 409 Conflict si intentamos borrar un cliente que tiene proyectos asociados', async () => {

@@ -3,7 +3,7 @@ import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
-import { Navbar, NavTab } from '../src/client/src/components/Navbar';
+import { Navbar } from '../src/client/src/components/Navbar';
 
 describe('UI & Responsive Testing - Navbar & Mobile Navigation', () => {
   const mockOnTabChange = vi.fn();
