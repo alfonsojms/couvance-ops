@@ -16,3 +16,4 @@ Thumbs.db
 test-results/
 playwright-report/
 .atl/
+coverage/
